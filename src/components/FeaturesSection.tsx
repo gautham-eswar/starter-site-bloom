@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Star, Book } from 'lucide-react';
+import { Scissors, Mic, Robot, Search } from 'lucide-react';
 
 const FeaturesSection: React.FC = () => {
   return (
@@ -19,7 +19,7 @@ const FeaturesSection: React.FC = () => {
             <div className="flex flex-col gap-10">
               <div className="flex gap-4 items-start">
                 <div className="mt-1">
-                  <Check className="text-draft-green" size={20} />
+                  <Scissors className="text-draft-green" size={20} />
                 </div>
                 <div>
                   <h3 className="font-medium">Cut the fluff</h3>
@@ -31,7 +31,7 @@ const FeaturesSection: React.FC = () => {
               
               <div className="flex gap-4 items-start">
                 <div className="mt-1">
-                  <Star className="text-draft-green" size={20} />
+                  <Mic className="text-draft-green" size={20} />
                 </div>
                 <div>
                   <h3 className="font-medium">Speak their language</h3>
@@ -43,12 +43,24 @@ const FeaturesSection: React.FC = () => {
               
               <div className="flex gap-4 items-start">
                 <div className="mt-1">
-                  <Book className="text-draft-green" size={20} />
+                  <Robot className="text-draft-green" size={20} />
                 </div>
                 <div>
                   <h3 className="font-medium">ATS-friendly by default</h3>
                   <p className="text-draft-text opacity-70 mt-1">
                     Designed to pass through Applicant Tracking Systems.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 items-start">
+                <div className="mt-1">
+                  <Search className="text-draft-green" size={20} />
+                </div>
+                <div>
+                  <h3 className="font-medium">Zero guesswork</h3>
+                  <p className="text-draft-text opacity-70 mt-1">
+                    Follow our proven templates for guaranteed results.
                   </p>
                 </div>
               </div>
@@ -58,9 +70,9 @@ const FeaturesSection: React.FC = () => {
           <div className="lg:w-3/5">
             <div className="bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden">
               <img 
-                src="/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png" 
+                src="/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png" 
                 alt="DraftZero Resume Builder Interface" 
-                className="w-full object-cover"
+                className="w-full object-contain"
               />
             </div>
           </div>
