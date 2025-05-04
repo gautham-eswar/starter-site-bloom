@@ -97,11 +97,11 @@ const FeaturesSection: React.FC = () => {
           </div>
           
           <div className="lg:w-3/5">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300 h-[515px]">
               <img 
                 src={currentFeature.image} 
                 alt={`${currentFeature.title} - DraftZero Feature`} 
-                className="w-full object-contain"
+                className="w-full h-full object-contain"
               />
             </div>
           </div>
