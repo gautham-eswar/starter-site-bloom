@@ -8,7 +8,7 @@ const HeroSection: React.FC = () => {
     <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="flex flex-col lg:flex-row gap-16">
         {/* Left side - Hero text */}
-        <div className="lg:w-1/2">
+        <div className="lg:w-1/2 flex flex-col justify-center">
           <div className="max-w-2xl">
             <h1 className="text-title font-serif font-medium text-draft-green leading-tight">
               Build a resume that wins <span className="italic">every</span> time.
@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
         </div>
         
         {/* Right side - How to section */}
-        <div className="lg:w-1/2">
+        <div className="lg:w-1/2 relative">
           <div className="bg-[#f1f1eb] inline-block px-4 py-2 rounded-md mb-8">
             <span className="text-draft-green uppercase text-sm font-medium">How to</span>
           </div>
@@ -51,13 +51,11 @@ const HeroSection: React.FC = () => {
             </Button>
           </div>
           
-          <div className="relative">
-            <div className="absolute -top-12 -right-12">
-              <div className="shape-blob w-20 h-20 bg-draft-mint"></div>
-            </div>
-            <div className="absolute -bottom-4 -right-4">
-              <div className="shape-blob w-16 h-16 bg-draft-coral"></div>
-            </div>
+          <div className="absolute -top-12 -right-12">
+            <div className="shape-blob w-20 h-20 bg-draft-mint"></div>
+          </div>
+          <div className="absolute -bottom-4 -right-4">
+            <div className="shape-blob w-16 h-16 bg-draft-coral"></div>
           </div>
         </div>
       </div>
