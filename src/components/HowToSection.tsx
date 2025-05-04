@@ -7,25 +7,25 @@ import { Badge } from '@/components/ui/badge';
 
 const HowToSection: React.FC = () => {
   return (
-    <section className="flex flex-col md:flex-row gap-16 py-16 px-8 md:px-12 lg:px-20 relative">
+    <section className="flex flex-col md:flex-row gap-16 py-16 px-8 md:px-12 lg:px-20 relative bg-draft-bg">
       {/* Left side with illustrations */}
       <div className="md:w-1/2 relative flex items-center justify-center">
-        {/* Abstract shapes for illustration */}
-        <div className="relative w-full h-full max-w-md mx-auto">
-          {/* Top shape */}
-          <div className="absolute right-1/4 top-1/4 transform -translate-y-1/2">
-            <div className="relative w-32 h-32">
-              <div className="absolute inset-0 bg-draft-mint rounded-lg"></div>
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-draft-yellow rounded-full"></div>
+        <div className="relative w-full h-64 md:h-80 max-w-md mx-auto">
+          {/* Center circle */}
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="w-32 h-32 bg-draft-mint rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 bg-draft-yellow rounded-full"></div>
             </div>
           </div>
           
-          {/* Bottom shape */}
-          <div className="absolute left-1/4 bottom-1/4 transform translate-y-1/2">
-            <div className="flex items-end gap-4">
-              <div className="w-20 h-20 bg-draft-coral rounded-full"></div>
-              <div className="w-16 h-16 bg-draft-purple rounded-full mb-4"></div>
-            </div>
+          {/* Top left shape */}
+          <div className="absolute left-10 top-6">
+            <div className="w-16 h-16 bg-draft-coral rounded-full"></div>
+          </div>
+          
+          {/* Bottom right shape */}
+          <div className="absolute right-10 bottom-6">
+            <div className="w-16 h-16 bg-draft-purple rounded-full"></div>
           </div>
         </div>
       </div>
@@ -36,13 +36,13 @@ const HowToSection: React.FC = () => {
       </div>
       
       {/* Right side content */}
-      <div className="md:w-1/2 flex flex-col gap-12 md:pl-16">
+      <div className="md:w-1/2 flex flex-col gap-8 md:pl-16">
         {/* How To Badge */}
         <Badge className="bg-[#f1f1eb] text-draft-green hover:bg-[#f1f1eb] rounded-full px-6 py-2 w-fit uppercase font-semibold">
           HOW TO
         </Badge>
         
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-8">
           {/* Step 1 */}
           <div>
             <h3 className="text-2xl font-medium flex items-baseline gap-2 text-draft-green">
