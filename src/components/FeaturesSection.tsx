@@ -1,8 +1,56 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Scissors, Mic, Bot, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Define our feature data structure
+interface Feature {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  image: string;
+}
 
 const FeaturesSection: React.FC = () => {
+  // Features data with associated images
+  const features: Feature[] = [
+    {
+      id: 'cut-fluff',
+      icon: <Scissors className="text-draft-green" size={20} />,
+      title: 'Cut the fluff',
+      description: 'We trim what doesn't matter and spotlight what does — fast.',
+      image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
+    },
+    {
+      id: 'speak-language',
+      icon: <Mic className="text-draft-green" size={20} />,
+      title: 'Speak their language',
+      description: 'Match keywords and phrases from the job posting.',
+      image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
+    },
+    {
+      id: 'ats-friendly',
+      icon: <Bot className="text-draft-green" size={20} />,
+      title: 'ATS-friendly by default',
+      description: 'Designed to pass through Applicant Tracking Systems.',
+      image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
+    },
+    {
+      id: 'zero-guesswork',
+      icon: <Search className="text-draft-green" size={20} />,
+      title: 'Zero guesswork',
+      description: 'Follow our proven templates for guaranteed results.',
+      image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
+    }
+  ];
+
+  // State to track the currently selected feature
+  const [selectedFeature, setSelectedFeature] = useState<string>(features[0].id);
+
+  // Find the currently selected feature object
+  const currentFeature = features.find(feature => feature.id === selectedFeature) || features[0];
+
   return (
     <section className="py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto">
@@ -19,61 +67,40 @@ const FeaturesSection: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="lg:w-2/5">
             <div className="flex flex-col gap-10">
-              <div className="flex gap-4 items-start">
-                <div className="mt-1">
-                  <Scissors className="text-draft-green" size={20} />
+              {features.map((feature) => (
+                <div 
+                  key={feature.id}
+                  onClick={() => setSelectedFeature(feature.id)}
+                  className={cn(
+                    "flex gap-4 items-start p-4 rounded-lg transition-all duration-200 cursor-pointer",
+                    "hover:bg-gray-50",
+                    selectedFeature === feature.id && "bg-gray-100 border-l-4 border-draft-green"
+                  )}
+                >
+                  <div className="mt-1">
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h3 className={cn(
+                      "font-medium",
+                      selectedFeature === feature.id && "text-draft-green"
+                    )}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-draft-text opacity-70 mt-1">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium">Cut the fluff</h3>
-                  <p className="text-draft-text opacity-70 mt-1">
-                    We trim what doesn't matter and spotlight what does — fast.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4 items-start">
-                <div className="mt-1">
-                  <Mic className="text-draft-green" size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium">Speak their language</h3>
-                  <p className="text-draft-text opacity-70 mt-1">
-                    Match keywords and phrases from the job posting.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4 items-start">
-                <div className="mt-1">
-                  <Bot className="text-draft-green" size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium">ATS-friendly by default</h3>
-                  <p className="text-draft-text opacity-70 mt-1">
-                    Designed to pass through Applicant Tracking Systems.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4 items-start">
-                <div className="mt-1">
-                  <Search className="text-draft-green" size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium">Zero guesswork</h3>
-                  <p className="text-draft-text opacity-70 mt-1">
-                    Follow our proven templates for guaranteed results.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
           
           <div className="lg:w-3/5">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300">
               <img 
-                src="/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png" 
-                alt="DraftZero Resume Builder Interface" 
+                src={currentFeature.image} 
+                alt={`${currentFeature.title} - DraftZero Feature`} 
                 className="w-full object-contain"
               />
             </div>
