@@ -6,11 +6,13 @@ const FeaturesSection: React.FC = () => {
   return (
     <section className="py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-[#f1f1eb] inline-block px-4 py-2 rounded-md mb-8">
-          <span className="text-draft-green uppercase text-sm font-medium">What we offer</span>
+        <div className="flex justify-center mb-8">
+          <div className="bg-[#f1f1eb] px-4 py-2 rounded-md">
+            <span className="text-draft-green uppercase text-sm font-medium">What we offer</span>
+          </div>
         </div>
         
-        <h2 className="text-heading font-serif mb-12">
+        <h2 className="text-heading font-serif mb-12 text-center">
           Build zero-effort resumes with DraftZero
         </h2>
         
