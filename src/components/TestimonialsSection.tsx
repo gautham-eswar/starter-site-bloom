@@ -23,7 +23,7 @@ const TestimonialsSection: React.FC = () => {
             <span className="text-draft-green uppercase text-sm font-medium">Testimonials</span>
           </div>
           
-          <h2 className="text-3xl md:text-4xl font-serif text-center mb-6">
+          <h2 className="text-heading font-serif text-center mb-6">
             Hear from real people
           </h2>
           

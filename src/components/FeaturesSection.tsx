@@ -6,7 +6,7 @@ const FeaturesSection: React.FC = () => {
   return (
     <section className="py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-serif text-center mb-12">
+        <h2 className="text-heading font-serif text-center mb-12">
           Build zero-effort resumes with DraftZero
         </h2>
         

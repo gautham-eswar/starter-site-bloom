@@ -5,10 +5,10 @@ const StatsSection: React.FC = () => {
   return (
     <section className="bg-draft-bg py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif font-medium text-center">
+        <h2 className="text-heading font-serif font-medium text-center">
           Your resume gets rejected in 7 seconds, fix it in 6
         </h2>
-        <p className="text-center mt-3 text-gray-600">
+        <p className="text-center mt-3 text-draft-text opacity-70">
           Our AI doesn't fabricate experience, it intelligently enhances what you already have.
         </p>
         

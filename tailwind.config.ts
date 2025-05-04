@@ -63,10 +63,10 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         },
-        // Custom colors for Draft Zero
-        "draft-green": "#094C3A",
-        "draft-bg": "#FAF8F5",
-        "draft-text": "#1A1A1A",
+        // Updated custom colors for Draft Zero
+        "draft-green": "#0E3C26",
+        "draft-bg": "#FDFBF5",
+        "draft-text": "#0E3C26",
         "draft-coral": "#FF9D8C",
         "draft-mint": "#9AEBD0",
         "draft-purple": "#C4A1FF",
@@ -93,8 +93,12 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out'
       },
       fontFamily: {
-        'serif': ['EB Garamond', 'Georgia', 'serif'],
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'serif': ['GT Alpina Trial', 'Georgia', 'serif'],
+        'sans': ['GT Alpina Trial', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        'title': '72px',
+        'heading': '40px',
       }
     }
   },
