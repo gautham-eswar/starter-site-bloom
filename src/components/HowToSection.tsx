@@ -15,35 +15,8 @@ const HowToSection: React.FC = () => {
 
   return (
     <section className="flex flex-col md:flex-row py-16 px-8 md:px-12 lg:px-20 relative bg-draft-bg">
-      {/* Left side with illustrations */}
-      <div className="md:w-1/2 relative flex items-center justify-center">
-        <div className="relative w-full h-64 md:h-80 max-w-md mx-auto">
-          {/* Center illustration - mint background with yellow shape */}
-          <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
-            <div className="w-64 h-64 bg-draft-mint rounded-lg flex items-center justify-center">
-              <div className="w-40 h-40 bg-draft-yellow shape-blob"></div>
-            </div>
-          </div>
-          
-          {/* Top right coral blob */}
-          <div className="absolute right-4 top-4">
-            <div className="w-20 h-20 bg-draft-coral shape-blob"></div>
-          </div>
-          
-          {/* Bottom left purple blob */}
-          <div className="absolute bottom-4 left-4">
-            <div className="w-24 h-24 bg-draft-purple shape-blob"></div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Vertical divider line */}
-      <div className="hidden md:block absolute left-1/2 h-full -ml-px">
-        <Separator orientation="vertical" className="h-full bg-gray-300" />
-      </div>
-      
-      {/* Right side content */}
-      <div className="md:w-1/2 flex flex-col gap-8 md:pl-16 mt-8 md:mt-0">
+      {/* Left side content */}
+      <div className="md:w-1/2 flex flex-col gap-8 md:pr-16">
         {/* How To Badge */}
         <Badge className="bg-[#f1f1eb] text-draft-green hover:bg-[#f1f1eb] rounded-full px-6 py-2 w-fit uppercase font-semibold text-sm">
           HOW TO
@@ -83,11 +56,11 @@ const HowToSection: React.FC = () => {
                   placeholder="Add description" 
                   className="border-none h-[200px] focus-visible:ring-0 focus-visible:ring-offset-0 text-draft-green" 
                 />
-                <div className="p-3 border-t border-draft-green">
+                <div className="p-3 border-t border-draft-green flex items-center">
                   <Button
                     variant="ghost"
                     onClick={toggleWriteSection}
-                    className="text-draft-green hover:bg-transparent hover:text-draft-green/90"
+                    className="text-draft-green hover:bg-transparent hover:text-draft-green/90 p-0"
                   >
                     <ArrowLeft size={16} />
                   </Button>
@@ -111,6 +84,30 @@ const HowToSection: React.FC = () => {
           <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit mx-auto md:mx-0 px-8 py-6 rounded-full">
             Make it better
           </Button>
+        </div>
+      </div>
+      
+      {/* Vertical divider line */}
+      <div className="hidden md:block absolute left-1/2 h-full -ml-px">
+        <Separator orientation="vertical" className="h-full bg-gray-300" />
+      </div>
+      
+      {/* Right side with illustrations */}
+      <div className="md:w-1/2 mt-12 md:mt-0 md:pl-16 flex items-center justify-center">
+        {/* First illustration (top) */}
+        <div className="relative w-full max-w-md mx-auto">
+          <div className="w-[300px] h-[300px] bg-draft-mint rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-[200px] h-[200px] bg-draft-yellow shape-blob"></div>
+          </div>
+          
+          {/* Second illustration (bottom) - based on provided CSS */}
+          <div className="absolute bottom-8 right-16 flex flex-row justify-center items-center p-2 gap-2 isolation-isolate">
+            {/* Purple vector */}
+            <div className="absolute w-[58px] h-[58px] right-8 top-5 bg-[#E1D1F9] rounded-full z-0"></div>
+            
+            {/* Orange vector */}
+            <div className="absolute w-[87px] h-[87px] left-0 top-[23px] bg-[#F29C77] rounded-full z-10"></div>
+          </div>
         </div>
       </div>
     </section>
