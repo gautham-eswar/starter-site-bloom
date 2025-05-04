@@ -1,9 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 const HeroSection: React.FC = () => {
+  const [isWriteExpanded, setIsWriteExpanded] = useState(false);
+
+  const toggleWriteExpanded = () => {
+    setIsWriteExpanded(prev => !prev);
+  };
+
   return (
     <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="flex flex-col lg:flex-row gap-16">
@@ -41,9 +48,33 @@ const HeroSection: React.FC = () => {
                 <span className="text-draft-green">2.</span> Upload job description
               </h3>
               <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
-              <Button variant="ghost" className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1">
-                Write <ArrowRight size={16} />
-              </Button>
+              
+              {isWriteExpanded ? (
+                <div className="mt-4 border border-draft-green rounded-md h-[200px] flex flex-col">
+                  <Textarea 
+                    placeholder="Add description" 
+                    className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
+                  />
+                  <div className="border-t border-draft-green p-3">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={toggleWriteExpanded} 
+                      className="p-0 hover:bg-transparent"
+                    >
+                      <ArrowLeft size={16} className="text-draft-green" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={toggleWriteExpanded} 
+                  className="pl-0 mt-4 text-draft-green border-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1 rounded-full"
+                >
+                  Write <ArrowRight size={16} />
+                </Button>
+              )}
             </div>
             
             <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
