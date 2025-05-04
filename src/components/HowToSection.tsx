@@ -3,23 +3,44 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 const HowToSection: React.FC = () => {
   return (
     <section className="flex flex-col md:flex-row gap-16 py-16 px-8 md:px-12 lg:px-20 relative">
-      <div className="md:w-1/2 relative">
-        {/* Left side illustration - similar to the one in the image but using existing styles */}
+      {/* Left side with illustrations */}
+      <div className="md:w-1/2 relative flex items-center justify-center">
+        {/* Abstract shapes for illustration */}
+        <div className="relative w-full h-full max-w-md mx-auto">
+          {/* Top shape */}
+          <div className="absolute right-1/4 top-1/4 transform -translate-y-1/2">
+            <div className="relative w-32 h-32">
+              <div className="absolute inset-0 bg-draft-mint rounded-lg"></div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-draft-yellow rounded-full"></div>
+            </div>
+          </div>
+          
+          {/* Bottom shape */}
+          <div className="absolute left-1/4 bottom-1/4 transform translate-y-1/2">
+            <div className="flex items-end gap-4">
+              <div className="w-20 h-20 bg-draft-coral rounded-full"></div>
+              <div className="w-16 h-16 bg-draft-purple rounded-full mb-4"></div>
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Vertical divider line */}
       <div className="hidden md:block absolute left-1/2 h-full -ml-px">
-        <Separator orientation="vertical" className="h-full bg-gray-200" />
+        <Separator orientation="vertical" className="h-full bg-gray-300" />
       </div>
       
+      {/* Right side content */}
       <div className="md:w-1/2 flex flex-col gap-12 md:pl-16">
-        <div className="bg-[#f1f1eb] inline-self-start px-6 py-2 rounded-full">
-          <span className="text-draft-green uppercase text-sm font-semibold">HOW TO</span>
-        </div>
+        {/* How To Badge */}
+        <Badge className="bg-[#f1f1eb] text-draft-green hover:bg-[#f1f1eb] rounded-full px-6 py-2 w-fit uppercase font-semibold">
+          HOW TO
+        </Badge>
         
         <div className="flex flex-col gap-12">
           {/* Step 1 */}
@@ -32,23 +53,14 @@ const HowToSection: React.FC = () => {
             {/* Button with border */}
             <Button 
               variant="outline" 
-              className="mt-6 border border-draft-green text-draft-green hover:bg-transparent hover:text-draft-green/90 px-6"
+              className="mt-6 border-2 border-draft-green text-draft-green hover:bg-transparent hover:text-draft-green/90 px-6 rounded-full"
             >
               Upload <ArrowRight className="ml-2" size={16} />
             </Button>
-            
-            {/* Step 1 illustration */}
-            <div className="absolute right-20 top-40 hidden md:block">
-              <div className="relative w-36 h-36 bg-draft-mint rounded-lg">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 bg-draft-yellow rounded-full"></div>
-                </div>
-              </div>
-            </div>
           </div>
           
           {/* Horizontal separator */}
-          <Separator className="bg-gray-200" />
+          <Separator className="bg-gray-300" />
           
           {/* Step 2 */}
           <div>
@@ -60,25 +72,17 @@ const HowToSection: React.FC = () => {
             {/* Button with border */}
             <Button 
               variant="outline" 
-              className="mt-6 border border-draft-green text-draft-green hover:bg-transparent hover:text-draft-green/90 px-6"
+              className="mt-6 border-2 border-draft-green text-draft-green hover:bg-transparent hover:text-draft-green/90 px-6 rounded-full"
             >
               Write <ArrowRight className="ml-2" size={16} />
             </Button>
-            
-            {/* Step 2 illustration */}
-            <div className="absolute right-20 bottom-40 hidden md:block">
-              <div className="flex gap-4">
-                <div className="w-20 h-20 bg-draft-coral rounded-full"></div>
-                <div className="w-16 h-16 bg-draft-purple rounded-full mt-6"></div>
-              </div>
-            </div>
           </div>
           
           {/* Horizontal separator */}
-          <Separator className="bg-gray-200" />
+          <Separator className="bg-gray-300" />
           
           {/* Final button */}
-          <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit mx-auto md:mx-0 px-8 py-6">
+          <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit mx-auto md:mx-0 px-8 py-6 rounded-full">
             Make it better
           </Button>
         </div>
