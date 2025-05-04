@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Scissors, Mic, Robot, Search } from 'lucide-react';
+import { Scissors, Mic, Bot, Search } from 'lucide-react';
 
 const FeaturesSection: React.FC = () => {
   return (
@@ -43,7 +43,7 @@ const FeaturesSection: React.FC = () => {
               
               <div className="flex gap-4 items-start">
                 <div className="mt-1">
-                  <Robot className="text-draft-green" size={20} />
+                  <Bot className="text-draft-green" size={20} />
                 </div>
                 <div>
                   <h3 className="font-medium">ATS-friendly by default</h3>
