@@ -73,8 +73,8 @@ const FeaturesSection: React.FC = () => {
                   onClick={() => setSelectedFeature(feature.id)}
                   className={cn(
                     "flex gap-4 items-start p-4 rounded-lg transition-all duration-200 cursor-pointer",
-                    "hover:bg-gray-50",
-                    selectedFeature === feature.id && "bg-gray-100 border-l-4 border-draft-green"
+                    "hover:bg-[#EDEEE7]",
+                    selectedFeature === feature.id && "bg-[#EDEEE7] border-l-4 border-draft-green"
                   )}
                 >
                   <div className="mt-1">
