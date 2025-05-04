@@ -19,7 +19,7 @@ const FeaturesSection: React.FC = () => {
       id: 'cut-fluff',
       icon: <Scissors className="text-draft-green" size={20} />,
       title: 'Cut the fluff',
-      description: 'We trim what doesn't matter and spotlight what does — fast.',
+      description: "We trim what doesn't matter and spotlight what does — fast.",
       image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
     },
     {
