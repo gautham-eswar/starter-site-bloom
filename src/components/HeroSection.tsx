@@ -188,7 +188,7 @@ const HeroSection: React.FC = () => {
                       Uploaded and ready for enhancement: {uploadedFileName}
                     </p> : isUploading ?
                     <p className="text-sm text-draft-green mt-2">
-                      Uploading: {uploadedFileName}
+                      Uploading: {selectedFile.name}
                     </p> :
                     <Button 
                       variant="ghost" 
