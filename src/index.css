@@ -1,4 +1,3 @@
-
 /* Import GT Alpina Trial font */
 @font-face {
   font-family: 'GT Alpina Trial';
@@ -72,28 +71,28 @@
   
   .dark {
     --background: 158 45% 8%;
-    --foreground: 45 33% 97%;
+    --foreground: 65 100% 94%;
 
     --card: 158 40% 10%;
-    --card-foreground: 45 33% 97%;
+    --card-foreground: 65 100% 94%;
 
     --popover: 158 40% 10%;
-    --popover-foreground: 45 33% 97%;
+    --popover-foreground: 65 100% 94%;
 
     --primary: 65 100% 74%;
     --primary-foreground: 158 78% 17%;
 
     --secondary: 158 30% 15%;
-    --secondary-foreground: 45 33% 97%;
+    --secondary-foreground: 65 100% 94%;
 
     --muted: 158 30% 15%;
-    --muted-foreground: 45 10% 80%;
+    --muted-foreground: 65 100% 84%;
 
     --accent: 158 30% 15%;
-    --accent-foreground: 45 33% 97%;
+    --accent-foreground: 65 100% 94%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 45 33% 97%;
+    --destructive-foreground: 65 100% 94%;
 
     --border: 158 30% 15%;
     --input: 158 30% 15%;
@@ -107,7 +106,7 @@
   }
 
   body {
-    @apply bg-draft-bg text-draft-text dark:bg-draft-footer dark:text-white transition-colors duration-300;
+    @apply bg-draft-bg text-draft-text dark:bg-draft-footer dark:text-draft-yellow transition-colors duration-300;
     font-family: 'GT Alpina Trial', serif;
   }
 
@@ -133,6 +132,15 @@
   
   .dark .hover\:bg-draft-bg\/80:hover {
     @apply hover:bg-draft-green/80;
+  }
+  
+  /* Update Header sign in button in dark mode */
+  .dark .border-draft-green.text-draft-green {
+    @apply border-draft-yellow text-draft-yellow;
+  }
+  
+  .dark .hover\:text-draft-green:hover {
+    @apply hover:text-draft-yellow;
   }
 }
 
