@@ -3,12 +3,12 @@ import React from 'react';
 
 const StatsSection: React.FC = () => {
   return (
-    <section className="bg-[#F7F4ED] py-20 px-8 md:px-12 lg:px-20">
+    <section className="bg-[#F7F4ED] dark:bg-draft-footer py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-heading font-serif font-medium text-center">
+        <h2 className="text-heading font-serif font-medium text-center text-draft-green dark:text-draft-yellow">
           Your resume gets rejected in 7 seconds, fix it in 6
         </h2>
-        <p className="text-center mt-3 text-draft-text opacity-70">
+        <p className="text-center mt-3 text-draft-text dark:text-gray-300 opacity-70">
           Our AI doesn't fabricate experience, it intelligently enhances what you already have.
         </p>
         
@@ -21,8 +21,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium">40%</h3>
-            <p className="mt-2 text-center">A statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">40%</h3>
+            <p className="mt-2 text-center dark:text-gray-300">A statistic</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -33,8 +33,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium">100%</h3>
-            <p className="mt-2 text-center">Another statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">100%</h3>
+            <p className="mt-2 text-center dark:text-gray-300">Another statistic</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -45,8 +45,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium">2457</h3>
-            <p className="mt-2 text-center">Another statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">2457</h3>
+            <p className="mt-2 text-center dark:text-gray-300">Another statistic</p>
           </div>
         </div>
       </div>

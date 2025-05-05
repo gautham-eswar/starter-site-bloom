@@ -120,7 +120,7 @@
   }
   
   .dark .bg-[#F7F4ED] {
-    @apply bg-draft-green;
+    @apply bg-draft-footer;
   }
   
   .dark .text-draft-green {
@@ -146,7 +146,7 @@
 
   /* Updated text color for subtitle text in dark mode */
   .dark .text-draft-text {
-    @apply text-gray-200;
+    @apply text-gray-300;
   }
 
   /* Fix for "How to" badge/button in dark mode */

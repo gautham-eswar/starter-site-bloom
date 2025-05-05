@@ -18,7 +18,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
       onClick={toggleTheme}
       className={`rounded-full bg-transparent border ${
         theme === 'dark' 
-          ? 'border-draft-yellow/30 hover:bg-draft-yellow/10 hover:text-draft-yellow text-draft-yellow' 
+          ? 'border-draft-green/30 hover:bg-draft-green/10 hover:text-draft-green text-draft-green' 
           : 'border-white/30 hover:bg-white/10 hover:text-white text-white'
       } ${className}`}
       aria-label="Toggle theme"

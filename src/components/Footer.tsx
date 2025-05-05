@@ -10,11 +10,11 @@ const Footer: React.FC = () => {
         <div>
           <h2 className="text-3xl font-serif mb-6 text-draft-yellow dark:text-draft-green">Draft Zero</h2>
           <div className="flex gap-4">
-            <a href="#" className="bg-[#0E3C26] dark:bg-white p-3 rounded-lg hover:opacity-90 transition-opacity">
-              <Twitter size={20} className="text-white dark:text-draft-green" />
+            <a href="#" className="bg-[#0E3C26] dark:bg-draft-green p-3 rounded-lg hover:opacity-90 transition-opacity">
+              <Twitter size={20} className="text-white dark:text-white" />
             </a>
-            <a href="#" className="bg-[#0E3C26] dark:bg-white p-3 rounded-lg hover:opacity-90 transition-opacity">
-              <Instagram size={20} className="text-white dark:text-draft-green" />
+            <a href="#" className="bg-[#0E3C26] dark:bg-draft-green p-3 rounded-lg hover:opacity-90 transition-opacity">
+              <Instagram size={20} className="text-white dark:text-white" />
             </a>
             <ThemeToggle className="ml-2" />
           </div>
