@@ -14,37 +14,19 @@ const StatsSection: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
           <div className="flex flex-col items-center">
-            <div className="mb-8 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/10c86fba-7dd2-4419-ac9b-07f4203ce297.png" 
-                alt="Purple statistic icon" 
-                className="w-[160px] h-[160px]" 
-              />
-            </div>
+            <div className="shape-blob w-20 h-20 bg-draft-purple mb-8 flex items-center justify-center"></div>
             <h3 className="text-4xl md:text-5xl font-serif font-medium">40%</h3>
             <p className="mt-2 text-center">A statistic</p>
           </div>
           
           <div className="flex flex-col items-center">
-            <div className="mb-8 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/21a3eeff-fd79-41e3-a871-8757e822189c.png" 
-                alt="Coral statistic icon" 
-                className="w-[160px] h-[160px]" 
-              />
-            </div>
+            <div className="shape-blob w-20 h-20 bg-draft-coral mb-8 flex items-center justify-center"></div>
             <h3 className="text-4xl md:text-5xl font-serif font-medium">100%</h3>
             <p className="mt-2 text-center">Another statistic</p>
           </div>
           
           <div className="flex flex-col items-center">
-            <div className="mb-8 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/650405ee-0627-4260-9765-779aee5d9699.png" 
-                alt="Mint statistic icon" 
-                className="w-[160px] h-[160px]" 
-              />
-            </div>
+            <div className="shape-blob w-20 h-20 bg-draft-mint mb-8 flex items-center justify-center"></div>
             <h3 className="text-4xl md:text-5xl font-serif font-medium">2457</h3>
             <p className="mt-2 text-center">Another statistic</p>
           </div>
