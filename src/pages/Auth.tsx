@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -99,11 +98,10 @@ const Auth: React.FC = () => {
 
   const handleGoogleAuth = async () => {
     try {
-      // Using the Google Client ID you provided
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/`,
           queryParams: {
             prompt: 'select_account',
           }

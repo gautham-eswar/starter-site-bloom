@@ -31,6 +31,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+
+  // Handle hash fragment redirect (when coming back from OAuth)
+  useEffect(() => {
+    // Check if we have an access token in the URL hash
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      // Process the hash to retrieve session
+      supabase.auth.getSessionFromUrl()
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Error getting session from URL:', error);
+            toast({
+              title: 'Authentication error',
+              description: error.message,
+              variant: 'destructive',
+            });
+          } else if (data?.session) {
+            setSession(data.session);
+            setUser(data.session.user);
+            toast({
+              title: 'Signed in successfully',
+              description: `Welcome ${data.session.user.email}!`,
+            });
+            // Clean up URL by replacing the current hash with nothing
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Redirect to home page
+            navigate('/');
+          }
+        });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     // Handle auth changes and maintain state between page refreshes
