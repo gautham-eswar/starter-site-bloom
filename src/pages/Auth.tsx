@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  // Only add the name field if it's going to be used
 });
 
 const Auth: React.FC = () => {
@@ -54,7 +56,7 @@ const Auth: React.FC = () => {
   const handleEmailAuth = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const { email, password, name } = values;
+      const { email, password } = values;
       
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
@@ -62,8 +64,8 @@ const Auth: React.FC = () => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
-            data :{
-              "Display Name": name
+            data: {
+              "Display Name": ""
             }
           }
         });
@@ -140,25 +142,11 @@ const Auth: React.FC = () => {
           <div className="bg-white dark:bg-draft-footer/30 p-8 rounded-lg shadow-sm border border-[#e6e6e0] dark:border-draft-footer">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleEmailAuth)} className="space-y-4">
-                {!isSignUp? "":
-                <FormField
-                  control={form.control}
-                  name="user_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-draft-green dark:text-draft-yellow">Name</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Your name here" 
-                          disabled={isLoading}
-                          className="bg-[#F7F4ED] dark:bg-draft-footer/50 border-[#e6e6e0] dark:border-draft-footer"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />}
+                {isSignUp ? (
+                  <div className="text-sm text-draft-text dark:text-gray-300 mb-4">
+                    Display name will be configured after signup
+                  </div>
+                ) : null}
                 <FormField
                   control={form.control}
                   name="email"

@@ -41,7 +41,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 // Upload resume
-export async function uploadResume(file: File, userId: String) {
+export async function uploadResume(file: File, userId: string) {
   const formData = new FormData();
   
   formData.append("file", file);
