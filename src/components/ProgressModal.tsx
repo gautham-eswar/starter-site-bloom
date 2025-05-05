@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { CircleCheck, Rocket, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ProgressModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ProgressModalProps {
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const navigate = useNavigate();
 
   const steps = [
     { name: 'Uploading resume', icon: <Rocket className="text-draft-coral" /> },
@@ -33,6 +35,11 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
           setCurrentStep(prevStep => {
             if (prevStep >= steps.length - 1) {
               clearInterval(timer);
+              // Navigate to comparison page when all steps are complete
+              setTimeout(() => {
+                onOpenChange(false);
+                navigate('/comparison');
+              }, 500);
               return prevStep;
             }
             return prevStep + 1;
@@ -44,7 +51,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     }, 100);
 
     return () => clearInterval(timer);
-  }, [isOpen, steps.length]);
+  }, [isOpen, steps.length, navigate, onOpenChange]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
