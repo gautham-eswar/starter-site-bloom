@@ -33,29 +33,24 @@ const HeroSection: React.FC = () => {
           </div>
           
           <div className="flex flex-col gap-10">
-            <div className="relative">
-              <h3 className="text-xl font-medium flex items-baseline gap-2">
-                <span className="text-draft-green">1.</span> Upload resume
-              </h3>
-              <p className="text-draft-text opacity-70 mt-1">We will use this resume as a base.</p>
-              <div className="flex justify-between items-center">
+            <div className="relative flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-medium flex items-baseline gap-2">
+                  <span className="text-draft-green">1.</span> Upload resume
+                </h3>
+                <p className="text-draft-text opacity-70 mt-1">We will use this resume as a base.</p>
                 <Button variant="ghost" className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1">
                   Upload <ArrowRight size={16} />
                 </Button>
-                <img 
-                  src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" 
-                  alt="Decorative element" 
-                  className="w-32 h-32" 
-                />
               </div>
+              <img 
+                src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" 
+                alt="Decorative element" 
+                className="w-24 h-24" 
+              />
             </div>
             
             <div className="relative">
-              <h3 className="text-xl font-medium flex items-baseline gap-2">
-                <span className="text-draft-green">2.</span> Upload job description
-              </h3>
-              <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
-              
               {isWriteExpanded ? (
                 <div className="mt-4 border border-draft-green rounded-md h-[200px] flex flex-col">
                   <Textarea 
@@ -75,17 +70,23 @@ const HeroSection: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex justify-between items-center">
-                  <Button 
-                    variant="ghost" 
-                    onClick={toggleWriteExpanded} 
-                    className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
-                  >
-                    Write <ArrowRight size={16} />
-                  </Button>
+                  <div>
+                    <h3 className="text-xl font-medium flex items-baseline gap-2">
+                      <span className="text-draft-green">2.</span> Upload job description
+                    </h3>
+                    <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
+                    <Button 
+                      variant="ghost" 
+                      onClick={toggleWriteExpanded} 
+                      className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
+                    >
+                      Write <ArrowRight size={16} />
+                    </Button>
+                  </div>
                   <img 
                     src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
                     alt="Decorative element" 
-                    className="w-32 h-32" 
+                    className="w-24 h-24" 
                   />
                 </div>
               )}
