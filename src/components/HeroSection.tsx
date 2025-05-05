@@ -60,7 +60,7 @@ const HeroSection: React.FC = () => {
   };
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     
-    if (!selectedFile){
+    if (!selectedFile || isUploading){
       return;
     }
     
