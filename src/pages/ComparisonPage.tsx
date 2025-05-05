@@ -31,8 +31,8 @@ const ComparisonPage: React.FC = () => {
     <div className="min-h-screen bg-draft-bg">
       <Header />
       
-      <main className="px-8 py-12 md:px-12 lg:px-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+      <main className="px-8 py-6 md:px-12 lg:px-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
           {/* Left side - Improvements */}
           <div className="space-y-8">
             <h2 className="text-2xl font-serif text-draft-green">Improvements</h2>
