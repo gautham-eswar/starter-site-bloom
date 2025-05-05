@@ -3,7 +3,7 @@ import React from 'react';
 
 const StatsSection: React.FC = () => {
   return (
-    <section className="bg-[#F7F4ED] dark:bg-draft-footer py-20 px-8 md:px-12 lg:px-20">
+    <section className="bg-[#F7F4ED] dark:bg-[#0A2218] py-20 px-8 md:px-12 lg:px-20">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-heading font-serif font-medium text-center text-draft-green dark:text-draft-yellow">
           Your resume gets rejected in 7 seconds, fix it in 6
