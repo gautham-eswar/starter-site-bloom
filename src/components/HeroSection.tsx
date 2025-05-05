@@ -88,7 +88,10 @@ const HeroSection: React.FC = () => {
             </div>
             
             <div className="mt-4">
-              <Button onClick={handleMakeItBetter} className="bg-[#0A2218] hover:bg-[#0A2218]/90 text-white dark:bg-draft-yellow dark:text-[#0A2218] dark:hover:bg-draft-yellow/90 w-fit">
+              <Button 
+                onClick={handleMakeItBetter} 
+                className="bg-[#0A2218] hover:bg-[#0A2218]/90 text-white dark:bg-draft-yellow dark:text-[#0A2218] dark:hover:bg-draft-yellow/90 w-fit"
+              >
                 Make it better
               </Button>
             </div>
