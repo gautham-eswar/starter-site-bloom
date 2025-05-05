@@ -48,8 +48,8 @@ export async function uploadResume(file: File, userId: String) {
   if (userId) {
       formData.append('user_id', userId);
   }
-  
-  return apiRequest("/upload", {
+  console.log(`Starting resume upload from user ID: ${userId}`)
+  return await apiRequest("/upload", {
     method: "POST",
     headers: {}, // Let browser set content-type for FormData
     body: formData,

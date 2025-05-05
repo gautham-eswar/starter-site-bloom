@@ -53,6 +53,7 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
+    console.log(`File selected: ${file.name}`)
     
     setIsUploading(true);
     setUploadedFileName(file.name);
