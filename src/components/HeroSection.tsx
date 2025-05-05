@@ -51,45 +51,48 @@ const HeroSection: React.FC = () => {
             </div>
             
             <div className="relative">
-              {isWriteExpanded ? (
-                <div className="mt-4 border border-draft-green rounded-md h-[200px] flex flex-col">
-                  <Textarea 
-                    placeholder="Add description" 
-                    className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
-                  />
-                  <div className="border-t border-draft-green p-3">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={toggleWriteExpanded} 
-                      className="p-0 hover:bg-transparent"
-                    >
-                      <ArrowLeft size={16} className="text-draft-green" />
-                    </Button>
-                  </div>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-medium flex items-baseline gap-2">
+                    <span className="text-draft-green">2.</span> Upload job description
+                  </h3>
+                  <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
                 </div>
-              ) : (
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-medium flex items-baseline gap-2">
-                      <span className="text-draft-green">2.</span> Upload job description
-                    </h3>
-                    <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
-                    <Button 
-                      variant="ghost" 
-                      onClick={toggleWriteExpanded} 
-                      className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
-                    >
-                      Write <ArrowRight size={16} />
-                    </Button>
+                <img 
+                  src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
+                  alt="Decorative element" 
+                  className="w-24 h-24" 
+                />
+              </div>
+              
+              <div className="mt-4">
+                {isWriteExpanded ? (
+                  <div className="border border-draft-green rounded-md h-[200px] flex flex-col">
+                    <Textarea 
+                      placeholder="Add description" 
+                      className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
+                    />
+                    <div className="border-t border-draft-green p-3">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={toggleWriteExpanded} 
+                        className="p-0 hover:bg-transparent"
+                      >
+                        <ArrowLeft size={16} className="text-draft-green" />
+                      </Button>
+                    </div>
                   </div>
-                  <img 
-                    src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
-                    alt="Decorative element" 
-                    className="w-24 h-24" 
-                  />
-                </div>
-              )}
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    onClick={toggleWriteExpanded} 
+                    className="pl-0 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
+                  >
+                    Write <ArrowRight size={16} />
+                  </Button>
+                )}
+              </div>
             </div>
             
             <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
