@@ -95,21 +95,23 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
           </div>
           
           <div className="mt-8 text-center">
-            {isComplete ? (
+            <div className="flex flex-col items-center gap-2">
+              {!isComplete && (
+                <p className="text-draft-green italic mb-4">
+                  {currentStep === 0 && "Preparing to make magic..."}
+                  {currentStep === 1 && "Finding the perfect words..."}
+                  {currentStep === 2 && "Adding that special touch..."}
+                  {currentStep === 3 && "Almost ready to shine!"}
+                </p>
+              )}
+              
               <Button 
                 className="bg-draft-green hover:bg-draft-green/90 text-white"
                 onClick={handleDoneClick}
               >
                 Done
               </Button>
-            ) : (
-              <p className="text-draft-green italic">
-                {currentStep === 0 && "Preparing to make magic..."}
-                {currentStep === 1 && "Finding the perfect words..."}
-                {currentStep === 2 && "Adding that special touch..."}
-                {currentStep === 3 && "Almost ready to shine!"}
-              </p>
-            )}
+            </div>
           </div>
         </div>
       </DialogContent>
