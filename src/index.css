@@ -160,6 +160,21 @@
   .dark .text-draft-text.opacity-70 {
     @apply text-gray-300;
   }
+  
+  /* Features section and Testimonials section heading in dark mode */
+  .dark .bg-\[\#e6e6e0\] {
+    @apply bg-draft-green/20;
+  }
+  
+  /* Background for testimonial cards in dark mode */
+  .dark .bg-white {
+    @apply bg-draft-green/10;
+  }
+  
+  /* Border for testimonial cards in dark mode */
+  .dark .border-\[\#1D5F5B\] {
+    @apply border-draft-green/30;
+  }
 }
 
 .shape-blob {
