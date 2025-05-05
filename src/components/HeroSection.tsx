@@ -13,9 +13,9 @@ const HeroSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
-      <div className="flex flex-col lg:flex-row gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
-        <div className="lg:w-1/2 flex flex-col justify-center">
+        <div className="flex flex-col justify-center">
           <div className="max-w-2xl">
             <h1 className="text-title font-serif font-medium text-draft-green leading-tight">
               Build a resume that wins <span className="italic">every</span> time.
@@ -27,13 +27,13 @@ const HeroSection: React.FC = () => {
         </div>
         
         {/* Right side - How to section */}
-        <div className="lg:w-1/2 relative">
+        <div className="relative">
           <div className="bg-[#f1f1eb] inline-block px-4 py-2 rounded-md mb-8">
             <span className="text-draft-green uppercase text-sm font-medium">How to</span>
           </div>
           
           <div className="flex flex-col gap-10">
-            <div className="relative flex justify-between items-center">
+            <div className="relative flex items-center h-24">
               <div>
                 <h3 className="text-xl font-medium flex items-baseline gap-2">
                   <span className="text-draft-green">1.</span> Upload resume
@@ -43,26 +43,30 @@ const HeroSection: React.FC = () => {
                   Upload <ArrowRight size={16} />
                 </Button>
               </div>
-              <img 
-                src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" 
-                alt="Decorative element" 
-                className="w-24 h-24" 
-              />
+              <div className="absolute right-0 h-full flex items-center">
+                <img 
+                  src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" 
+                  alt="Decorative element" 
+                  className="w-24 h-24" 
+                />
+              </div>
             </div>
             
-            <div className="relative min-h-[150px]">
-              <div className="flex justify-between items-center">
+            <div className="relative min-h-[200px]">
+              <div className="flex items-center h-24 relative">
                 <div>
                   <h3 className="text-xl font-medium flex items-baseline gap-2">
                     <span className="text-draft-green">2.</span> Upload job description
                   </h3>
                   <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
                 </div>
-                <img 
-                  src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
-                  alt="Decorative element" 
-                  className="w-24 h-24" 
-                />
+                <div className="absolute right-0 h-full flex items-center">
+                  <img 
+                    src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
+                    alt="Decorative element" 
+                    className="w-24 h-24" 
+                  />
+                </div>
               </div>
               
               <div className="mt-4">
