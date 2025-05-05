@@ -65,17 +65,19 @@ const HeroSection: React.FC = () => {
     }
     
     setIsUploading(true);
-    setUploadedFileName(file.name);
     
     try {
-      const response = await uploadResume(file, user.id);
+      const response = await uploadResume(selectedFile, user.id);
       if (response && response.resume_id) {
         setResumeId(response.resume_id);
+        setUploadedFileName(selectedFile.name);
+        
         toast({
           title: "Resume uploaded",
           description: "Your resume has been successfully uploaded",
         });
         console.log(`Resume successfully uploaded with ID ${response.resume_id}`)
+        
         // Auto expand the job description textarea
         if (!isWriteExpanded) {
           setIsWriteExpanded(true);
