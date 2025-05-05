@@ -1,3 +1,4 @@
+
 /* Import GT Alpina Trial font */
 @font-face {
   font-family: 'GT Alpina Trial';
@@ -200,6 +201,11 @@
   /* Fix for dark mode "Make it better" button text */
   .dark .bg-draft-yellow.text-draft-green {
     color: #0E3C26 !important; /* Make it dark green in dark mode with !important to ensure it applies */
+  }
+
+  /* Authentication page specific dark mode overrides */
+  .dark .border-\[\#e6e6e0\] {
+    border-color: #1E433A;
   }
 }
 
