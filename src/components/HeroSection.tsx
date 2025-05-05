@@ -8,6 +8,7 @@ import { useResumeContext } from '@/contexts/ResumeContext';
 import { uploadResume, optimizeResume } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
