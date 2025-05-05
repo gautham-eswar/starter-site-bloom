@@ -107,7 +107,7 @@
   }
 
   body {
-    @apply bg-draft-bg text-draft-text dark:bg-draft-footer dark:text-draft-yellow transition-colors duration-300;
+    @apply bg-draft-bg text-draft-text dark:bg-[#0A2920] dark:text-draft-yellow transition-colors duration-300;
     font-family: 'GT Alpina Trial', serif;
   }
 
@@ -116,7 +116,7 @@
   }
   
   .dark .bg-draft-bg {
-    @apply bg-draft-footer;
+    @apply bg-[#0A2920];
   }
   
   .dark .bg-[#F7F4ED] {
@@ -181,8 +181,8 @@
     @apply bg-[#0A2218];
   }
   
-  /* Footer in dark mode (light mode colors) */
-  .dark .bg-draft-footer {
+  /* Footer in dark mode */
+  .dark .bg-\[\#0A2920\] {
     @apply bg-draft-bg;
   }
   

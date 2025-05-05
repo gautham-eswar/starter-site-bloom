@@ -5,7 +5,7 @@ import ThemeToggle from './theme/ThemeToggle';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-draft-footer dark:bg-draft-bg text-white dark:text-draft-green py-16 px-8 md:px-12 lg:px-20">
+    <footer className="bg-[#0A2920] dark:bg-draft-bg text-white dark:text-draft-green py-16 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
           <h2 className="text-3xl font-serif mb-6 text-draft-yellow dark:text-draft-green">Draft Zero</h2>
