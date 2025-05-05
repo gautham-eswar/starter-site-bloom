@@ -140,6 +140,25 @@ const Auth: React.FC = () => {
           <div className="bg-white dark:bg-draft-footer/30 p-8 rounded-lg shadow-sm border border-[#e6e6e0] dark:border-draft-footer">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleEmailAuth)} className="space-y-4">
+                {!isSignUp? "":
+                <FormField
+                  control={form.control}
+                  name="user_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-draft-green dark:text-draft-yellow">Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Your name here" 
+                          disabled={isLoading}
+                          className="bg-[#F7F4ED] dark:bg-draft-footer/50 border-[#e6e6e0] dark:border-draft-footer"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />}
                 <FormField
                   control={form.control}
                   name="email"
@@ -177,25 +196,6 @@ const Auth: React.FC = () => {
                     </FormItem>
                   )}
                 />
-                {isSignUp? "":
-                <FormField
-                  control={form.control}
-                  name="user_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-draft-green dark:text-draft-yellow">Name</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Your name here" 
-                          disabled={isLoading}
-                          className="bg-[#F7F4ED] dark:bg-draft-footer/50 border-[#e6e6e0] dark:border-draft-footer"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />}
                 
                 <Button 
                   type="submit" 
