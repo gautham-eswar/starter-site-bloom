@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -18,7 +19,30 @@ const formSchema = z.object({
 const Auth: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // Check for error parameter in URL (from OAuth redirect)
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    
+    if (error) {
+      toast({
+        title: 'Authentication error',
+        description: errorDescription || 'There was an error during authentication',
+        variant: 'destructive',
+      });
+    }
+  }, [searchParams]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,6 +61,9 @@ const Auth: React.FC = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          }
         });
         
         if (error) throw error;
@@ -76,6 +103,10 @@ const Auth: React.FC = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       });
       

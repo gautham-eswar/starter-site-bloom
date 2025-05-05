@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   session: Session | null;
@@ -34,8 +35,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        if (event === 'SIGNED_IN') {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          toast({
+            title: 'Signed in successfully',
+            description: `Welcome ${newSession?.user?.email}!`,
+          });
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          toast({
+            title: 'Signed out',
+            description: 'You have been signed out successfully.',
+          });
+        } else if (event === 'TOKEN_REFRESHED') {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+        } else {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+        }
         setIsLoading(false);
       }
     );
@@ -53,7 +73,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error: any) {
+      toast({
+        title: 'Error signing out',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   };
 
   const value = {
