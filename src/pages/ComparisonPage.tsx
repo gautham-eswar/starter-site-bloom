@@ -85,7 +85,7 @@ const ComparisonPage: React.FC = () => {
           </div>
           
           {/* Right side - Resume Preview */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-[#F7F4ED] p-6 rounded-lg">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-serif text-draft-green">Resume Preview</h2>
               <Button className="bg-draft-green hover:bg-draft-green/90 text-white">
@@ -93,7 +93,7 @@ const ComparisonPage: React.FC = () => {
               </Button>
             </div>
             
-            <div className="rounded-lg bg-[#F7F4ED] p-6 h-[600px] overflow-auto">
+            <div className="bg-white rounded-lg p-6 h-[600px] overflow-auto">
               <div className="space-y-6">
                 <div className="text-center">
                   <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>
