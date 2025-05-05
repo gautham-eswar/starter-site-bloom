@@ -1,4 +1,3 @@
-
 /* Import GT Alpina Trial font */
 @font-face {
   font-family: 'GT Alpina Trial';
@@ -107,7 +106,11 @@
   }
 
   body {
-    @apply bg-draft-bg text-draft-text dark:bg-[#0A2920] dark:text-draft-yellow transition-colors duration-300;
+    @apply bg-draft-bg text-draft-text dark:text-draft-yellow transition-colors duration-300;
+    background-color: theme('colors.draft-bg');
+    .dark & {
+      background-color: #0A2920;
+    }
     font-family: 'GT Alpina Trial', serif;
   }
 
@@ -116,7 +119,7 @@
   }
   
   .dark .bg-draft-bg {
-    @apply bg-[#0A2920];
+    background-color: #0A2920;
   }
   
   .dark .bg-[#F7F4ED] {
@@ -183,7 +186,7 @@
   
   /* Footer in dark mode */
   .dark .bg-\[\#0A2920\] {
-    @apply bg-draft-bg;
+    background-color: #FDFBF5; /* Use the draft-bg color value directly instead of @apply */
   }
   
   /* Fix for feature section hover and selected states */
