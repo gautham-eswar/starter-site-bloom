@@ -13,9 +13,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, selectFile] = useState<File | null>(null)
-  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {user} = useAuth();
   
@@ -54,45 +53,14 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-    console.log(`File selected: ${file.name}`)
-    selectFile(file)
     
-  };
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    // Just store the file for later processing
+    console.log(`File selected: ${file.name}`);
+    setSelectedFile(file);
     
-    if (!selectedFile || isUploading){
-      return;
-    }
-    
-    setIsUploading(true);
-    
-    try {
-      const response = await uploadResume(selectedFile, user.id);
-      if (response && response.resume_id) {
-        setResumeId(response.resume_id);
-        setUploadedFileName(selectedFile.name);
-        
-        toast({
-          title: "Resume uploaded",
-          description: "Your resume has been successfully uploaded",
-        });
-        console.log(`Resume successfully uploaded with ID ${response.resume_id}`)
-        
-        // Auto expand the job description textarea
-        if (!isWriteExpanded) {
-          setIsWriteExpanded(true);
-        }
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
-        variant: "destructive",
-      });
-      setUploadedFileName(null);
-    } finally {
-      setIsUploading(false);
+    // Auto expand the job description textarea when a file is selected
+    if (!isWriteExpanded) {
+      setIsWriteExpanded(true);
     }
   };
 
@@ -101,10 +69,10 @@ const HeroSection: React.FC = () => {
   };
 
   const handleMakeItBetter = async () => {
-    if (!resumeId) {
+    if (!selectedFile) {
       toast({
-        title: "No resume uploaded",
-        description: "Please upload a resume first",
+        title: "No resume selected",
+        description: "Please select a resume file first",
         variant: "destructive",
       });
       return;
@@ -119,23 +87,42 @@ const HeroSection: React.FC = () => {
       return;
     }
     
-    setIsOptimizing(true);
+    setIsProcessing(true);
     setIsProgressModalOpen(true);
+    setIsOptimizing(true);
     
     try {
-      const response = await optimizeResume(resumeId, jobDescription);
-      if (response && response.job_id) {
-        setJobId(response.job_id);
+      // First upload the resume
+      const uploadResponse = await uploadResume(selectedFile, user.id);
+      
+      if (!uploadResponse || !uploadResponse.resume_id) {
+        throw new Error("Failed to upload resume");
       }
+      
+      // Store the resume ID
+      setResumeId(uploadResponse.resume_id);
+      
+      // Then optimize it
+      const optimizeResponse = await optimizeResume(uploadResponse.resume_id, jobDescription);
+      
+      if (!optimizeResponse || !optimizeResponse.job_id) {
+        throw new Error("Failed to optimize resume");
+      }
+      
+      // Store the job ID
+      setJobId(optimizeResponse.job_id);
+      
     } catch (error) {
-      console.error("Optimization error:", error);
+      console.error("Process error:", error);
       toast({
-        title: "Optimization failed",
-        description: "There was an error optimizing your resume. Please try again.",
+        title: "Process failed",
+        description: "There was an error processing your resume. Please try again.",
         variant: "destructive",
       });
       setIsProgressModalOpen(false);
       setIsOptimizing(false);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -179,23 +166,17 @@ const HeroSection: React.FC = () => {
                   variant="ghost" 
                   className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
                   onClick={handleUploadClick}
-                  disabled={isUploading}
+                  disabled={isProcessing}
                 >
-                  {isUploading ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
+                  {isProcessing ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {
                   selectedFile && (
-                    uploadedFileName == selectedFile.name ?
                     <p className="text-sm text-draft-green mt-2">
-                      Uploaded and ready for enhancement: {uploadedFileName}
-                    </p> : 
-                    <p className="text-sm text-draft-green mt-2" onClick = {handleFileUpload}>
-                      {isUploading?"Selected File":"Upload"}: {selectedFile.name}
+                      Selected: {selectedFile.name}
                     </p>
                   )
-                  
                 }
-                
               </div>
               <div className="absolute right-0 h-full flex items-center">
                 <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
@@ -223,7 +204,6 @@ const HeroSection: React.FC = () => {
                       className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70"
                       value={jobDescription}
                       onChange={handleJobDescriptionChange}
-                      disabled={!resumeId}
                     />
                     <div className="border-t border-draft-green dark:border-draft-yellow p-3">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
@@ -236,7 +216,6 @@ const HeroSection: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       onClick={toggleWriteExpanded} 
-                      disabled={!resumeId}
                       className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
                     >
                       Write <ArrowRight size={16} />
@@ -250,7 +229,7 @@ const HeroSection: React.FC = () => {
               <Button 
                 onClick={handleMakeItBetter} 
                 className="bg-[#0A2218] text-white hover:bg-[#0A2218]/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 w-fit"
-                disabled={!resumeId || !jobDescription.trim() || isUploading}
+                disabled={!selectedFile || !jobDescription.trim() || isProcessing}
               >
                 Make it better
               </Button>
