@@ -15,6 +15,7 @@ const HeroSection: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const {user} = useAuth();
   
   const { 
     resumeId, 
@@ -56,7 +57,7 @@ const HeroSection: React.FC = () => {
     setUploadedFileName(file.name);
     
     try {
-      const response = await uploadResume(file);
+      const response = await uploadResume(file, user.id);
       if (response && response.resume_id) {
         setResumeId(response.resume_id);
         toast({
