@@ -101,9 +101,11 @@ const HeroSection: React.FC = () => {
               </div>
             </div>
             
-            <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit mt-2">
-              Make it better
-            </Button>
+            <div className="mt-10">
+              <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
+                Make it better
+              </Button>
+            </div>
           </div>
         </div>
       </div>

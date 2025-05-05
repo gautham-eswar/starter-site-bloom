@@ -7,13 +7,13 @@ const Footer: React.FC = () => {
     <footer className="bg-draft-footer text-white py-16 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
-          <h2 className="text-3xl font-serif mb-6">Draft Zero</h2>
+          <h2 className="text-3xl font-serif mb-6 text-[#E9FA93]">Draft Zero</h2>
           <div className="flex gap-4">
-            <a href="#" className="text-white hover:text-gray-300">
-              <Twitter size={20} />
+            <a href="#" className="bg-[#0E3C26] p-3 rounded-lg hover:opacity-90 transition-opacity">
+              <Twitter size={20} className="text-white" />
             </a>
-            <a href="#" className="text-white hover:text-gray-300">
-              <Instagram size={20} />
+            <a href="#" className="bg-[#0E3C26] p-3 rounded-lg hover:opacity-90 transition-opacity">
+              <Instagram size={20} className="text-white" />
             </a>
           </div>
         </div>
