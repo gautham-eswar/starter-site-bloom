@@ -188,17 +188,10 @@ const HeroSection: React.FC = () => {
                     uploadedFileName == selectedFile.name ?
                     <p className="text-sm text-draft-green mt-2">
                       Uploaded and ready for enhancement: {uploadedFileName}
-                    </p> : isUploading ?
-                    <p className="text-sm text-draft-green mt-2">
-                      Uploading: {selectedFile.name}
-                    </p> :
-                    <Button 
-                      variant="ghost" 
-                      className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center"
-                      onClick={handleFileUpload}
-                    >
-                    {isUploading ? `Uploading ${selectedFile.name}` : `Upload ${selectedFile.name}`} <ArrowRight size={16} />
-                  </Button>
+                    </p> : 
+                    <p className="text-sm text-draft-green mt-2" onClick = {handleFileUpload}>
+                      {isUploading?"Selected File":"Upload"}: {selectedFile.name}
+                    </p>
                   )
                   
                 }
