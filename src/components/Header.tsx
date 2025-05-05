@@ -11,7 +11,7 @@ const Header: React.FC = () => {
         <Link to="/" className="logo text-draft-green font-serif text-2xl font-medium hover:opacity-90 transition-opacity">
           draft_zero
         </Link>
-        <ThemeToggle className="ml-2" />
+        <ThemeToggle className="ml-1" />
       </div>
       <div className="flex items-center gap-4">
         <Button variant="outline" className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80">
