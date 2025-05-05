@@ -120,7 +120,7 @@
   }
   
   .dark .bg-[#F7F4ED] {
-    @apply bg-draft-footer;
+    @apply bg-[#0A2218];
   }
   
   .dark .text-draft-green {
@@ -174,6 +174,21 @@
   /* Border for testimonial cards in dark mode */
   .dark .border-\[\#1D5F5B\] {
     @apply border-draft-green/30;
+  }
+  
+  /* Stats section in dark mode */
+  .dark .bg-\[\#F7F4ED\] {
+    @apply bg-[#0A2218];
+  }
+  
+  /* Footer in dark mode (light mode colors) */
+  .dark .bg-draft-footer {
+    @apply bg-draft-bg;
+  }
+  
+  /* Fix for feature section hover and selected states */
+  .dark .bg-\[\#EDEEE7\] {
+    @apply bg-draft-green/20;
   }
 }
 
