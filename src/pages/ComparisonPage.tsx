@@ -32,15 +32,6 @@ const ComparisonPage: React.FC = () => {
       <Header />
       
       <main className="px-8 py-12 md:px-12 lg:px-20">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-8">
-            <button className="text-draft-green font-medium border-b-2 border-draft-green pb-2">Tab 1</button>
-            <button className="text-draft-green opacity-70 hover:opacity-100 pb-2">Tab 2</button>
-            <button className="text-draft-green opacity-70 hover:opacity-100 pb-2">Tab 3</button>
-            <button className="text-draft-green opacity-70 hover:opacity-100 pb-2">Tab 4</button>
-          </div>
-        </div>
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           {/* Left side - Improvements */}
           <div className="space-y-8">
@@ -63,7 +54,7 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="border border-draft-green rounded-lg bg-white overflow-hidden">
+            <div className="bg-white overflow-hidden">
               <Table>
                 <TableHeader className="bg-[#f1f1eb]">
                   <TableRow>
@@ -102,7 +93,7 @@ const ComparisonPage: React.FC = () => {
               </Button>
             </div>
             
-            <div className="border border-draft-green rounded-lg bg-white p-6 h-[600px] overflow-auto">
+            <div className="rounded-lg bg-[#F7F4ED] p-6 h-[600px] overflow-auto">
               <div className="space-y-6">
                 <div className="text-center">
                   <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>
