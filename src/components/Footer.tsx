@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Twitter, Instagram } from 'lucide-react';
+import ThemeToggle from './theme/ThemeToggle';
 
 const Footer: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const Footer: React.FC = () => {
             <a href="#" className="bg-[#0E3C26] p-3 rounded-lg hover:opacity-90 transition-opacity">
               <Instagram size={20} className="text-white" />
             </a>
+            <ThemeToggle className="ml-2" />
           </div>
         </div>
         
