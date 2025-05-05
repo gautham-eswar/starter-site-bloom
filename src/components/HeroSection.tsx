@@ -23,10 +23,10 @@ const HeroSection: React.FC = () => {
         {/* Left side - Hero text */}
         <div className="flex flex-col justify-center lg:sticky lg:top-24 lg:self-start">
           <div className="max-w-2xl">
-            <h1 className="text-title font-serif font-medium text-draft-green leading-tight">
+            <h1 className="text-title font-serif font-medium text-draft-green dark:text-draft-yellow leading-tight">
               Build a resume that wins <span className="italic">every</span> time.
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-draft-text opacity-90">
+            <p className="mt-6 text-lg md:text-xl text-draft-text dark:text-gray-200 opacity-90">
               Tailor your resume to match a job description in minutes
             </p>
           </div>
@@ -34,18 +34,18 @@ const HeroSection: React.FC = () => {
         
         {/* Right side - How to section */}
         <div className="relative">
-          <div className="bg-[#f1f1eb] inline-block px-4 py-2 rounded-md mb-8">
-            <span className="text-draft-green uppercase text-sm font-medium">How to</span>
+          <div className="bg-[#f1f1eb] dark:bg-draft-green/30 inline-block px-4 py-2 rounded-md mb-8">
+            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">How to</span>
           </div>
           
           <div className="flex flex-col gap-6">
             <div className="relative flex items-center h-24">
               <div>
                 <h3 className="text-xl font-medium flex items-baseline gap-2">
-                  <span className="text-draft-green">1.</span> Upload resume
+                  <span className="text-draft-green dark:text-draft-yellow">1.</span> Upload resume
                 </h3>
-                <p className="text-draft-text opacity-70 mt-1">We will use this resume as a base.</p>
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1">
+                <p className="text-draft-text dark:text-gray-300 opacity-70 mt-1">We will use this resume as a base.</p>
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
                   Upload <ArrowRight size={16} />
                 </Button>
               </div>
@@ -62,9 +62,9 @@ const HeroSection: React.FC = () => {
               <div className="flex items-center h-24 relative">
                 <div>
                   <h3 className="text-xl font-medium flex items-baseline gap-2">
-                    <span className="text-draft-green">2.</span> Upload job description
+                    <span className="text-draft-green dark:text-draft-yellow">2.</span> Upload job description
                   </h3>
-                  <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
+                  <p className="text-draft-text dark:text-gray-300 opacity-70 mt-1">Tailor your resume to this job description.</p>
                 </div>
                 <div className="absolute right-0 h-full flex items-center">
                   <img 
@@ -77,19 +77,19 @@ const HeroSection: React.FC = () => {
               
               <div className="mt-4 h-[200px]">
                 {isWriteExpanded ? (
-                  <div className="border border-draft-green rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
+                  <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea 
                       placeholder="Add description" 
-                      className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
+                      className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70"
                     />
-                    <div className="border-t border-draft-green p-3">
+                    <div className="border-t border-draft-green dark:border-draft-yellow p-3">
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={toggleWriteExpanded} 
                         className="p-0 hover:bg-transparent"
                       >
-                        <ArrowLeft size={16} className="text-draft-green" />
+                        <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
                     </div>
                   </div>
@@ -98,7 +98,7 @@ const HeroSection: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       onClick={toggleWriteExpanded} 
-                      className="pl-0 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
+                      className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
                     >
                       Write <ArrowRight size={16} />
                     </Button>
@@ -109,7 +109,7 @@ const HeroSection: React.FC = () => {
             
             <div className="mt-4">
               <Button 
-                className="bg-draft-green hover:bg-draft-green/90 text-white w-fit"
+                className="bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 w-fit"
                 onClick={handleMakeItBetter}
               >
                 Make it better

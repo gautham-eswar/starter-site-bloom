@@ -1,3 +1,4 @@
+
 /* Import GT Alpina Trial font */
 @font-face {
   font-family: 'GT Alpina Trial';
@@ -141,6 +142,23 @@
   
   .dark .hover\:text-draft-green:hover {
     @apply hover:text-draft-yellow;
+  }
+
+  /* Updated text color for subtitle text in dark mode */
+  .dark .text-draft-text {
+    @apply text-gray-200;
+  }
+
+  /* Fix for "How to" badge/button in dark mode */
+  .dark .bg-\[\#f1f1eb\] {
+    @apply bg-draft-green/30;
+  }
+
+  /* Ensure proper coloring for opacity-based texts */
+  .dark .text-draft-text.opacity-90,
+  .dark .text-draft-text.opacity-80,
+  .dark .text-draft-text.opacity-70 {
+    @apply text-gray-300;
   }
 }
 
