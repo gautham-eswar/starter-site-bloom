@@ -15,7 +15,7 @@ const HeroSection: React.FC = () => {
     <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center lg:sticky lg:top-24 lg:self-start">
           <div className="max-w-2xl">
             <h1 className="text-title font-serif font-medium text-draft-green leading-tight">
               Build a resume that wins <span className="italic">every</span> time.
@@ -52,7 +52,7 @@ const HeroSection: React.FC = () => {
               </div>
             </div>
             
-            <div className="relative min-h-[200px]">
+            <div className="relative">
               <div className="flex items-center h-24 relative">
                 <div>
                   <h3 className="text-xl font-medium flex items-baseline gap-2">
@@ -69,9 +69,9 @@ const HeroSection: React.FC = () => {
                 </div>
               </div>
               
-              <div className="mt-4">
+              <div className="mt-4 h-[200px]">
                 {isWriteExpanded ? (
-                  <div className="border border-draft-green rounded-md h-[200px] flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
+                  <div className="border border-draft-green rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea 
                       placeholder="Add description" 
                       className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
@@ -88,13 +88,15 @@ const HeroSection: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <Button 
-                    variant="ghost" 
-                    onClick={toggleWriteExpanded} 
-                    className="pl-0 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
-                  >
-                    Write <ArrowRight size={16} />
-                  </Button>
+                  <div className="h-full flex items-start">
+                    <Button 
+                      variant="ghost" 
+                      onClick={toggleWriteExpanded} 
+                      className="pl-0 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
+                    >
+                      Write <ArrowRight size={16} />
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
