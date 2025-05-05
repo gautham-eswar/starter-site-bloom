@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -71,7 +70,7 @@ export default {
         "draft-mint": "#9AEBD0",
         "draft-purple": "#C4A1FF",
         "draft-yellow": "#E9FF7D",
-        "draft-footer": "#0A2920",
+        "draft-footer": "#1A3F35", // Updated from #0A2920
       },
       borderRadius: {
         lg: 'var(--radius)',
