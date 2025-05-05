@@ -1,17 +1,22 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
+
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
+
   const handleMakeItBetter = () => {
     setIsProgressModalOpen(true);
   };
+
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
@@ -78,7 +83,7 @@ const HeroSection: React.FC = () => {
             </div>
             
             <div className="mt-4">
-              <Button onClick={handleMakeItBetter} className="dark:bg-draft-yellow dark:hover:bg-draft-yellow/90 w-fit text-emerald-100 bg-[#0a2218]">
+              <Button onClick={handleMakeItBetter} className="bg-[#0A2218] text-white hover:bg-[#0A2218]/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 w-fit">
                 Make it better
               </Button>
             </div>
@@ -90,4 +95,5 @@ const HeroSection: React.FC = () => {
       <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
     </section>;
 };
+
 export default HeroSection;

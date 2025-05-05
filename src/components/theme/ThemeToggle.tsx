@@ -16,10 +16,10 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className={`rounded-full bg-transparent hover:bg-draft-green/10 ${
+      className={`rounded-full bg-transparent hover:bg-transparent ${
         theme === 'dark' 
-          ? 'text-draft-green hover:text-draft-green' 
-          : 'text-draft-green hover:text-draft-green'
+          ? 'text-draft-yellow hover:text-draft-yellow/80' 
+          : 'text-draft-green hover:text-draft-green/80'
       } ${className}`}
       aria-label="Toggle theme"
     >
