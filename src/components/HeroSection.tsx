@@ -3,12 +3,18 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import ProgressModal from '@/components/ProgressModal';
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
 
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
+  };
+
+  const handleMakeItBetter = () => {
+    setIsProgressModalOpen(true);
   };
 
   return (
@@ -102,13 +108,22 @@ const HeroSection: React.FC = () => {
             </div>
             
             <div className="mt-4">
-              <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
+              <Button 
+                className="bg-draft-green hover:bg-draft-green/90 text-white w-fit"
+                onClick={handleMakeItBetter}
+              >
                 Make it better
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Progress Modal */}
+      <ProgressModal 
+        isOpen={isProgressModalOpen} 
+        onOpenChange={setIsProgressModalOpen} 
+      />
     </section>
   );
 };
