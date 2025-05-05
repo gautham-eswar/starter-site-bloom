@@ -107,10 +107,12 @@
   }
 
   body {
-    @apply bg-draft-bg text-draft-text dark:text-draft-yellow transition-colors duration-300;
+    @apply bg-draft-bg transition-colors duration-300;
+    color: #0E3C26; /* Use direct color value for draft-text */
     background-color: theme('colors.draft-bg');
     .dark & {
       background-color: #0A2920;
+      color: #E9FF7D; /* Use direct color value for draft-yellow */
     }
     font-family: 'GT Alpina Trial', serif;
   }
@@ -124,60 +126,61 @@
   }
   
   .dark .bg-[#F7F4ED] {
-    @apply bg-[#0A2218];
+    background-color: #0A2218;
   }
   
   .dark .text-draft-green {
-    @apply text-draft-yellow;
+    color: #E9FF7D; /* Direct value for draft-yellow */
   }
   
   .dark .border-draft-green {
-    @apply border-draft-yellow;
+    border-color: #E9FF7D; /* Direct value for draft-yellow */
   }
   
   .dark .hover\:bg-draft-bg\/80:hover {
-    @apply hover:bg-draft-green/80;
+    background-color: rgba(14, 60, 38, 0.8); /* Direct RGBA value for draft-green/80 */
   }
   
   /* Update Header sign in button in dark mode */
   .dark .border-draft-green.text-draft-green {
-    @apply border-draft-yellow text-draft-yellow;
+    border-color: #E9FF7D; /* Direct value for draft-yellow */
+    color: #E9FF7D; /* Direct value for draft-yellow */
   }
   
   .dark .hover\:text-draft-green:hover {
-    @apply hover:text-draft-yellow;
+    color: #E9FF7D; /* Direct value for draft-yellow */
   }
 
   /* Updated text color for subtitle text in dark mode */
   .dark .text-draft-text {
-    @apply text-gray-300;
+    color: #d1d5db; /* Direct value for gray-300 */
   }
 
   /* Fix for "How to" badge/button in dark mode */
   .dark .bg-\[\#f1f1eb\] {
-    @apply bg-draft-green/30;
+    background-color: rgba(14, 60, 38, 0.3); /* Direct RGBA value for draft-green/30 */
   }
 
   /* Ensure proper coloring for opacity-based texts */
   .dark .text-draft-text.opacity-90,
   .dark .text-draft-text.opacity-80,
   .dark .text-draft-text.opacity-70 {
-    @apply text-gray-300;
+    color: #d1d5db; /* Direct value for gray-300 */
   }
   
   /* Features section and Testimonials section heading in dark mode */
   .dark .bg-\[\#e6e6e0\] {
-    @apply bg-draft-green/20;
+    background-color: rgba(14, 60, 38, 0.2); /* Direct RGBA value for draft-green/20 */
   }
   
   /* Background for testimonial cards in dark mode */
   .dark .bg-white {
-    @apply bg-draft-green/10;
+    background-color: rgba(14, 60, 38, 0.1); /* Direct RGBA value for draft-green/10 */
   }
   
   /* Border for testimonial cards in dark mode */
   .dark .border-\[\#1D5F5B\] {
-    @apply border-draft-green/30;
+    border-color: rgba(14, 60, 38, 0.3); /* Direct RGBA value for draft-green/30 */
   }
   
   /* Stats section in dark mode - using the same background color as testimonials section */
@@ -187,18 +190,17 @@
   
   /* Footer in dark mode */
   .dark .bg-\[\#0A2920\] {
-    background-color: #FDFBF5; /* Use the draft-bg color value directly instead of @apply */
+    background-color: #FDFBF5; /* Use the draft-bg color value directly */
   }
   
   /* Fix for feature section hover and selected states */
   .dark .bg-\[\#EDEEE7\] {
-    @apply bg-draft-green/20;
+    background-color: rgba(14, 60, 38, 0.2); /* Direct RGBA value for draft-green/20 */
   }
   
   /* Fix for dark mode "Make it better" button text */
   .dark .bg-draft-yellow.text-draft-green {
-    @apply text-draft-green;
-    color: #0A2920;
+    color: #0A2920; /* Direct color value for darker text */
   }
 }
 
