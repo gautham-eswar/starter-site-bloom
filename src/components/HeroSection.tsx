@@ -1,24 +1,18 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
-
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
-
   const handleMakeItBetter = () => {
     setIsProgressModalOpen(true);
   };
-
-  return (
-    <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
+  return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
         <div className="flex flex-col justify-center lg:sticky lg:top-24 lg:self-start">
@@ -50,11 +44,7 @@ const HeroSection: React.FC = () => {
                 </Button>
               </div>
               <div className="absolute right-0 h-full flex items-center">
-                <img 
-                  src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" 
-                  alt="Decorative element" 
-                  className="w-24 h-24" 
-                />
+                <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
               </div>
             </div>
             
@@ -67,51 +57,28 @@ const HeroSection: React.FC = () => {
                   <p className="text-draft-text dark:text-gray-300 opacity-70 mt-1">Tailor your resume to this job description.</p>
                 </div>
                 <div className="absolute right-0 h-full flex items-center">
-                  <img 
-                    src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" 
-                    alt="Decorative element" 
-                    className="w-24 h-24" 
-                  />
+                  <img src="/lovable-uploads/fcc43085-9c29-4c70-8944-9781978da937.png" alt="Decorative element" className="w-24 h-24" />
                 </div>
               </div>
               
               <div className="mt-4 h-[200px]">
-                {isWriteExpanded ? (
-                  <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
-                    <Textarea 
-                      placeholder="Add description" 
-                      className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70"
-                    />
+                {isWriteExpanded ? <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
+                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" />
                     <div className="border-t border-draft-green dark:border-draft-yellow p-3">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={toggleWriteExpanded} 
-                        className="p-0 hover:bg-transparent"
-                      >
+                      <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-start">
-                    <Button 
-                      variant="ghost" 
-                      onClick={toggleWriteExpanded} 
-                      className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
-                    >
+                  </div> : <div className="h-full flex items-start">
+                    <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
                       Write <ArrowRight size={16} />
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
             
             <div className="mt-4">
-              <Button 
-                className="bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 w-fit"
-                onClick={handleMakeItBetter}
-              >
+              <Button onClick={handleMakeItBetter} className="bg-draft-green hover:bg-draft-green/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 w-fit text-lime-950">
                 Make it better
               </Button>
             </div>
@@ -120,12 +87,7 @@ const HeroSection: React.FC = () => {
       </div>
 
       {/* Progress Modal */}
-      <ProgressModal 
-        isOpen={isProgressModalOpen} 
-        onOpenChange={setIsProgressModalOpen} 
-      />
-    </section>
-  );
+      <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
+    </section>;
 };
-
 export default HeroSection;
