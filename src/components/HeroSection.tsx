@@ -32,7 +32,7 @@ const HeroSection: React.FC = () => {
             <span className="text-draft-green uppercase text-sm font-medium">How to</span>
           </div>
           
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-6">
             <div className="relative flex items-center h-24">
               <div>
                 <h3 className="text-xl font-medium flex items-baseline gap-2">
@@ -101,7 +101,7 @@ const HeroSection: React.FC = () => {
               </div>
             </div>
             
-            <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
+            <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit mt-2">
               Make it better
             </Button>
           </div>
