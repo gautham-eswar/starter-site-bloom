@@ -1,24 +1,18 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
-
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
-
   const handleMakeItBetter = () => {
     setIsProgressModalOpen(true);
   };
-
-  return (
-    <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
+  return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
         <div className="flex flex-col justify-center lg:sticky lg:top-24 lg:self-start">
@@ -68,30 +62,23 @@ const HeroSection: React.FC = () => {
               </div>
               
               <div className="mt-4 h-[200px]">
-                {isWriteExpanded ? (
-                  <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
+                {isWriteExpanded ? <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" />
                     <div className="border-t border-draft-green dark:border-draft-yellow p-3">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-start">
+                  </div> : <div className="h-full flex items-start">
                     <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
                       Write <ArrowRight size={16} />
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
             
             <div className="mt-4">
-              <Button 
-                onClick={handleMakeItBetter} 
-                className="bg-[#0A2218] hover:bg-[#0A2218]/90 text-white dark:bg-draft-yellow dark:text-[#0A2218] dark:hover:bg-draft-yellow/90 w-fit"
-              >
+              <Button onClick={handleMakeItBetter} className="dark:bg-draft-yellow dark:hover:bg-draft-yellow/90 w-fit text-emerald-100 bg-[#0a2218]">
                 Make it better
               </Button>
             </div>
@@ -101,8 +88,6 @@ const HeroSection: React.FC = () => {
 
       {/* Progress Modal */}
       <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
