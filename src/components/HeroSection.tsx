@@ -66,7 +66,7 @@ const HeroSection: React.FC = () => {
           title: "Resume uploaded",
           description: "Your resume has been successfully uploaded",
         });
-        
+        console.log(`Resume successfully uploaded with ID ${response.resume_id}`)
         // Auto expand the job description textarea
         if (!isWriteExpanded) {
           setIsWriteExpanded(true);
