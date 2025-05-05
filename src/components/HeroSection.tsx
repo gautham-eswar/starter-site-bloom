@@ -169,27 +169,40 @@ const HeroSection: React.FC = () => {
               </div>
               
               <div className="mt-4 h-[200px] relative">
-                {isWriteExpanded ? <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
-                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
+                {isWriteExpanded ? (
+                  <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
+                    <Textarea 
+                      placeholder="Add description" 
+                      className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" 
+                      value={jobDescription} 
+                      onChange={handleJobDescriptionChange} 
+                    />
                     <div className="border-t border-draft-green dark:border-draft-yellow p-3">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
                     </div>
-                  </div> : <div className="h-full flex items-start">
-                    <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
+                  </div>
+                ) : (
+                  <div className="h-full flex items-start">
+                    <Button 
+                      variant="ghost" 
+                      onClick={toggleWriteExpanded} 
+                      className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
+                    >
                       Write <ArrowRight size={16} />
                     </Button>
-                  </div>}
-                  
-                {/* Moved "Make it better" button right below the write area */}
+                  </div>
+                )}
+                
+                {/* Make it better button - styled like sign-in button */}
                 <div className={`mt-4 ${isWriteExpanded ? 'pt-4' : ''}`}>
                   <Button 
                     onClick={handleMakeItBetter} 
-                    className="bg-[#0A2218] text-white hover:bg-[#0A2218]/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90" 
                     disabled={!selectedFile || !jobDescription.trim() || isProcessing}
+                    className="bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90"
                   >
-                    Make it better
+                    {isProcessing ? "Processing..." : "Make it better"}
                   </Button>
                 </div>
               </div>

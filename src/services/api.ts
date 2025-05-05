@@ -1,6 +1,5 @@
 
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 const API_BASE_URL = "https://latest-try-psti.onrender.com/api";
 
