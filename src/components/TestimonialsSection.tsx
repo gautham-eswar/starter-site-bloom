@@ -40,7 +40,7 @@ const TestimonialsSection: React.FC = () => {
           {testimonials.map((testimonial, index) => (
             <div 
               key={index} 
-              className={`bg-white p-6 rounded-lg border border-gray-100 ${
+              className={`bg-white p-6 rounded-lg border border-[#1D5F5B] ${
                 testimonialView === 'list' ? 'max-w-2xl mx-auto' : ''
               }`}
             >
