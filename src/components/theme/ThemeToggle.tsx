@@ -19,7 +19,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
       className={`rounded-full bg-transparent border ${
         theme === 'dark' 
           ? 'border-draft-green/30 hover:bg-draft-green/10 hover:text-draft-green text-draft-green' 
-          : 'border-white/30 hover:bg-white/10 hover:text-white text-white'
+          : 'border-draft-green/30 hover:bg-draft-green/10 hover:text-draft-green text-draft-green'
       } ${className}`}
       aria-label="Toggle theme"
     >
