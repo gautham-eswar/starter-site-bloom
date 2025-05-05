@@ -54,7 +54,7 @@ const Auth: React.FC = () => {
   const handleEmailAuth = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const { email, password } = values;
+      const { email, password, name } = values;
       
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
@@ -165,6 +165,24 @@ const Auth: React.FC = () => {
                         <Input 
                           placeholder="••••••••" 
                           type="password" 
+                          disabled={isLoading}
+                          className="bg-[#F7F4ED] dark:bg-draft-footer/50 border-[#e6e6e0] dark:border-draft-footer"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="user_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-draft-green dark:text-draft-yellow">Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Your name here" 
                           disabled={isLoading}
                           className="bg-[#F7F4ED] dark:bg-draft-footer/50 border-[#e6e6e0] dark:border-draft-footer"
                           {...field} 
