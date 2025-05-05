@@ -73,10 +73,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
                       <div className="mt-2">
                         <Progress 
                           value={progress} 
-                          className="h-2 bg-[#f1f1eb]"
-                          style={{
-                            "--tw-bg-opacity": 0.7
-                          }}
+                          className="h-2 bg-[#f1f1eb] bg-opacity-70"
                         />
                       </div>
                     )}
