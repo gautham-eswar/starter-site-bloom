@@ -43,39 +43,32 @@ const HeroSection: React.FC = () => {
               </Button>
             </div>
             
-            <div>
-              <h3 className="text-xl font-medium flex items-baseline gap-2">
-                <span className="text-draft-green">2.</span> Upload job description
-              </h3>
-              <p className="text-draft-text opacity-70 mt-1">Tailor your resume to this job description.</p>
-              
-              {isWriteExpanded ? (
-                <div className="mt-4 border border-draft-green rounded-md h-[200px] flex flex-col">
-                  <Textarea 
-                    placeholder="Add description" 
-                    className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
-                  />
-                  <div className="border-t border-draft-green p-3">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={toggleWriteExpanded} 
-                      className="p-0 hover:bg-transparent"
-                    >
-                      <ArrowLeft size={16} className="text-draft-green" />
-                    </Button>
-                  </div>
+            {isWriteExpanded ? (
+              <div className="mt-4 border border-draft-green rounded-md h-[200px] flex flex-col">
+                <Textarea 
+                  placeholder="Add description" 
+                  className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
+                />
+                <div className="border-t border-draft-green p-3">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={toggleWriteExpanded} 
+                    className="p-0 hover:bg-transparent"
+                  >
+                    <ArrowLeft size={16} className="text-draft-green" />
+                  </Button>
                 </div>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  onClick={toggleWriteExpanded} 
-                  className="pl-0 mt-4 text-draft-green border-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1 rounded-full"
-                >
-                  Write <ArrowRight size={16} />
-                </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Button 
+                variant="ghost" 
+                onClick={toggleWriteExpanded} 
+                className="pl-0 mt-4 text-draft-green hover:bg-transparent hover:text-draft-green/80 flex items-center gap-1"
+              >
+                Write <ArrowRight size={16} />
+              </Button>
+            )}
             
             <Button className="bg-draft-green hover:bg-draft-green/90 text-white w-fit">
               Make it better

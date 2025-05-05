@@ -6,7 +6,6 @@ import StatsSection from '@/components/StatsSection';
 import FeaturesSection from '@/components/FeaturesSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import Footer from '@/components/Footer';
-import HowToSection from '@/components/HowToSection';
 
 const Index: React.FC = () => {
   return (
@@ -14,7 +13,6 @@ const Index: React.FC = () => {
       <Header />
       <main>
         <HeroSection />
-        <HowToSection />
         <StatsSection />
         <FeaturesSection />
         <TestimonialsSection />
