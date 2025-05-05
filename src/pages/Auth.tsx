@@ -62,6 +62,9 @@ const Auth: React.FC = () => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
+            data :{
+              "Display Name": name
+            }
           }
         });
         
