@@ -200,7 +200,7 @@
   
   /* Fix for dark mode "Make it better" button text */
   .dark .bg-draft-yellow.text-draft-green {
-    color: #0A2920; /* Direct color value for darker text */
+    color: #0E3C26; /* Make it dark green in dark mode */
   }
 }
 
