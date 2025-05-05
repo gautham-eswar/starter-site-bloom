@@ -50,7 +50,7 @@ const HeroSection: React.FC = () => {
               />
             </div>
             
-            <div className="relative">
+            <div className="relative min-h-[150px]">
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xl font-medium flex items-baseline gap-2">
@@ -67,7 +67,7 @@ const HeroSection: React.FC = () => {
               
               <div className="mt-4">
                 {isWriteExpanded ? (
-                  <div className="border border-draft-green rounded-md h-[200px] flex flex-col">
+                  <div className="border border-draft-green rounded-md h-[200px] flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea 
                       placeholder="Add description" 
                       className="flex-1 border-none focus-visible:ring-0 text-draft-green resize-none"
