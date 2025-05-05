@@ -14,6 +14,7 @@ const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, selectFile] = useState<File | null>(null)
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {user} = useAuth();
@@ -38,7 +39,7 @@ const HeroSection: React.FC = () => {
       fileInputRef.current.click();
     }
   };
-
+  
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,6 +55,14 @@ const HeroSection: React.FC = () => {
       return;
     }
     console.log(`File selected: ${file.name}`)
+    selectFile(file)
+    
+  };
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    
+    if (!selectedFile){
+      return;
+    }
     
     setIsUploading(true);
     setUploadedFileName(file.name);
@@ -170,13 +179,26 @@ const HeroSection: React.FC = () => {
                   onClick={handleUploadClick}
                   disabled={isUploading}
                 >
-                  {isUploading ? "Uploading..." : uploadedFileName ? "Change File" : "Upload"} <ArrowRight size={16} />
+                  {isUploading ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {uploadedFileName && (
-                  <p className="text-sm text-draft-green mt-2">
-                    Uploaded: {uploadedFileName}
-                  </p>
-                )}
+                {
+                  selectedFile && (
+                    uploadedFileName == selectedFile.name?
+                    <p className="text-sm text-draft-green mt-2">
+                      Uploaded and ready for enhancement: {uploadedFileName}
+                    </p> :
+                    <Button 
+                    variant="ghost" 
+                    className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1"
+                    onClick={handleFileUpload}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? `Uploading ${selectedFile.name}` : `Upload ${selectedFile.name}`} <ArrowRight size={16} />
+                  </Button>
+                  )
+                  
+                }
+                
               </div>
               <div className="absolute right-0 h-full flex items-center">
                 <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
