@@ -179,7 +179,7 @@ const Auth: React.FC = () => {
                   name="user_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-draft-green dark:text-draft-yellow">Name</FormLabel>
+                      <FormLabel className={"text-draft-green dark:text-draft-yellow"+(isSignUp?"":"hide")}>Name</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Your name here" 

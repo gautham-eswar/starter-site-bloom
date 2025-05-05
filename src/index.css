@@ -207,6 +207,10 @@
   .dark .border-\[\#e6e6e0\] {
     border-color: #1E433A;
   }
+
+  .hide {
+    display:none;
+  }
 }
 
 .shape-blob {
