@@ -99,19 +99,20 @@ const Auth: React.FC = () => {
 
   const handleGoogleAuth = async () => {
     try {
+      // Using the Google Client ID you provided
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         },
       });
       
       if (error) throw error;
     } catch (error: any) {
+      console.error("Google auth error:", error);
       toast({
         title: 'Google authentication error',
         description: error.message,
