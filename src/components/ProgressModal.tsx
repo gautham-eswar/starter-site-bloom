@@ -5,6 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { CircleCheck, Rocket, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useResumeContext } from '@/contexts/ResumeContext';
+import { checkOptimizationStatus } from '@/services/api';
+import { OptimizationStatus } from '@/types/api';
+import { toast } from '@/hooks/use-toast';
 
 interface ProgressModalProps {
   isOpen: boolean;
@@ -15,7 +19,10 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
+  
   const navigate = useNavigate();
+  const { resumeId, jobId, isOptimizing, setIsOptimizing } = useResumeContext();
 
   const steps = [
     { name: 'Uploading resume', icon: <Rocket className="text-draft-coral" /> },
@@ -25,40 +32,86 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
 
   const handleDoneClick = () => {
     onOpenChange(false);
-    navigate('/comparison');
+    if (resumeId && jobId) {
+      navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
+    }
+    setIsOptimizing(false);
   };
 
+  // Poll for optimization status
+  useEffect(() => {
+    if (!isOpen || !jobId || !isOptimizing) return;
+
+    let interval: NodeJS.Timeout;
+    const checkStatus = async () => {
+      try {
+        const status = await checkOptimizationStatus(jobId);
+        setOptimizationStatus(status);
+        
+        // Update current step based on status
+        if (status.status === 'pending') {
+          setCurrentStep(0);
+        } else if (status.status === 'processing') {
+          setCurrentStep(1);
+        } else if (status.status === 'completed') {
+          setCurrentStep(2);
+          setIsComplete(true);
+          clearInterval(interval);
+          toast({
+            title: "Optimization complete",
+            description: "Your resume has been optimized successfully!",
+          });
+        } else if (status.status === 'error') {
+          clearInterval(interval);
+          toast({
+            title: "Optimization failed",
+            description: status.message || "There was an error optimizing your resume",
+            variant: "destructive",
+          });
+          onOpenChange(false);
+          setIsOptimizing(false);
+        }
+        
+        // Update progress if available
+        if (status.progress !== undefined) {
+          setProgress(status.progress);
+        } else {
+          // Simulate progress if not provided by API
+          setProgress(prev => (prev >= 100) ? 0 : prev + 5);
+        }
+      } catch (error) {
+        console.error("Error checking optimization status:", error);
+      }
+    };
+    
+    // Initial check
+    checkStatus();
+    
+    // Set up polling interval
+    interval = setInterval(checkStatus, 2000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isOpen, jobId, isOptimizing, onOpenChange, setIsOptimizing]);
+
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setCurrentStep(0);
-      setProgress(0);
-      setIsComplete(false);
-      return;
+      if (!isComplete) {
+        setCurrentStep(0);
+        setProgress(0);
+      }
     }
-
-    // Simulate progress through the steps
-    const timer = setInterval(() => {
-      setProgress(prevProgress => {
-        if (prevProgress >= 100) {
-          setCurrentStep(prevStep => {
-            if (prevStep >= steps.length - 1) {
-              clearInterval(timer);
-              setIsComplete(true);
-              return prevStep;
-            }
-            return prevStep + 1;
-          });
-          return 0;
-        }
-        return prevProgress + 2;
-      });
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [isOpen, steps.length]);
+  }, [isOpen, isComplete]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only allow closing if complete or error
+      if (isComplete || optimizationStatus?.status === 'error') {
+        onOpenChange(open);
+      }
+    }}>
       <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
         <div className="py-6">
           <h2 className="text-2xl font-serif text-draft-green text-center mb-8">
@@ -101,15 +154,15 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
                   {currentStep === 0 && "Preparing to make magic..."}
                   {currentStep === 1 && "Finding the perfect words..."}
                   {currentStep === 2 && "Adding that special touch..."}
-                  {currentStep === 3 && "Almost ready to shine!"}
                 </p>
               )}
               
               <Button 
                 className="bg-draft-green hover:bg-draft-green/90 text-white"
                 onClick={handleDoneClick}
+                disabled={!isComplete && optimizationStatus?.status !== 'error'}
               >
-                Done
+                {isComplete ? "View Results" : "Processing..."}
               </Button>
             </div>
           </div>

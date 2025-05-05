@@ -1,31 +1,159 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Loader } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
+import { useResumeContext } from '@/contexts/ResumeContext';
+import { getOptimizationResults, downloadResume } from '@/services/api';
+import { OptimizationResult } from '@/types/api';
+import { toast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const ComparisonPage: React.FC = () => {
-  const improvementData = [
-    {
-      section: 'Summary',
-      original: 'Web developer with experience in JavaScript',
-      improved: 'Experienced software engineer specializing in JavaScript frameworks with a track record of delivering scalable web applications',
-      type: 'Major'
-    },
-    {
-      section: 'Experience',
-      original: 'Worked in the frontend team',
-      improved: 'Led the frontend team and increased user engagement.',
-      type: 'Major'
-    },
-    {
-      section: 'Skills',
-      original: 'React',
-      improved: 'React (Redux, Hooks, Context API)',
-      type: 'Minor'
+  const [searchParams] = useSearchParams();
+  const resumeIdParam = searchParams.get('resumeId');
+  const jobIdParam = searchParams.get('jobId');
+
+  const { 
+    resumeId: contextResumeId, 
+    setResumeId,
+    jobId: contextJobId,
+    setJobId,
+    optimizationResult,
+    setOptimizationResult
+  } = useResumeContext();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
+
+  // Use URL params if available, otherwise use context
+  const resumeId = resumeIdParam || contextResumeId;
+  const jobId = jobIdParam || contextJobId;
+
+  // Fetch optimization results
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!resumeId || !jobId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Update context with URL params if they exist
+        if (resumeIdParam && resumeIdParam !== contextResumeId) {
+          setResumeId(resumeIdParam);
+        }
+        if (jobIdParam && jobIdParam !== contextJobId) {
+          setJobId(jobIdParam);
+        }
+
+        // Fetch results
+        setIsLoading(true);
+        const results = await getOptimizationResults(resumeId, jobId);
+        setOptimizationResult(results);
+      } catch (error) {
+        console.error("Error fetching optimization results:", error);
+        toast({
+          title: "Error fetching results",
+          description: "There was an error fetching your optimization results.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, setOptimizationResult]);
+
+  // Handle download
+  const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
+    if (!resumeId) {
+      toast({
+        title: "Download failed",
+        description: "Resume ID is missing.",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
+
+    setIsDownloading(true);
+    setDownloadFormat(format);
+
+    try {
+      const response = await downloadResume(resumeId, format);
+      
+      // Create a blob from the response
+      const blob = await response.blob();
+      
+      // Create a link element to trigger the download
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `optimized_resume.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+      
+      toast({
+        title: "Download successful",
+        description: `Your optimized resume has been downloaded as ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading your resume. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-draft-bg">
+        <Header />
+        <div className="h-[calc(100vh-80px)] flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
+            <p className="text-draft-green">Loading optimization results...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no results found
+  if (!optimizationResult && !isLoading) {
+    return (
+      <div className="min-h-screen bg-draft-bg">
+        <Header />
+        <div className="px-8 py-10 md:px-12 lg:px-20">
+          <div className="text-center max-w-xl mx-auto">
+            <h2 className="text-2xl font-serif text-draft-green mb-4">No Results Found</h2>
+            <p className="text-draft-text mb-6">
+              We couldn't find optimization results for this resume. Please try optimizing your resume again.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="bg-draft-green hover:bg-draft-green/90 text-white"
+            >
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare the data for the comparison table
+  const improvementData = optimizationResult?.modifications || [];
 
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -40,17 +168,23 @@ const ComparisonPage: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Old Score</p>
-                <p className="text-4xl font-bold text-draft-green">67/100</p>
+                <p className="text-4xl font-bold text-draft-green">
+                  {optimizationResult?.analysis_data.old_score || 0}/100
+                </p>
               </div>
               
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Improved Score</p>
-                <p className="text-4xl font-bold text-draft-green">98/100</p>
+                <p className="text-4xl font-bold text-draft-green">
+                  {optimizationResult?.analysis_data.improved_score || 0}/100
+                </p>
               </div>
               
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
-                <p className="text-draft-green mb-2">Another metric</p>
-                <p className="text-4xl font-bold text-draft-green">97%</p>
+                <p className="text-draft-green mb-2">Match Rate</p>
+                <p className="text-4xl font-bold text-draft-green">
+                  {optimizationResult?.analysis_data.match_percentage || 0}%
+                </p>
               </div>
             </div>
             
@@ -65,20 +199,28 @@ const ComparisonPage: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {improvementData.map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{row.section}</TableCell>
-                      <TableCell>{row.original}</TableCell>
-                      <TableCell className="text-draft-green">{row.improved}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          row.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
-                        }`}>
-                          {row.type}
-                        </span>
+                  {improvementData.length > 0 ? (
+                    improvementData.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{row.section}</TableCell>
+                        <TableCell>{row.original}</TableCell>
+                        <TableCell className="text-draft-green">{row.improved}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            row.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
+                          }`}>
+                            {row.type}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8">
+                        No improvements found
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -88,12 +230,36 @@ const ComparisonPage: React.FC = () => {
           <div className="space-y-4 bg-[#F7F4ED] p-6 rounded-lg">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-serif text-draft-green">Resume Preview</h2>
-              <Button className="bg-draft-green hover:bg-draft-green/90 text-white">
-                <Download className="mr-2 h-4 w-4" /> Download
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  className="bg-draft-green hover:bg-draft-green/90 text-white"
+                  onClick={() => handleDownload('pdf')}
+                  disabled={isDownloading}
+                >
+                  {isDownloading && downloadFormat === 'pdf' ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  PDF
+                </Button>
+                <Button 
+                  className="bg-draft-green hover:bg-draft-green/90 text-white"
+                  onClick={() => handleDownload('docx')}
+                  disabled={isDownloading}
+                >
+                  {isDownloading && downloadFormat === 'docx' ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  DOCX
+                </Button>
+              </div>
             </div>
             
             <div className="bg-white rounded-lg p-6 h-[600px] overflow-auto">
+              {/* This is a simplified preview - in a real app, you would render the actual resume content from the API */}
               <div className="space-y-6">
                 <div className="text-center">
                   <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>

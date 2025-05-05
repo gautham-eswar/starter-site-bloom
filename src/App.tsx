@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import ComparisonPage from "./pages/ComparisonPage";
 import Auth from "./pages/Auth";
@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
+import { ResumeProvider } from "./contexts/ResumeContext";
 
 const queryClient = new QueryClient();
 
@@ -29,17 +30,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/comparison" element={
-          <ProtectedRoute>
-            <ComparisonPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/auth" element={<Auth />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <ResumeProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/comparison" element={
+            <ProtectedRoute>
+              <ComparisonPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/auth" element={<Auth />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ResumeProvider>
     </AuthProvider>
   );
 };
