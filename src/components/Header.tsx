@@ -34,28 +34,29 @@ const Header: React.FC = () => {
         <ThemeToggle className="ml-1" />
       </div>
       
-      <div className="hidden md:flex items-center space-x-4">
-        <Link 
-          to="/technology" 
-          className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/technology') ? 'font-medium' : ''}`}
-        >
-          Technology
-        </Link>
-        <Link 
-          to="/pricing" 
-          className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/pricing') ? 'font-medium' : ''}`}
-        >
-          Pricing
-        </Link>
-        <Link 
-          to="/faq" 
-          className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/faq') ? 'font-medium' : ''}`}
-        >
-          FAQ
-        </Link>
-      </div>
-      
+      {/* Navigation links now at the right side, before the auth buttons */}
       <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center space-x-4 mr-4">
+          <Link 
+            to="/technology" 
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/technology') ? 'font-medium' : ''}`}
+          >
+            Technology
+          </Link>
+          <Link 
+            to="/pricing" 
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/pricing') ? 'font-medium' : ''}`}
+          >
+            Pricing
+          </Link>
+          <Link 
+            to="/faq" 
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/faq') ? 'font-medium' : ''}`}
+          >
+            FAQ
+          </Link>
+        </div>
+        
         {user ? (
           <div className="flex items-center gap-2">
             <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow">
