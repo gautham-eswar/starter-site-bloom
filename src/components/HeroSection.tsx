@@ -161,20 +161,21 @@ const HeroSection: React.FC = () => {
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
                 <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isProcessing}>
-                  {uploadState== UPLOADING ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
+                  {uploadState== UPLOADING ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {selectedFile && 
                   <p className="text-sm text-draft-green mt-2">
                     {()=>{
                       switch (uploadState){
                         case UPLOADING:
-                          return `Selected File: ${selectedFile.name}`;
+                          return `Selected File: `;
                         case UPLOADED:
-                          return `Uploaded File: ${selectedFile.name}`;
-                        case UPLOADING:
-                          return `Couldn't Upload File: ${selectedFile.name}. Please try to re-upload the file or try again later.`;
+                          return `Uploaded File: `;
+                        case NOT_UPLOADED:
+                          return `Couldn't Upload File: `;
                       }                    
                     }}
+                    {selectedFile.name}
                   </p>
                 }
               </div>
