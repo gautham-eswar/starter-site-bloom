@@ -150,6 +150,9 @@ const HeroSection: React.FC = () => {
             <p className="mt-6 text-lg md:text-xl text-draft-text dark:text-gray-200 opacity-90">
               Tailor your resume to match a job description in minutes
             </p>
+            <p className="mt-3 text-base md:text-lg text-draft-text dark:text-gray-300 opacity-80 italic">
+              The only tool that optimizes for both ATS robots AND human recruiters
+            </p>
           </div>
         </div>
         
