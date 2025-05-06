@@ -12,7 +12,6 @@ const handleApiError = (error: any) => {
     description: errorMessage,
     variant: "destructive",
   });
-  throw error;
 };
 
 // Helper function for making API requests
@@ -30,7 +29,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     const response = await fetch(url, options);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+      concole.error(errorData.message || `Request failed with status ${response.status}`);
     }
     
     return await response.json();
