@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from './theme/ThemeToggle';
 import { useAuth } from './auth/AuthProvider';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, DollarSign } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -28,6 +28,15 @@ const Header: React.FC = () => {
         <ThemeToggle className="ml-1" />
       </div>
       <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          className="text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+          onClick={() => navigate('/pricing')}
+        >
+          <DollarSign size={18} className="mr-1" />
+          Pricing
+        </Button>
+        
         {user ? (
           <div className="flex items-center gap-2">
             <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow">

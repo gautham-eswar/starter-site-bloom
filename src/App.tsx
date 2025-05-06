@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import ComparisonPage from "./pages/ComparisonPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Pricing from "./pages/Pricing";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
@@ -33,6 +34,7 @@ const AppRoutes = () => {
       <ResumeProvider>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/comparison" element={
             <ProtectedRoute>
               <ComparisonPage />
