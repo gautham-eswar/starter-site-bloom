@@ -74,6 +74,7 @@ const HeroSection: React.FC = () => {
       });
     }
     setUploadState(UPLOADED);
+    setResumeId(data.id)
     console.log("Resume Uploaded Successfully!");
     console.log(data);
 
@@ -106,11 +107,6 @@ const HeroSection: React.FC = () => {
     setIsProgressModalOpen(true);
     setIsOptimizing(true);
     try {
-      // First upload the resume
-      const uploadResponse = await uploadResume(selectedFile, user.id);
-      if (!uploadResponse || !uploadResponse.resume_id) {
-        throw new Error("Failed to upload resume");
-      }
 
       // Store the resume ID
       setResumeId(uploadResponse.resume_id);
