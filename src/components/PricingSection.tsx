@@ -1,18 +1,14 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-
 const PricingSection: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
-
-  return (
-    <section className="py-20 px-8 md:px-12 lg:px-20 bg-draft-bg">
+  return <section className="py-20 px-8 md:px-12 lg:px-20 bg-draft-bg">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col items-center mb-12">
+        <div className="flex flex-col items-center mb-12 mx-0">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md mb-6">
             <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">Plans & Pricing</span>
           </div>
@@ -23,11 +19,7 @@ const PricingSection: React.FC = () => {
           
           <div className="flex items-center justify-center mt-6 gap-2">
             <span className={`text-sm ${!isAnnual ? 'font-medium text-draft-green dark:text-draft-yellow' : 'text-draft-text/70 dark:text-gray-400'}`}>Billed Monthly</span>
-            <Switch
-              checked={isAnnual}
-              onCheckedChange={setIsAnnual}
-              className="bg-draft-green data-[state=unchecked]:bg-draft-green dark:bg-draft-yellow dark:data-[state=unchecked]:bg-draft-yellow"
-            />
+            <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="bg-draft-green data-[state=unchecked]:bg-draft-green dark:bg-draft-yellow dark:data-[state=unchecked]:bg-draft-yellow" />
             <span className={`text-sm ${isAnnual ? 'font-medium text-draft-green dark:text-draft-yellow' : 'text-draft-text/70 dark:text-gray-400'}`}>Billed Annually</span>
           </div>
         </div>
@@ -67,10 +59,7 @@ const PricingSection: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter className="pt-4">
-                <Button 
-                  id="btn-free" 
-                  className="w-full bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 rounded-full font-serif"
-                >
+                <Button id="btn-free" className="w-full bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 rounded-full font-serif">
                   Start for Free
                 </Button>
               </CardFooter>
@@ -120,10 +109,7 @@ const PricingSection: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter className="pt-4">
-                <Button 
-                  id="btn-standard" 
-                  className="w-full bg-draft-coral hover:bg-draft-coral/90 text-white rounded-full font-serif"
-                >
+                <Button id="btn-standard" className="w-full bg-draft-coral hover:bg-draft-coral/90 text-white rounded-full font-serif">
                   Choose Standard
                 </Button>
               </CardFooter>
@@ -168,10 +154,7 @@ const PricingSection: React.FC = () => {
                 </ul>
               </CardContent>
               <CardFooter className="pt-4">
-                <Button 
-                  id="btn-pro" 
-                  className="w-full bg-draft-purple hover:bg-draft-purple/90 text-white rounded-full font-serif"
-                >
+                <Button id="btn-pro" className="w-full bg-draft-purple hover:bg-draft-purple/90 text-white rounded-full font-serif">
                   Go Pro
                 </Button>
               </CardFooter>
@@ -179,8 +162,6 @@ const PricingSection: React.FC = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default PricingSection;
