@@ -50,9 +50,9 @@ const FeaturesSection: React.FC = () => {
 
   // Find the currently selected feature object
   const currentFeature = features.find(feature => feature.id === selectedFeature) || features[0];
-  return <section className="py-20 px-8 md:px-12 lg:px-20">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-center mb-8">
+  return <section className="py-16 px-8 md:px-12 lg:px-20">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-center mb-6">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md">
             <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">BUILT TO WIN</span>
           </div>
@@ -62,22 +62,22 @@ const FeaturesSection: React.FC = () => {
           Build zero-effort resumes with DraftZero
         </h2>
         
-        <p className="text-center text-draft-text dark:text-gray-300 mb-12 max-w-3xl mx-auto">
+        <p className="text-center text-draft-text dark:text-gray-300 mb-10 max-w-3xl mx-auto">
           Powered by breakthrough resume optimization technology
         </p>
         
-        <div className="flex flex-col lg:flex-row gap-12">
-          <div className="lg:w-2/5">
-            <div className="flex flex-col gap-10">
-              {features.map(feature => <div key={feature.id} onClick={() => setSelectedFeature(feature.id)} className={cn("flex gap-4 items-start p-4 rounded-lg transition-all duration-200 cursor-pointer", "hover:bg-[#EDEEE7] dark:hover:bg-draft-green/20", selectedFeature === feature.id && "bg-[#EDEEE7] dark:bg-draft-green/20 border-l-4 border-draft-green dark:border-draft-yellow")}>
-                  <div className="mt-1">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-3/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {features.map(feature => <div key={feature.id} onClick={() => setSelectedFeature(feature.id)} className={cn("flex gap-3 items-start p-3 rounded-lg transition-all duration-200 cursor-pointer", "hover:bg-[#EDEEE7] dark:hover:bg-draft-green/20", selectedFeature === feature.id && "bg-[#EDEEE7] dark:bg-draft-green/20 border-l-4 border-draft-green dark:border-draft-yellow")}>
+                  <div className="mt-1 shrink-0">
                     {feature.icon}
                   </div>
                   <div>
-                    <h3 className={cn("font-medium", selectedFeature === feature.id && "text-draft-green dark:text-draft-yellow")}>
+                    <h3 className={cn("font-medium text-sm", selectedFeature === feature.id && "text-draft-green dark:text-draft-yellow")}>
                       {feature.title}
                     </h3>
-                    <p className="text-draft-text dark:text-gray-300 mt-1">
+                    <p className="text-draft-text dark:text-gray-300 mt-1 text-xs">
                       {feature.description}
                     </p>
                   </div>
@@ -85,8 +85,8 @@ const FeaturesSection: React.FC = () => {
             </div>
           </div>
           
-          <div className="lg:w-3/5">
-            <div className="bg-white dark:bg-draft-green/10 rounded-lg border border-gray-200 dark:border-draft-green/30 shadow-lg overflow-hidden transition-all duration-300 h-[515px]">
+          <div className="lg:w-2/5">
+            <div className="bg-white dark:bg-draft-green/10 rounded-lg border border-gray-200 dark:border-draft-green/30 shadow-lg overflow-hidden transition-all duration-300 h-[400px]">
               <img src={currentFeature.image} alt={`${currentFeature.title} - DraftZero Feature`} className="w-full h-full object-contain" />
             </div>
           </div>
