@@ -20,6 +20,19 @@ const HeroSection: React.FC = () => {
   const [uploadState, setUploadState] = useState(NOT_UPLOADED);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
+        resumeId,
+        setResumeId,
+        jobId,
+        setJobId,
+        jobDescription,
+        setJobDescription,
+        optimizationResult,
+        setOptimizationResult,
+        isOptimizing,
+        setIsOptimizing
+      } = useResumeContext()
+  
+  const {
     user
   } = useAuth();
   const {
@@ -69,6 +82,7 @@ const HeroSection: React.FC = () => {
     setUploadState(UPLOADED)
     console.log("Resume Uploaded Successfully!")
     console.log(data)
+    
 
     // Auto expand the job description textarea when a file is selected
     if (!isWriteExpanded) {
