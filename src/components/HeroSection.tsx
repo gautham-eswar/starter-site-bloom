@@ -35,14 +35,6 @@ const HeroSection: React.FC = () => {
   const {
     user
   } = useAuth();
-  const {
-    resumeId,
-    setResumeId,
-    setJobId,
-    jobDescription,
-    setJobDescription,
-    setIsOptimizing
-  } = useResumeContext();
   const navigate = useNavigate();
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
