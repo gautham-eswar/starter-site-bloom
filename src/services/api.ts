@@ -12,7 +12,7 @@ const handleApiError = (error: any) => {
     description: errorMessage,
     variant: "destructive",
   });
-  // throw error;
+  throw error;
 };
 
 // Helper function for making API requests
