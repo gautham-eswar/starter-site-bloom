@@ -29,7 +29,7 @@ const FeaturesSection: React.FC = () => {
     id: 'industry-adaptive',
     icon: <Cog className="text-draft-green dark:text-draft-yellow" size={20} />,
     title: 'Industry-Adaptive Learning™',
-    description: 'Draft Zero recognizes the unique language patterns in your professional domain, and tailors optimization specifically to your industry's expectations.',
+    description: "Draft Zero recognizes the unique language patterns in your professional domain, and tailors optimization specifically to your industry's expectations.",
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
     id: 'smart-keyword',
