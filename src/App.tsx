@@ -9,6 +9,8 @@ import ComparisonPage from "./pages/ComparisonPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
+import Technology from "./pages/Technology"; // Add Technology page
+import FAQ from "./pages/FAQ"; // Add FAQ page
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
@@ -35,6 +37,8 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/technology" element={<Technology />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/comparison" element={
             <ProtectedRoute>
               <ComparisonPage />
