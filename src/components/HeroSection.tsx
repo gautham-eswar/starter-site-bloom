@@ -13,6 +13,7 @@ const HeroSection: React.FC = () => {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     user
@@ -52,6 +53,16 @@ const HeroSection: React.FC = () => {
     // Just store the file for later processing
     console.log(`File selected: ${file.name}`);
     setSelectedFile(file);
+
+    console.log(`Uploading resume. User ID: ${user.id}`)
+    const {data, error} = await uploadResume(selectedFile, user.id)
+
+    if (error){
+      throw Error(`Error while uploading resume: ${error.message}` )
+    }
+    
+    console.log("Resume Uploaded Successfully!")
+    console.log(data)
 
     // Auto expand the job description textarea when a file is selected
     if (!isWriteExpanded) {
@@ -142,12 +153,14 @@ const HeroSection: React.FC = () => {
                   We will use this resume as a base.
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
+                {selectedFile && 
+                  <p className="text-sm text-draft-green mt-2">
+                      Selected File: {selectedFile.name}
+                  </p>
+                }
                 <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isProcessing}>
                   {isProcessing ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {selectedFile && <p className="text-sm text-draft-green mt-2">
-                      Selected: {selectedFile.name}
-                    </p>}
               </div>
               <div className="absolute right-0 h-full flex items-center">
                 <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
