@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 import { FAQCategory } from '@/pages/FAQ';
 
 interface FAQItemProps {
@@ -257,6 +257,13 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
     }
   };
 
+  // Add this function to clear search
+  const clearSearch = () => {
+    // This is a placeholder function since we don't have direct access to setQuery
+    // Instead, we'll handle this by making the button redirect to the category without search
+    window.location.href = `?category=${activeCategory}`;
+  };
+
   return (
     <div ref={accordionRef} className="max-w-3xl mx-auto mb-12">
       {filteredFAQs.length > 0 ? (
@@ -329,7 +336,7 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
             We couldn't find any FAQs matching your search.
           </p>
           <button 
-            onClick={() => setFilter('')}
+            onClick={clearSearch}
             className="mt-4 px-4 py-2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green rounded-md hover:bg-draft-green/90 dark:hover:bg-draft-yellow/90 transition-colors"
           >
             Clear search
@@ -337,8 +344,8 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
         </div>
       )}
       
-      {/* Animation styles */}
-      <style jsx>{`
+      <style>
+        {`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -347,7 +354,8 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out forwards;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };

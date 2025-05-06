@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -226,7 +225,8 @@ const SemanticVisualization: React.FC = () => {
       </div>
       
       {/* Add the styles for the network visualization */}
-      <style jsx>{`
+      <style>
+        {`
         .word-node {
           position: absolute;
           padding: 10px 14px;
@@ -311,7 +311,8 @@ const SemanticVisualization: React.FC = () => {
         .dark .connection-line {
           stroke: #d1d5db;
         }
-      `}</style>
+        `}
+      </style>
     </section>
   );
 };
