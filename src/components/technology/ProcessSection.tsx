@@ -45,7 +45,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ number, title, description, i
       className="flex-1 relative group opacity-0 translate-y-4 transition-all duration-700"
     >
       {/* Number Circle */}
-      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg z-10">
+      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg z-10 font-serif">
         {number}
       </div>
       
@@ -54,8 +54,8 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ number, title, description, i
         <div className="flex justify-center mb-4 text-draft-green dark:text-draft-yellow transition-all duration-300 group-hover:transform group-hover:scale-110">
           {icon}
         </div>
-        <h3 className="text-xl font-semibold text-center mb-3 text-draft-green dark:text-draft-yellow">{title}</h3>
-        <p className="text-draft-text dark:text-gray-300 text-center text-[1.1rem]">{description}</p>
+        <h3 className="text-xl font-semibold text-center mb-3 text-draft-green dark:text-draft-yellow font-serif">{title}</h3>
+        <p className="text-draft-text dark:text-gray-300 text-center text-[1.1rem] font-serif">{description}</p>
       </div>
       
       {/* Connecting line (except for last item) */}
@@ -103,7 +103,7 @@ const ProcessSection: React.FC = () => {
           <h2 className="text-heading font-serif mb-6 text-draft-green dark:text-draft-yellow">
             Our Three-Step Optimization Process
           </h2>
-          <p className="text-draft-text dark:text-gray-300 max-w-3xl mx-auto text-lg">
+          <p className="text-draft-text dark:text-gray-300 max-w-3xl mx-auto text-lg font-serif">
             We've engineered a seamless process that transforms your existing resume into an optimized document that gets results.
           </p>
         </div>

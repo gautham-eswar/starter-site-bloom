@@ -152,8 +152,8 @@ const TechnologiesShowcase: React.FC = () => {
     {
       icon: <TrendingUp className="h-6 w-6" />,
       title: "Achievement Amplification",
-      stat: "67%",
-      description: "Responsibilities get filtered. Achievements get interviews.",
+      stat: "40%",
+      description: "Resumes with quantified achievements get 40% more interviews.",
       details: "We don't just add keywords—we restructure your experience to highlight results and measurable impacts that make recruiters stop and take notice, while maintaining complete factual accuracy. Our system identifies and emphasizes quantifiable accomplishments that demonstrate your real value to employers."
     }
   ];
