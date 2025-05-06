@@ -76,7 +76,11 @@ const HeroSection: React.FC = () => {
 
     if (error){
       setUploadState(NOT_UPLOADED)
-      throw Error(`Error while uploading resume: ${error.message}` )
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive"
+      });
     }
 
     setUploadState(UPLOADED)
