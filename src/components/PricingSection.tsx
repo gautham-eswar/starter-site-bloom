@@ -18,9 +18,9 @@ const PricingSection: React.FC = () => {
           </h2>
           
           <div className="flex items-center justify-center mt-6 gap-2">
-            <span className={`text-sm ${!isAnnual ? 'font-medium text-draft-green dark:text-draft-yellow' : 'text-draft-text/70 dark:text-gray-400'}`}>Billed Monthly</span>
-            <Switch checked={isAnnual} onCheckedChange={setIsAnnual} className="bg-draft-green data-[state=unchecked]:bg-draft-green dark:bg-draft-yellow dark:data-[state=unchecked]:bg-draft-yellow" />
-            <span className={`text-sm ${isAnnual ? 'font-medium text-draft-green dark:text-draft-yellow' : 'text-draft-text/70 dark:text-gray-400'}`}>Billed Annually</span>
+            
+            
+            
           </div>
         </div>
         
