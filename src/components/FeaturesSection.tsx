@@ -53,7 +53,7 @@ const FeaturesSection: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-center mb-6">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md">
-            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">BUILT TO WIN</span>
+            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">WHAT WE DO</span>
           </div>
         </div>
         
@@ -61,9 +61,7 @@ const FeaturesSection: React.FC = () => {
           Build zero-effort resumes with DraftZero
         </h2>
         
-        <p className="text-center text-draft-text dark:text-gray-300 mb-10 max-w-3xl mx-auto">
-          Powered by breakthrough resume optimization technology
-        </p>
+        
         
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="lg:w-1/2">
