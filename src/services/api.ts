@@ -29,7 +29,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     const response = await fetch(url, options);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      concole.error(errorData.message || `Request failed with status ${response.status}`);
+      console.error(errorData.message || `Request failed with status ${response.status}`);
     }
     
     return await response.json();
