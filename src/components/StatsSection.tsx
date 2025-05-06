@@ -21,8 +21,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">40%</h3>
-            <p className="mt-2 text-center dark:text-gray-300">A statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">93%</h3>
+            <p className="mt-2 text-center dark:text-gray-300">Resumes rejected by ATS before human review</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -33,8 +33,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">100%</h3>
-            <p className="mt-2 text-center dark:text-gray-300">Another statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">8 sec</h3>
+            <p className="mt-2 text-center dark:text-gray-300">Average time recruiters spend on initial resume screening</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -45,8 +45,8 @@ const StatsSection: React.FC = () => {
                 className="w-[160px] h-[160px]" 
               />
             </div>
-            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">2457</h3>
-            <p className="mt-2 text-center dark:text-gray-300">Another statistic</p>
+            <h3 className="text-4xl md:text-5xl font-serif font-medium dark:text-draft-yellow">92%</h3>
+            <p className="mt-2 text-center dark:text-gray-300">Of Fortune 500 companies use keyword filtering technology</p>
           </div>
         </div>
       </div>
