@@ -65,7 +65,7 @@ const FeaturesSection: React.FC = () => {
         
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="lg:w-1/2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-[10px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-0">
               {features.map(feature => <div key={feature.id} onClick={() => setSelectedFeature(feature.id)} className={cn("flex gap-3 items-start p-3 rounded-lg transition-all duration-200 cursor-pointer", "hover:bg-[#EDEEE7] dark:hover:bg-draft-green/20", selectedFeature === feature.id && "bg-[#EDEEE7] dark:bg-draft-green/20 border-l-4 border-draft-green dark:border-draft-yellow")}>
                   <div className="mt-1 shrink-0">
                     {feature.icon}
