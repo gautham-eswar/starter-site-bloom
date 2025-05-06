@@ -165,7 +165,7 @@ const HeroSection: React.FC = () => {
                 </Button>
                 {selectedFile && 
                   <p className="text-sm text-draft-green mt-2">
-                    {()=>{
+                    {(()=>{
                       switch (uploadState){
                         case UPLOADING:
                           return `Selected File: `;
@@ -174,7 +174,7 @@ const HeroSection: React.FC = () => {
                         case NOT_UPLOADED:
                           return `Couldn't Upload File: `;
                       }                    
-                    }}
+                    })()}
                     {selectedFile.name}
                   </p>
                 }
