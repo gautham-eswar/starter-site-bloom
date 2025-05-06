@@ -53,16 +53,16 @@ const HeroSection: React.FC = () => {
     // Just store the file for later processing
     console.log(`File selected: ${file.name}`);
     setSelectedFile(file);
-    console.log(`Uploading resume. User ID: ${user.id}`);
-    const {
-      data,
-      error
-    } = await uploadResume(selectedFile, user.id);
-    if (error) {
-      throw Error(`Error while uploading resume: ${error.message}`);
+
+    console.log(`Uploading resume. User ID: ${user.id}`)
+    const {data, error} = await uploadResume(selectedFile, user.id)
+
+    if (error){
+      throw Error(`Error while uploading resume: ${error.message}` )
     }
-    console.log("Resume Uploaded Successfully!");
-    console.log(data);
+    
+    console.log("Resume Uploaded Successfully!")
+    console.log(data)
 
     // Auto expand the job description textarea when a file is selected
     if (!isWriteExpanded) {
@@ -153,9 +153,11 @@ const HeroSection: React.FC = () => {
                   We will use this resume as a base.
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
-                {selectedFile && <p className="text-sm text-draft-green mt-2">
+                {selectedFile && 
+                  <p className="text-sm text-draft-green mt-2">
                       Selected File: {selectedFile.name}
-                  </p>}
+                  </p>
+                }
                 <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isProcessing}>
                   {isProcessing ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
@@ -194,7 +196,7 @@ const HeroSection: React.FC = () => {
                 
                 {/* Make it better button - styled like sign-in button */}
                 <div className={`mt-4 ${isWriteExpanded ? 'pt-4' : ''}`}>
-                  <Button onClick={handleMakeItBetter} disabled={!selectedFile || !jobDescription.trim() || isProcessing} className="bg-draft-green hover:bg-draft-green/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 text-green-950 my-0 mx-0 py-0 px-[6px] text-justify">
+                  <Button onClick={handleMakeItBetter} disabled={!selectedFile || !jobDescription.trim() || isProcessing} className="bg-draft-green hover:bg-draft-green/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 text-lime-950">
                     {isProcessing ? "Processing..." : "Make it better"}
                   </Button>
                 </div>
