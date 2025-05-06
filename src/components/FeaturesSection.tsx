@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Scissors, Mic, Bot, Search } from 'lucide-react';
+import { Brain, Scale, Cog, Target, Fingerprint } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Define our feature data structure
@@ -13,29 +14,35 @@ interface Feature {
 const FeaturesSection: React.FC = () => {
   // Features data with associated images
   const features: Feature[] = [{
-    id: 'cut-fluff',
-    icon: <Scissors className="text-draft-green dark:text-draft-yellow" size={20} />,
-    title: 'Cut the fluff',
-    description: "We trim what doesn't matter and spotlight what does — fast.",
+    id: 'semantic-intelligence',
+    icon: <Brain className="text-draft-green dark:text-draft-yellow" size={20} />,
+    title: 'Semantic Intelligence Engine™',
+    description: "Our algorithm understands meaning, not just keywords. 83% of recruiters prioritize context over exact term matches.",
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
-    id: 'speak-language',
-    icon: <Mic className="text-draft-green dark:text-draft-yellow" size={20} />,
-    title: 'Speak their language',
-    description: 'Match keywords and phrases from the job posting.',
+    id: 'dual-optimization',
+    icon: <Scale className="text-draft-green dark:text-draft-yellow" size={20} />,
+    title: 'Dual Optimization Technology™',
+    description: 'Only 25% of candidates pass both ATS and human screening. We optimize for both challenges simultaneously.',
     image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
   }, {
-    id: 'ats-friendly',
-    icon: <Bot className="text-draft-green dark:text-draft-yellow" size={20} />,
-    title: 'ATS-friendly by default',
-    description: 'Designed to pass through Applicant Tracking Systems.',
+    id: 'industry-adaptive',
+    icon: <Cog className="text-draft-green dark:text-draft-yellow" size={20} />,
+    title: 'Industry-Adaptive Learning™',
+    description: 'Draft Zero recognizes the unique language patterns in your professional domain, and tailors optimization specifically to your industry's expectations.',
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
-    id: 'zero-guesswork',
-    icon: <Search className="text-draft-green dark:text-draft-yellow" size={20} />,
-    title: 'Zero guesswork',
-    description: 'Follow our proven templates for guaranteed results.',
+    id: 'smart-keyword',
+    icon: <Target className="text-draft-green dark:text-draft-yellow" size={20} />,
+    title: 'Smart Keyword Prioritization',
+    description: 'Top 5 keywords carry 3x more weight than all others combined. We identify and position what matters most.',
     image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
+  }, {
+    id: 'authenticity',
+    icon: <Fingerprint className="text-draft-green dark:text-draft-yellow" size={20} />,
+    title: 'Authenticity Preservation',
+    description: '78% of recruiters spot generic AI content. We enhance YOUR experience while maintaining your unique voice.',
+    image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }];
 
   // State to track the currently selected feature
@@ -51,9 +58,13 @@ const FeaturesSection: React.FC = () => {
           </div>
         </div>
         
-        <h2 className="text-heading font-serif mb-12 text-center text-draft-green dark:text-draft-yellow">
+        <h2 className="text-heading font-serif mb-4 text-center text-draft-green dark:text-draft-yellow">
           Build zero-effort resumes with DraftZero
         </h2>
+        
+        <p className="text-center text-draft-text dark:text-gray-300 mb-12 max-w-3xl mx-auto">
+          Powered by breakthrough resume optimization technology
+        </p>
         
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="lg:w-2/5">
