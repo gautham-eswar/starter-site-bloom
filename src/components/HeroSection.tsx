@@ -8,12 +8,16 @@ import { uploadResume, optimizeResume } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+
+const NOT_UPLOADED = 0, UPLOADING = 1, UPLOADED = 2;
+
+
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadState, setUploadState] = useState(NOT_UPLOADED);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     user
@@ -53,14 +57,16 @@ const HeroSection: React.FC = () => {
     // Just store the file for later processing
     console.log(`File selected: ${file.name}`);
     setSelectedFile(file);
+    setUploadState(UPLOADING)
 
-    console.log(`Uploading resume. User ID: ${user.id}`)
-    const {data, error} = await uploadResume(selectedFile, user.id)
+    const {data, error} = await uploadResume(file, user.id)
 
     if (error){
+      setUploadState(NOT_UPLOADED)
       throw Error(`Error while uploading resume: ${error.message}` )
     }
-    
+
+    setUploadState(UPLOADED)
     console.log("Resume Uploaded Successfully!")
     console.log(data)
 
@@ -153,14 +159,24 @@ const HeroSection: React.FC = () => {
                   We will use this resume as a base.
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
+                
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isProcessing}>
+                  {uploadState== UPLOADING ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
+                </Button>
                 {selectedFile && 
                   <p className="text-sm text-draft-green mt-2">
-                      Selected File: {selectedFile.name}
+                    {()=>{
+                      switch (uploadState){
+                        case UPLOADING:
+                          return `Selected File: ${selectedFile.name}`;
+                        case UPLOADED:
+                          return `Uploaded File: ${selectedFile.name}`;
+                        case UPLOADING:
+                          return `Couldn't Upload File: ${selectedFile.name}. Please try to re-upload the file or try again later.`;
+                      }                    
+                    }}
                   </p>
                 }
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isProcessing}>
-                  {isProcessing ? "Processing..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
-                </Button>
               </div>
               <div className="absolute right-0 h-full flex items-center">
                 <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
