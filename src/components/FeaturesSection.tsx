@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Brain, Scale, Cog, Target, Fingerprint } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,31 +15,31 @@ const FeaturesSection: React.FC = () => {
   // Features data with associated images
   const features: Feature[] = [{
     id: 'semantic-intelligence',
-    icon: <Brain className="text-draft-green dark:text-draft-yellow" size={20} />,
+    icon: <Brain className="text-draft-green dark:text-draft-yellow" size={24} />,
     title: 'Semantic Intelligence Engine™',
     description: "Our algorithm understands meaning, not just keywords. 83% of recruiters prioritize context over exact term matches.",
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
     id: 'dual-optimization',
-    icon: <Scale className="text-draft-green dark:text-draft-yellow" size={20} />,
+    icon: <Scale className="text-draft-green dark:text-draft-yellow" size={24} />,
     title: 'Dual Optimization Technology™',
     description: 'Only 25% of candidates pass both ATS and human screening. We optimize for both challenges simultaneously.',
     image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
   }, {
     id: 'industry-adaptive',
-    icon: <Cog className="text-draft-green dark:text-draft-yellow" size={20} />,
+    icon: <Cog className="text-draft-green dark:text-draft-yellow" size={24} />,
     title: 'Industry-Adaptive Learning™',
     description: "Draft Zero recognizes the unique language patterns in your professional domain, and tailors optimization specifically to your industry's expectations.",
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
     id: 'smart-keyword',
-    icon: <Target className="text-draft-green dark:text-draft-yellow" size={20} />,
+    icon: <Target className="text-draft-green dark:text-draft-yellow" size={24} />,
     title: 'Smart Keyword Prioritization',
     description: 'Top 5 keywords carry 3x more weight than all others combined. We identify and position what matters most.',
     image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
   }, {
     id: 'authenticity',
-    icon: <Fingerprint className="text-draft-green dark:text-draft-yellow" size={20} />,
+    icon: <Fingerprint className="text-draft-green dark:text-draft-yellow" size={24} />,
     title: 'Authenticity Preservation',
     description: '78% of recruiters spot generic AI content. We enhance YOUR experience while maintaining your unique voice.',
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
@@ -65,18 +66,18 @@ const FeaturesSection: React.FC = () => {
           Powered by breakthrough resume optimization technology
         </p>
         
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-3/5">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-0">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="lg:w-1/2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-0">
               {features.map(feature => <div key={feature.id} onClick={() => setSelectedFeature(feature.id)} className={cn("flex gap-3 items-start p-3 rounded-lg transition-all duration-200 cursor-pointer", "hover:bg-[#EDEEE7] dark:hover:bg-draft-green/20", selectedFeature === feature.id && "bg-[#EDEEE7] dark:bg-draft-green/20 border-l-4 border-draft-green dark:border-draft-yellow")}>
                   <div className="mt-1 shrink-0">
                     {feature.icon}
                   </div>
                   <div>
-                    <h3 className={cn("font-medium text-sm", selectedFeature === feature.id && "text-draft-green dark:text-draft-yellow")}>
+                    <h3 className={cn("font-medium text-base", selectedFeature === feature.id && "text-draft-green dark:text-draft-yellow")}>
                       {feature.title}
                     </h3>
-                    <p className="text-draft-text dark:text-gray-300 mt-1 text-xs">
+                    <p className="text-draft-text dark:text-gray-300 mt-1 text-sm">
                       {feature.description}
                     </p>
                   </div>
@@ -84,8 +85,8 @@ const FeaturesSection: React.FC = () => {
             </div>
           </div>
           
-          <div className="lg:w-2/5">
-            <div className="bg-white dark:bg-draft-green/10 rounded-lg border border-gray-200 dark:border-draft-green/30 shadow-lg overflow-hidden transition-all duration-300 h-[400px]">
+          <div className="lg:w-1/2">
+            <div className="bg-white dark:bg-draft-green/10 rounded-lg border border-gray-200 dark:border-draft-green/30 shadow-lg overflow-hidden transition-all duration-300 h-[450px]">
               <img src={currentFeature.image} alt={`${currentFeature.title} - DraftZero Feature`} className="w-full h-full object-contain" />
             </div>
           </div>
