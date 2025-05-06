@@ -64,7 +64,7 @@ const TechnologyCard: React.FC<TechnologyCardProps> = ({ icon, title, stat, desc
           <div className="p-2 rounded-full bg-draft-green/10 dark:bg-draft-green/20 text-draft-green dark:text-draft-yellow">
             {icon}
           </div>
-          <div className="text-3xl font-bold text-draft-green dark:text-draft-yellow">
+          <div className="text-3xl font-bold text-draft-green dark:text-draft-yellow font-serif">
             {stat}
           </div>
         </div>
@@ -112,7 +112,7 @@ const TechnologiesShowcase: React.FC = () => {
     };
   }, []);
 
-  // Define the technologies data with the new sixth technology added
+  // Define the technologies data with the updated "Achievement Amplification" technology
   const technologies = [
     {
       icon: <Brain className="h-6 w-6" />,

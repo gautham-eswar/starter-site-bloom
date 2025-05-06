@@ -17,7 +17,7 @@ const Technology: React.FC = () => {
 
   // Changed the title in the document
   useEffect(() => {
-    document.title = "Our Optimization Technology | DraftZero";
+    document.title = "Resume Optimization Technology | DraftZero";
   }, []);
 
   return (

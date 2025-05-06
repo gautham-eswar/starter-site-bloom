@@ -34,7 +34,6 @@ const Header: React.FC = () => {
         <ThemeToggle className="ml-1" />
       </div>
       
-      {/* Navigation links now at the right side, before the auth buttons */}
       <div className="flex items-center gap-4">
         <div className="hidden md:flex items-center space-x-4 mr-4">
           <Link 

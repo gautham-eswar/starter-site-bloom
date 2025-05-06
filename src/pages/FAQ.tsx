@@ -15,9 +15,14 @@ const FAQ: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<FAQCategory>('general');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Scroll to top on page load
+  // Scroll to top on page load without animation
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Set document title
+  useEffect(() => {
+    document.title = "Frequently Asked Questions | DraftZero";
   }, []);
 
   return (
