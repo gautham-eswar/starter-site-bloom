@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Brain, Scale, Cog, Target, Fingerprint } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -76,7 +77,7 @@ const FeaturesSection: React.FC = () => {
                     <h3 className={cn("font-medium text-base", selectedFeature === feature.id && "text-draft-green dark:text-draft-yellow")}>
                       {feature.title}
                     </h3>
-                    <p className="text-draft-text dark:text-gray-300 mt-1 text-sm">
+                    <p className="text-draft-text dark:text-gray-300 mt-1 text-[1rem]">
                       {feature.description}
                     </p>
                   </div>
