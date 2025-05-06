@@ -39,19 +39,19 @@ const Header: React.FC = () => {
         <div className="hidden md:flex items-center space-x-4 mr-4">
           <Link 
             to="/technology" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/technology') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/technology') ? 'font-medium' : ''}`}
           >
             Technology
           </Link>
           <Link 
             to="/pricing" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/pricing') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/pricing') ? 'font-medium' : ''}`}
           >
             Pricing
           </Link>
           <Link 
             to="/faq" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/faq') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/faq') ? 'font-medium' : ''}`}
           >
             FAQ
           </Link>
@@ -59,13 +59,13 @@ const Header: React.FC = () => {
         
         {user ? (
           <div className="flex items-center gap-2">
-            <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow">
+            <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow font-serif">
               {user.email}
             </div>
             <Button 
               variant="outline"
               size="icon"
-              className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+              className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif"
               onClick={handleSignOut}
             >
               <LogOut size={18} />
@@ -74,7 +74,7 @@ const Header: React.FC = () => {
         ) : (
           <Button 
             variant="outline" 
-            className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+            className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif"
             onClick={handleSignIn}
           >
             Sign in

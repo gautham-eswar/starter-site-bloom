@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Accordion,
@@ -331,13 +330,13 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
           <div className="mb-4">
             <Search className="h-12 w-12 mx-auto text-gray-400" />
           </div>
-          <h3 className="text-xl font-medium text-draft-green dark:text-draft-yellow mb-2">No results found</h3>
-          <p className="text-draft-text dark:text-gray-300">
+          <h3 className="text-xl font-medium text-draft-green dark:text-draft-yellow mb-2 font-serif">No results found</h3>
+          <p className="text-draft-text dark:text-gray-300 font-serif">
             We couldn't find any FAQs matching your search.
           </p>
           <button 
             onClick={clearSearch}
-            className="mt-4 px-4 py-2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green rounded-md hover:bg-draft-green/90 dark:hover:bg-draft-yellow/90 transition-colors"
+            className="mt-4 px-4 py-2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green rounded-md hover:bg-draft-green/90 dark:hover:bg-draft-yellow/90 transition-colors font-serif"
           >
             Clear search
           </button>

@@ -1,6 +1,6 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Brain, Scale, Cog, Target, Fingerprint } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Brain, Scale, Cog, Target, Fingerprint, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Card,
@@ -68,14 +68,14 @@ const TechnologyCard: React.FC<TechnologyCardProps> = ({ icon, title, stat, desc
             {stat}
           </div>
         </div>
-        <CardTitle className="mt-4 text-xl text-draft-green dark:text-draft-yellow">{title}</CardTitle>
-        <CardDescription className="text-draft-text dark:text-gray-300 text-[1.1rem]">{description}</CardDescription>
+        <CardTitle className="mt-4 text-xl text-draft-green dark:text-draft-yellow font-serif">{title}</CardTitle>
+        <CardDescription className="text-draft-text dark:text-gray-300 text-[1.1rem] font-serif">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="border-draft-green/20">
-            <AccordionTrigger className="text-draft-green dark:text-draft-yellow">Learn More</AccordionTrigger>
-            <AccordionContent className="text-draft-text dark:text-gray-300">
+            <AccordionTrigger className="text-draft-green dark:text-draft-yellow font-serif">Learn More</AccordionTrigger>
+            <AccordionContent className="text-draft-text dark:text-gray-300 font-serif">
               {details}
             </AccordionContent>
           </AccordionItem>
@@ -112,7 +112,7 @@ const TechnologiesShowcase: React.FC = () => {
     };
   }, []);
 
-  // Define the technologies data
+  // Define the technologies data with the new sixth technology added
   const technologies = [
     {
       icon: <Brain className="h-6 w-6" />,
@@ -148,6 +148,13 @@ const TechnologiesShowcase: React.FC = () => {
       stat: "78%",
       description: "of recruiters spot generic AI content. We maintain your unique voice.",
       details: "Unlike many AI tools that generate generic content, DraftZero enhances YOUR experience and qualifications while maintaining your authentic voice. We optimize what you've already accomplished rather than replacing it with template text."
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: "Achievement Amplification",
+      stat: "67%",
+      description: "Responsibilities get filtered. Achievements get interviews.",
+      details: "We don't just add keywords—we restructure your experience to highlight results and measurable impacts that make recruiters stop and take notice, while maintaining complete factual accuracy. Our system identifies and emphasizes quantifiable accomplishments that demonstrate your real value to employers."
     }
   ];
 
@@ -159,9 +166,9 @@ const TechnologiesShowcase: React.FC = () => {
           className="text-center mb-16 opacity-0 translate-y-6 transition-all duration-700"
         >
           <h2 className="text-heading font-serif mb-6 text-draft-green dark:text-draft-yellow">
-            Our Five Core Technologies
+            Our Advanced Resume Technologies
           </h2>
-          <p className="text-draft-text dark:text-gray-300 max-w-3xl mx-auto text-lg">
+          <p className="text-draft-text dark:text-gray-300 max-w-3xl mx-auto text-lg font-serif">
             DraftZero combines multiple proprietary technologies to create the most effective resume optimization platform available today.
           </p>
         </div>

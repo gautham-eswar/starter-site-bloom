@@ -38,7 +38,7 @@ const FAQCategories: React.FC<FAQCategoriesProps> = ({ activeCategory, setActive
             <TabsTrigger 
               key={category.id} 
               value={category.id}
-              className="data-[state=active]:bg-draft-green data-[state=active]:text-white dark:data-[state=active]:bg-draft-yellow dark:data-[state=active]:text-draft-green text-draft-text dark:text-gray-300 text-[1.1rem]"
+              className="data-[state=active]:bg-draft-green data-[state=active]:text-white dark:data-[state=active]:bg-draft-yellow dark:data-[state=active]:text-draft-green text-draft-text dark:text-gray-300 text-[1.1rem] font-serif"
             >
               {category.label}
             </TabsTrigger>

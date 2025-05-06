@@ -15,6 +15,11 @@ const Technology: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Changed the title in the document
+  useEffect(() => {
+    document.title = "Our Optimization Technology | DraftZero";
+  }, []);
+
   return (
     <div className="min-h-screen bg-draft-bg dark:bg-[#1A3F35]">
       <Header />
