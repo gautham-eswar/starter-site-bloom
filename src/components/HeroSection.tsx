@@ -8,10 +8,9 @@ import { uploadResume, optimizeResume } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
-
-const NOT_UPLOADED = 0, UPLOADING = 1, UPLOADED = 2;
-
-
+const NOT_UPLOADED = 0,
+  UPLOADING = 1,
+  UPLOADED = 2;
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -20,18 +19,17 @@ const HeroSection: React.FC = () => {
   const [uploadState, setUploadState] = useState(NOT_UPLOADED);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-        resumeId,
-        setResumeId,
-        jobId,
-        setJobId,
-        jobDescription,
-        setJobDescription,
-        optimizationResult,
-        setOptimizationResult,
-        isOptimizing,
-        setIsOptimizing
-      } = useResumeContext()
-  
+    resumeId,
+    setResumeId,
+    jobId,
+    setJobId,
+    jobDescription,
+    setJobDescription,
+    optimizationResult,
+    setOptimizationResult,
+    isOptimizing,
+    setIsOptimizing
+  } = useResumeContext();
   const {
     user
   } = useAuth();
@@ -62,23 +60,22 @@ const HeroSection: React.FC = () => {
     // Just store the file for later processing
     console.log(`File selected: ${file.name}`);
     setSelectedFile(file);
-    setUploadState(UPLOADING)
-
-    const {data, error} = await uploadResume(file, user.id)
-
-    if (error){
-      setUploadState(NOT_UPLOADED)
+    setUploadState(UPLOADING);
+    const {
+      data,
+      error
+    } = await uploadResume(file, user.id);
+    if (error) {
+      setUploadState(NOT_UPLOADED);
       toast({
         title: "Upload failed",
         description: "There was an error uploading your resume. Please try again.",
         variant: "destructive"
       });
     }
-
-    setUploadState(UPLOADED)
-    console.log("Resume Uploaded Successfully!")
-    console.log(data)
-    
+    setUploadState(UPLOADED);
+    console.log("Resume Uploaded Successfully!");
+    console.log(data);
 
     // Auto expand the job description textarea when a file is selected
     if (!isWriteExpanded) {
@@ -150,9 +147,7 @@ const HeroSection: React.FC = () => {
             <p className="mt-6 text-lg md:text-xl text-draft-text dark:text-gray-200 opacity-90">
               Tailor your resume to match a job description in minutes
             </p>
-            <p className="mt-3 text-base md:text-lg text-draft-text dark:text-gray-300 opacity-80 italic">
-              The only tool that optimizes for both ATS robots AND human recruiters
-            </p>
+            
           </div>
         </div>
         
@@ -173,24 +168,22 @@ const HeroSection: React.FC = () => {
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={uploadState==UPLOADING}>
-                  {uploadState== UPLOADING ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={uploadState == UPLOADING}>
+                  {uploadState == UPLOADING ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {selectedFile && 
-                  <p className="text-sm text-draft-green mt-2">
-                    {(()=>{
-                      switch (uploadState){
-                        case UPLOADING:
-                          return `Selected File: `;
-                        case UPLOADED:
-                          return `Uploaded File: `;
-                        case NOT_UPLOADED:
-                          return `Couldn't Upload File: `;
-                      }                    
-                    })()}
+                {selectedFile && <p className="text-sm text-draft-green mt-2">
+                    {(() => {
+                  switch (uploadState) {
+                    case UPLOADING:
+                      return `Selected File: `;
+                    case UPLOADED:
+                      return `Uploaded File: `;
+                    case NOT_UPLOADED:
+                      return `Couldn't Upload File: `;
+                  }
+                })()}
                     {selectedFile.name}
-                  </p>
-                }
+                  </p>}
               </div>
               <div className="absolute right-0 h-full flex items-center">
                 <img src="/lovable-uploads/c5522b82-cbba-4967-b071-9464b0ddf692.png" alt="Decorative element" className="w-24 h-24" />
@@ -226,7 +219,7 @@ const HeroSection: React.FC = () => {
                 
                 {/* Make it better button - styled like sign-in button */}
                 <div className={`mt-4 ${isWriteExpanded ? 'pt-4' : ''}`}>
-                  <Button onClick={handleMakeItBetter} disabled={!selectedFile || !jobDescription.trim() || isProcessing} className="bg-draft-green hover:bg-draft-green/90 dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 text-lime-950">
+                  <Button onClick={handleMakeItBetter} disabled={!selectedFile || !jobDescription.trim() || isProcessing} className="text-lime-950">
                     {isProcessing ? "Processing..." : "Make it better"}
                   </Button>
                 </div>
