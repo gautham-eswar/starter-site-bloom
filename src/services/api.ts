@@ -55,11 +55,12 @@ export async function uploadResume(file: File, userId: string) {
 }
 
 // Optimize resume with job description
-export async function optimizeResume(resumeId: string, jobDescription: string) {
+export async function optimizeResume(resumeId: string, jobDescription: string, userId: string) {
   return await apiRequest("/optimize", {
     method: "POST",
     body: JSON.stringify({
       resume_id: resumeId,
+      user_id: userId,
       job_description: jobDescription,
     }),
   });
