@@ -230,7 +230,7 @@ const HeroSection: React.FC = () => {
       </div>
 
       {/* Progress Modal */}
-      <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
+      {/* <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} /> */}
     </section>;
 };
 
