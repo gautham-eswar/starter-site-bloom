@@ -76,8 +76,8 @@ const HeroSection: React.FC = () => {
       });
     }
     setUploadState(UPLOADED);
-    setResumeId(data.id)
-    console.log("Resume Uploaded Successfully!");
+    setResumeId(data.resume_id)
+    console.log(`Resume Uploaded Successfully! Resume ID: ${data.resume_id}`);
     console.log(data);
 
     // Auto expand the job description textarea when a file is selected
