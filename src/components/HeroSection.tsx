@@ -116,7 +116,7 @@ const HeroSection: React.FC = () => {
       }
 
       // Then optimize it
-      const optimizeResponse = await optimizeResume(resumeId, jobDescription);
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
       if (!optimizeResponse || !optimizeResponse.job_id) {
         throw new Error("Failed to optimize resume");
       }
