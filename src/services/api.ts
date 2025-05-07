@@ -56,6 +56,7 @@ export async function uploadResume(file: File, userId: string) {
 
 // Optimize resume with job description
 export async function optimizeResume(resumeId: string, jobDescription: string, userId: string) {
+  console.log(userId)
   return await apiRequest("/optimize", {
     method: "POST",
     body: JSON.stringify({
