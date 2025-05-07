@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Brain, Scale, Cog, Target, Fingerprint, Trophy } from 'lucide-react';
+import { Brain, Scale, Cog, Fingerprint, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Define our feature data structure
@@ -32,17 +32,11 @@ const FeaturesSection: React.FC = () => {
     description: "Draft Zero recognizes the unique language patterns in your professional domain, and tailors optimization specifically to your industry's expectations.",
     image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }, {
-    id: 'smart-keyword',
-    icon: <Target className="text-draft-green dark:text-draft-yellow" size={24} />,
-    title: 'Smart Keyword Prioritization',
-    description: 'Top 5 keywords carry 3x more weight than all others combined. We identify and position what matters most.',
+    id: 'adaptive-formatting',
+    icon: <Trophy className="text-draft-green dark:text-draft-yellow" size={24} />,
+    title: 'Adaptive Formatting Engine',
+    description: 'DraftZero outperforms generic tools with an adaptive formatting engine that transforms your resume into a clean, recruiter-optimized layout.',
     image: '/lovable-uploads/dea2fb25-e955-4057-9663-d39a1bb2a3a8.png'
-  }, {
-    id: 'authenticity',
-    icon: <Fingerprint className="text-draft-green dark:text-draft-yellow" size={24} />,
-    title: 'Authenticity Preservation',
-    description: '78% of recruiters spot generic AI content. We enhance YOUR experience while maintaining your unique voice.',
-    image: '/lovable-uploads/4888ffd5-758f-4167-9b6d-79e0225cc883.png'
   }];
 
   // State to track the currently selected feature
