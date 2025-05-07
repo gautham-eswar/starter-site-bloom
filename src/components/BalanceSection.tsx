@@ -1,9 +1,33 @@
 
 import React, { useEffect, useRef } from 'react';
-import { Scan, Network, Balance } from 'lucide-react';
+import { Scan, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+
+// Custom Balance icon component since it's not available in lucide-react
+const BalanceIcon = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="48"
+      height="48"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M12 3v18"></path>
+      <path d="M8 9h8"></path>
+      <rect x="4" y="8" width="4" height="2" rx="1"></rect>
+      <rect x="16" y="8" width="4" height="2" rx="1"></rect>
+      <path d="M4 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"></path>
+    </svg>
+  );
+};
 
 const ProcessStep = ({ 
   number, 
@@ -196,7 +220,7 @@ const BalanceSection: React.FC = () => {
             number={3}
             title="Dual Optimization"
             description="Your resume is precisely enhanced for both automated screening systems AND the 6-second human review—giving you an immediate advantage other applicants don't have."
-            icon={<Balance size={48} className="animate-balance-effect" />}
+            icon={<BalanceIcon className="animate-balance-effect" />}
             delay={400}
           />
         </div>
