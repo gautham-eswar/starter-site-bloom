@@ -59,6 +59,7 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   console.log(userId)
   return await apiRequest("/optimize", {
     method: "POST",
+    headers: {}, // Let browser set content-type for FormData
     body: JSON.stringify({
       resume_id: resumeId,
       user_id: userId,
