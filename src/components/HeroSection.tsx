@@ -8,9 +8,11 @@ import { uploadResume, optimizeResume } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
   UPLOADED = 2;
+
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -107,12 +109,14 @@ const HeroSection: React.FC = () => {
     setIsProgressModalOpen(true);
     setIsOptimizing(true);
     try {
-
-      // Store the resume ID
-      setResumeId(uploadResponse.resume_id);
+      // The resume has already been uploaded at this point, and the resumeId is stored in the context
+      // No need to upload again, just optimize using the stored resumeId
+      if (!resumeId) {
+        throw new Error("Resume ID not found");
+      }
 
       // Then optimize it
-      const optimizeResponse = await optimizeResume(uploadResponse.resume_id, jobDescription);
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription);
       if (!optimizeResponse || !optimizeResponse.job_id) {
         throw new Error("Failed to optimize resume");
       }
@@ -229,4 +233,5 @@ const HeroSection: React.FC = () => {
       <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
     </section>;
 };
+
 export default HeroSection;
