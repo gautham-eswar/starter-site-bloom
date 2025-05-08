@@ -1,10 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { ArrowLeft, ArrowRight, ZoomIn, ZoomOut, RefreshCw, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -20,6 +21,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
   const [scale, setScale] = useState<number>(1.0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [key, setKey] = useState<number>(0); // Key to force re-render
   
   // Memoize PDF options to prevent unnecessary rerenders
   const pdfOptions = useMemo(() => ({
@@ -28,6 +30,14 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
     standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
   }), []);
 
+  // Force re-render when URL changes
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    setKey(prev => prev + 1);
+    console.log('URL changed or component mounted. New URL:', url);
+  }, [url]);
+
   // Handle document load success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     console.log(`PDF loaded successfully with ${numPages} pages`);
@@ -35,10 +45,12 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
     setPageNumber(1);
     setError(null);
     setLoading(false);
+    toast({
+      title: "PDF Loaded",
+      description: `Document loaded with ${numPages} pages`,
+      variant: "default"
+    });
   };
-
-  // Log the URL being used
-  console.log('Attempting to load PDF from URL:', url);
 
   // Navigation functions
   const previousPage = () => setPageNumber(prev => Math.max(prev - 1, 1));
@@ -53,24 +65,63 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
   const handleRefresh = () => {
     setError(null);
     setLoading(true);
-    // Force re-render by adding timestamp to URL
+    setKey(prev => prev + 1);
+    console.log('Manual refresh requested');
+    
+    // Open in new tab as fallback
     const refreshedUrl = url.includes('?') 
       ? `${url}&refresh=${Date.now()}` 
       : `${url}?refresh=${Date.now()}`;
     window.open(refreshedUrl, '_blank');
   };
 
+  // Test if URL is valid
+  const testUrl = async () => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      console.log(`URL test result: ${response.status} ${response.statusText}`);
+      if (response.ok) {
+        const contentType = response.headers.get('Content-Type');
+        console.log(`Content-Type: ${contentType || 'not specified'}`);
+      }
+    } catch (err) {
+      console.error('Error testing URL:', err);
+    }
+  };
+
+  // Test URL on component mount
+  useEffect(() => {
+    if (url) {
+      testUrl();
+    }
+  }, [url]);
+
   return (
     <div className="flex flex-col h-full">
       {/* PDF document */}
       <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-100 p-4">
+        {loading && (
+          <div className="absolute z-10 bg-white/50 inset-0 flex items-center justify-center">
+            <div className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+              <Loader className="h-8 w-8 text-blue-500 animate-spin mb-2" />
+              <p className="text-gray-700">Loading PDF...</p>
+            </div>
+          </div>
+        )}
+        
         <Document
+          key={key}
           file={url}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={(err) => {
             console.error('PDF load error:', err);
             setError(`Failed to load PDF: ${err.message}`);
             setLoading(false);
+            toast({
+              title: "Error Loading PDF",
+              description: err.message,
+              variant: "destructive"
+            });
           }}
           options={pdfOptions}
           loading={
@@ -85,9 +136,14 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
                 <p className="text-red-600 font-medium mb-2">Error loading PDF</p>
                 <p className="text-gray-700 text-sm">{error || "Unable to load document"}</p>
               </div>
-              <Button variant="outline" onClick={handleRefresh}>
-                <RefreshCw className="h-4 w-4 mr-2" /> Try Again
-              </Button>
+              <div className="flex flex-col space-y-2">
+                <Button variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4" /> Try Again
+                </Button>
+                <Button variant="ghost" onClick={() => window.open(url, '_blank')} className="text-sm">
+                  Open in New Tab
+                </Button>
+              </div>
             </div>
           }
         >
@@ -96,7 +152,8 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
             scale={scale}
             renderTextLayer={true}
             renderAnnotationLayer={true}
-            className="pdf-page"
+            className="pdf-page shadow-lg"
+            error={<p className="text-red-500 p-4 bg-red-50 rounded-lg mt-2">Error rendering page {pageNumber}</p>}
           />
         </Document>
       </div>
