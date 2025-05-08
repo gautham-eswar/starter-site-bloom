@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download, RefreshCw, Loader } from 'lucide-react';
+import { Download, Loader } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DirectPDFViewerProps {
@@ -20,18 +20,10 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
       setError(null);
       
       try {
-        console.log(`Testing PDF URL: ${url}`);
         const response = await fetch(url, { method: 'HEAD' });
         
         if (!response.ok) {
           throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        
-        const contentType = response.headers.get('Content-Type');
-        console.log(`Content-Type: ${contentType || 'not specified'}`);
-        
-        if (contentType && !contentType.includes('pdf')) {
-          console.warn(`URL does not appear to be a PDF (Content-Type: ${contentType})`);
         }
         
         // URL is valid, we can proceed
@@ -55,66 +47,41 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
     }
   }, [url]);
 
-  // Handle refresh
-  const handleRefresh = () => {
-    setIframeKey(prev => prev + 1);
-    setLoading(true);
-    setError(null);
-  };
-
-  // Open in new tab
-  const openInNewTab = () => {
-    window.open(url, '_blank');
+  // Download the PDF
+  const downloadPdf = () => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = url.substring(url.lastIndexOf('/') + 1);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Controls header */}
-      <div className="p-2 bg-gray-50 border-b flex justify-end space-x-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reload
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={openInNewTab}
-          className="flex items-center gap-1"
-        >
-          <ExternalLink className="h-4 w-4" />
-          Open in New Tab
-        </Button>
-      </div>
+    <div className="flex flex-col h-full relative">
+      {/* Download button (floating in top-right corner) */}
+      <Button 
+        variant="secondary"
+        size="sm"
+        onClick={downloadPdf}
+        className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-white shadow-md"
+      >
+        <Download className="h-4 w-4 mr-1" />
+        Download
+      </Button>
 
       {/* PDF viewer */}
-      <div className="flex-1 relative">
+      <div className="flex-1">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
-            <div className="text-center">
-              <Loader className="h-8 w-8 text-blue-500 animate-spin mx-auto mb-2" />
-              <p className="text-gray-600">Loading PDF...</p>
-            </div>
+            <Loader className="h-8 w-8 text-blue-500 animate-spin" />
           </div>
         )}
         
         {error ? (
-          <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 max-w-md">
-              <p className="text-red-600 font-medium mb-2">Error loading PDF</p>
-              <p className="text-gray-700 text-sm">{error}</p>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Button variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4" /> Try Again
-              </Button>
-              <Button variant="ghost" onClick={openInNewTab} className="text-sm">
-                Open in New Tab
-              </Button>
+          <div className="h-full flex items-center justify-center p-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md">
+              <p className="text-red-600 font-medium">Error loading PDF</p>
             </div>
           </div>
         ) : (
@@ -123,17 +90,10 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
             src={url}
             className="w-full h-full border-0"
             onLoad={() => {
-              console.log("PDF iframe loaded");
               setLoading(false);
-              toast({
-                title: "PDF Loaded",
-                description: "The PDF document has loaded successfully",
-                variant: "default"
-              });
             }}
-            onError={(e) => {
-              console.error("PDF iframe error:", e);
-              setError("Failed to load PDF in viewer");
+            onError={() => {
+              setError("Failed to load PDF");
               setLoading(false);
             }}
             title="PDF Viewer"
