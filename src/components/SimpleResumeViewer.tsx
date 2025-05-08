@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -40,6 +40,13 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       ...prev.slice(0, 49) // Keep max 50 logs
     ]);
   };
+
+  // Memoize PDF.js options to prevent unnecessary reloads
+  const pdfOptions = useMemo(() => ({
+    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+  }), []);
 
   // Function to fetch PDF URL
   const fetchPdfUrl = async () => {
@@ -327,11 +334,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
                   <p className="text-gray-700 font-medium">Loading PDF content...</p>
                 </div>
               }
-              options={{
-                cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-                cMapPacked: true,
-                standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
-              }}
+              options={pdfOptions}
             >
               <Page 
                 pageNumber={pageNumber} 
