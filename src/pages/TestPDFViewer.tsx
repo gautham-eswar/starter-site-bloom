@@ -21,6 +21,17 @@ const TestPDFViewer: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [directUrl, setDirectUrl] = useState<string | null>(null);
   const [pdfLoaded, setPdfLoaded] = useState<boolean>(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  
+  // Function to add a log entry
+  const addLog = (message: string) => {
+    setDebugLogs(prev => [...prev, `${new Date().toISOString()}: ${message}`]);
+  };
+  
+  // Clear logs function
+  const clearLogs = () => {
+    setDebugLogs([]);
+  };
   
   // Attempt to load the PDF automatically when the component mounts
   useEffect(() => {
@@ -43,22 +54,33 @@ const TestPDFViewer: React.FC = () => {
     setIsLoading(true);
     setErrorMessage(null);
     setPdfLoaded(false);
+    clearLogs();
+    addLog(`Starting to fetch URL for resumeId: ${resumeId} and fileName: ${fileName}`);
     
     try {
       const bucketName = 'resumes';
       const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
       
+      addLog(`Using bucket: ${bucketName}, path: ${storagePath}`);
+      
       // Create a public URL for the file
-      const { data } = supabase
+      addLog(`Calling supabase.storage.from(${bucketName}).getPublicUrl(${storagePath})`);
+      const { data, error } = await supabase
         .storage
         .from(bucketName)
         .getPublicUrl(storagePath);
         
+      if (error) {
+        addLog(`Supabase returned error: ${error.message}`);
+        throw error;
+      }
+      
       if (!data?.publicUrl) {
+        addLog('No public URL returned from Supabase');
         throw new Error('Failed to generate public URL');
       }
       
-      console.log("Generated public URL:", data.publicUrl);
+      addLog(`Generated public URL: ${data.publicUrl}`);
       setDirectUrl(data.publicUrl);
       
       toast({
@@ -68,23 +90,27 @@ const TestPDFViewer: React.FC = () => {
       
       return data.publicUrl;
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to generate URL';
+      addLog(`Error occurred: ${errorMsg}`);
       console.error('Error generating URL:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to generate URL');
+      setErrorMessage(errorMsg);
       
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to generate URL',
+        description: errorMsg,
         variant: "destructive"
       });
       
       return null;
     } finally {
       setIsLoading(false);
+      addLog('Finished fetch attempt');
     }
   };
 
   const handlePdfLoadSuccess = () => {
     setPdfLoaded(true);
+    addLog('PDF loaded successfully');
     toast({
       title: "PDF Loaded Successfully",
       description: "The PDF document has been loaded and is now displaying",
@@ -92,6 +118,7 @@ const TestPDFViewer: React.FC = () => {
   };
   
   const handlePdfLoadError = (error: Error) => {
+    addLog(`PDF load error: ${error.message}`);
     setErrorMessage(`Failed to load PDF: ${error.message}`);
     toast({
       title: "PDF Load Error",
@@ -170,6 +197,32 @@ const TestPDFViewer: React.FC = () => {
                   <p className="text-sm text-green-500 mt-1 truncate">{directUrl}</p>
                 </div>
               )}
+              
+              {/* Debug Logs Section */}
+              <div className="mt-6 border border-gray-200 rounded-md">
+                <div className="bg-gray-50 p-3 flex justify-between items-center border-b border-gray-200">
+                  <h3 className="font-medium text-gray-700">Debug Logs</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={clearLogs}
+                    className="text-xs"
+                  >
+                    Clear Logs
+                  </Button>
+                </div>
+                <div className="p-3 max-h-60 overflow-y-auto bg-gray-900 text-gray-100 font-mono text-xs">
+                  {debugLogs.length > 0 ? (
+                    <ul className="space-y-1">
+                      {debugLogs.map((log, index) => (
+                        <li key={index} className="leading-tight">{log}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">No logs yet</p>
+                  )}
+                </div>
+              </div>
             </div>
             
             <div className="bg-white rounded-lg h-[700px] overflow-hidden shadow-md relative border border-gray-200">
@@ -189,6 +242,7 @@ const TestPDFViewer: React.FC = () => {
                   height="100%"
                   onLoadSuccess={handlePdfLoadSuccess}
                   onLoadError={handlePdfLoadError}
+                  showDebugLogs={true}
                 />
               )}
             </div>
