@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -11,8 +10,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { apiRequest } from '@/services/api';
 import { supabase } from '@/integrations/supabase/client';
 
-// Configure the PDF.js worker source with a more reliable CDN link
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+// Configure the PDF.js worker source to use a local worker
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface PDFViewerProps {
   resumeId?: string;

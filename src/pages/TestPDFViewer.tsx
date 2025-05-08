@@ -19,6 +19,13 @@ const TestPDFViewer: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [directUrl, setDirectUrl] = useState<string | null>(null);
   
+  // Attempt to load the PDF automatically when the component mounts
+  useEffect(() => {
+    if (resumeId && fileName) {
+      fetchDirectUrl();
+    }
+  }, []);
+  
   // Function to get the direct Supabase storage URL
   const fetchDirectUrl = async () => {
     if (!resumeId || !fileName) {
@@ -49,10 +56,23 @@ const TestPDFViewer: React.FC = () => {
       
       console.log("Generated public URL:", data.publicUrl);
       setDirectUrl(data.publicUrl);
+      
+      toast({
+        title: "PDF Loaded",
+        description: "Successfully generated public URL for the PDF",
+      });
+      
       return data.publicUrl;
     } catch (error) {
       console.error('Error generating URL:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Failed to generate URL');
+      
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to generate URL',
+        variant: "destructive"
+      });
+      
       return null;
     } finally {
       setIsLoading(false);
