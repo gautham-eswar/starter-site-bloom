@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -56,12 +55,7 @@ const Test2: React.FC = () => {
       logMessage(`Found ${data.length} files in folder`);
       setFiles(data);
       
-      // Auto-select first PDF file
-      const pdfFiles = data.filter(file => file.name.toLowerCase().endsWith('.pdf'));
-      if (pdfFiles.length > 0) {
-        logMessage(`Auto-selecting first PDF file: ${pdfFiles[0].name}`);
-        setSelectedFile(pdfFiles[0].name);
-      }
+      // We no longer auto-select the first PDF file
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       logMessage(`Exception during file fetch: ${errorMessage}`);
@@ -87,38 +81,9 @@ const Test2: React.FC = () => {
       
       if (publicData?.publicUrl) {
         logMessage(`Got public URL: ${publicData.publicUrl}`);
-        
-        // Test if URL is accessible
-        try {
-          const testResponse = await fetch(publicData.publicUrl, { method: 'HEAD' });
-          logMessage(`URL test result: ${testResponse.status} ${testResponse.statusText}`);
-          
-          if (testResponse.ok) {
-            setPdfUrl(publicData.publicUrl);
-            return;
-          } else {
-            logMessage("Public URL test failed, trying signed URL...");
-          }
-        } catch (err) {
-          logMessage(`Error testing public URL: ${err instanceof Error ? err.message : String(err)}`);
-        }
-      }
-      
-      // Try signed URL as fallback
-      logMessage("Requesting signed URL...");
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from(bucketName)
-        .createSignedUrl(filePath, 3600);
-        
-      if (signedError) {
-        throw signedError;
-      }
-      
-      if (signedData?.signedUrl) {
-        logMessage(`Got signed URL (expires in 1 hour)`);
-        setPdfUrl(signedData.signedUrl);
+        setPdfUrl(publicData.publicUrl);
       } else {
-        throw new Error("Failed to get signed URL");
+        throw new Error("Failed to get public URL");
       }
       
     } catch (err) {
@@ -131,6 +96,22 @@ const Test2: React.FC = () => {
       });
     } finally {
       setLoadingFile(false);
+    }
+  };
+
+  // Handle file selection and load PDF
+  const handleFileSelect = (fileName: string) => {
+    setSelectedFile(fileName);
+    if (fileName.toLowerCase().endsWith('.pdf')) {
+      fetchPdfUrl(fileName);
+    } else {
+      setPdfUrl(null);
+      logMessage("Selected file is not a PDF");
+      toast({
+        title: "Not Supported",
+        description: "Only PDF files can be viewed in the viewer",
+        variant: "default"
+      });
     }
   };
 
@@ -177,14 +158,6 @@ const Test2: React.FC = () => {
     fetchFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Fetch PDF URL when selected file changes
-  useEffect(() => {
-    if (selectedFile) {
-      fetchPdfUrl(selectedFile);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFile]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -238,7 +211,7 @@ const Test2: React.FC = () => {
                         ? 'bg-blue-50 border-blue-300' 
                         : 'hover:bg-gray-50 border-gray-200'
                     }`}
-                    onClick={() => setSelectedFile(file.name)}
+                    onClick={() => handleFileSelect(file.name)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -246,7 +219,7 @@ const Test2: React.FC = () => {
                         <span className="text-sm font-medium truncate max-w-[180px]">{file.name}</span>
                       </div>
                       
-                      {selectedFile === file.name && (
+                      {selectedFile === file.name && file.name.toLowerCase().endsWith('.pdf') && (
                         <Button size="sm" variant="ghost" onClick={downloadPdf}>
                           <Download className="h-4 w-4" />
                         </Button>
@@ -271,19 +244,12 @@ const Test2: React.FC = () => {
                 <Loader className="h-12 w-12 text-blue-500 animate-spin mb-4" />
                 <p className="text-gray-600">Loading PDF...</p>
               </div>
-            ) : !selectedFile ? (
+            ) : !selectedFile || !pdfUrl ? (
               <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                 <FileText className="h-16 w-16 text-gray-300 mb-4" />
                 <h3 className="text-xl font-medium text-gray-700 mb-2">No PDF Selected</h3>
                 <p className="text-gray-500 max-w-md">
                   Select a PDF file from the list to view it here
-                </p>
-              </div>
-            ) : !pdfUrl ? (
-              <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                <h3 className="text-xl font-medium text-red-600 mb-2">Error Loading PDF</h3>
-                <p className="text-gray-600 max-w-md">
-                  Unable to generate a URL for the selected PDF. Check the logs for details.
                 </p>
               </div>
             ) : (
