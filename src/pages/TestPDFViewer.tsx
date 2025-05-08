@@ -1,16 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import PDFViewer from '@/components/PDFViewer';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const TestPDFViewer: React.FC = () => {
   const navigate = useNavigate();
-  
-  // The direct URL to the PDF from Supabase storage
-  const pdfUrl = "https://mlvlovbfzgvdggoudgsr.supabase.co/storage/v1/object/public/resumes/41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266/ABHIRAJ%20SINGH_Resume%20-%20Supply%20Chain.pdf";
+  const [pdfUrl, setPdfUrl] = useState<string>("https://mlvlovbfzgvdggoudgsr.supabase.co/storage/v1/object/public/resumes/41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266/ABHIRAJ%20SINGH_Resume%20-%20Supply%20Chain.pdf");
   
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -30,6 +29,25 @@ const TestPDFViewer: React.FC = () => {
         <div className="grid grid-cols-1 gap-8">
           <div>
             <h2 className="text-2xl font-serif text-draft-green mb-6">PDF Viewer Test</h2>
+            
+            <div className="bg-white rounded-lg p-4 mb-4">
+              <label className="block text-sm font-medium mb-2">PDF URL</label>
+              <div className="flex gap-3">
+                <Input 
+                  value={pdfUrl}
+                  onChange={(e) => setPdfUrl(e.target.value)}
+                  className="flex-1"
+                  placeholder="Enter direct PDF URL"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPdfUrl("https://mlvlovbfzgvdggoudgsr.supabase.co/storage/v1/object/public/resumes/41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266/ABHIRAJ%20SINGH_Resume%20-%20Supply%20Chain.pdf")}
+                >
+                  Reset URL
+                </Button>
+              </div>
+            </div>
+            
             <div className="bg-white rounded-lg h-[700px] overflow-hidden shadow-md">
               <PDFViewer 
                 directUrl={pdfUrl}

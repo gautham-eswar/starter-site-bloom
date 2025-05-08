@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -6,9 +7,10 @@ import { getPdfUrl, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-// Configure the PDF.js worker source
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure the PDF.js worker source with a more reliable CDN link
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PDFViewerProps {
   resumeId?: string;
@@ -16,7 +18,7 @@ interface PDFViewerProps {
   width?: number | string;
   height?: number | string;
   className?: string;
-  directUrl?: string; // New prop for direct URL testing
+  directUrl?: string; // Prop for direct URL testing
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -25,7 +27,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   width = '100%',
   height = '100%',
   className = '',
-  directUrl // New prop
+  directUrl
 }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -34,27 +36,32 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [pdfExists, setPdfExists] = useState<boolean | null>(null);
   const [scale, setScale] = useState<number>(1.0);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   
   const { user } = useAuth();
   const userId = propUserId || user?.id;
   
   useEffect(() => {
     const loadPdf = async () => {
-      // If a direct URL is provided, use it instead of fetching from storage
-      if (directUrl) {
-        setPdfUrl(directUrl);
-        setPdfExists(true);
-        setLoading(false);
-        return;
-      }
-      
-      if (!resumeId || !userId) {
-        setError('Resume ID or User ID not provided');
-        setLoading(false);
-        return;
-      }
+      setError(null);
+      setLoadingError(null);
       
       try {
+        // If a direct URL is provided, use it instead of fetching from storage
+        if (directUrl) {
+          console.log("Loading PDF from direct URL:", directUrl);
+          setPdfUrl(directUrl);
+          setPdfExists(true);
+          setLoading(false);
+          return;
+        }
+        
+        if (!resumeId || !userId) {
+          setError('Resume ID or User ID not provided');
+          setLoading(false);
+          return;
+        }
+        
         // Check if PDF exists
         const exists = await checkPdfExists(resumeId, userId);
         setPdfExists(exists);
@@ -81,6 +88,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [resumeId, userId, directUrl]);
   
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    console.log("PDF loaded successfully with", numPages, "pages");
     setNumPages(numPages);
     setPageNumber(1);
   };
@@ -113,12 +121,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   if (error || !pdfExists) {
     return (
       <div className={`flex items-center justify-center h-full w-full ${className}`} style={{ height }}>
-        <div className="flex flex-col items-center justify-center gap-2 text-center max-w-md">
-          <p className="text-draft-coral font-medium">Resume PDF not available</p>
-          <p className="text-draft-text text-sm">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTitle>Resume PDF not available</AlertTitle>
+          <AlertDescription>
             The enhanced PDF for this resume is not available yet. This could be because the optimization is still in progress.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -126,20 +134,34 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   return (
     <div className={`flex flex-col h-full ${className}`} style={{ width, height }}>
       <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center">
-        <Document
-          file={pdfUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={(error) => setError('Error loading PDF')}
-          loading={<Loader className="h-8 w-8 animate-spin text-draft-green" />}
-          className="shadow-lg"
-        >
-          <Page 
-            pageNumber={pageNumber} 
-            scale={scale} 
-            renderTextLayer={true}
-            renderAnnotationLayer={true}
-          />
-        </Document>
+        {pdfUrl && (
+          <Document
+            file={pdfUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={(error) => {
+              console.error("Error loading document:", error);
+              setLoadingError('Error loading PDF. Please try again later.');
+            }}
+            loading={<Loader className="h-8 w-8 animate-spin text-draft-green" />}
+            className="shadow-lg"
+          >
+            {loadingError ? (
+              <div className="p-4 bg-white rounded shadow-md">
+                <p className="text-red-500">{loadingError}</p>
+              </div>
+            ) : (
+              <Page 
+                pageNumber={pageNumber} 
+                scale={scale} 
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                error={<div className="p-4 bg-white rounded shadow-md">
+                  <p className="text-red-500">Error loading page {pageNumber}.</p>
+                </div>}
+              />
+            )}
+          </Document>
+        )}
       </div>
       
       <div className="bg-white p-3 border-t border-gray-200 flex items-center justify-between">
