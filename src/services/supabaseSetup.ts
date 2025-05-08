@@ -61,15 +61,20 @@ export function generateResumePath(userId: string, resumeId: string, format: 'pd
 export async function checkResumeExists(userId: string, resumeId: string, format: 'pdf' | 'docx' = 'pdf'): Promise<boolean> {
   try {
     const path = generateResumePath(userId, resumeId, format);
+    
+    // Use .list() with prefix instead of getMetadata to check if file exists
     const { data, error } = await supabase.storage
       .from(RESUME_BUCKET)
-      .getMetadata(path);
+      .list(path.split('/').slice(0, -1).join('/'), {
+        limit: 1,
+        search: path.split('/').pop() || ''
+      });
     
     if (error) {
       return false;
     }
     
-    return !!data;
+    return data && data.length > 0;
   } catch (error) {
     return false;
   }
