@@ -87,7 +87,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
         ) : (
           <iframe
             key={iframeKey}
-            src={url}
+            src={`${url}#toolbar=0&navpanes=0&scrollbar=0`}
             className="w-full h-full border-0"
             onLoad={() => {
               setLoading(false);
@@ -97,6 +97,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
               setLoading(false);
             }}
             title="PDF Viewer"
+            frameBorder="0"
             allow="fullscreen"
           />
         )}
