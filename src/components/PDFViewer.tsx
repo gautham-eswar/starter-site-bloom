@@ -8,7 +8,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { apiRequest } from '@/services/api';
 import { supabase } from '@/integrations/supabase/client';
 
 // Configure the PDF.js worker source to use a local worker
@@ -186,7 +185,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       <div className={`flex items-center justify-center h-full w-full ${className}`} style={{ height }}>
         <div className="flex flex-col items-center justify-center gap-2">
           <Loader className="h-8 w-8 animate-spin text-gray-700" />
-          <p className="text-gray-700">Loading PDF...</p>
+          <p className="text-gray-700 font-medium">Loading PDF...</p>
         </div>
       </div>
     );
@@ -207,44 +206,52 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   
   return (
     <div className={`flex flex-col h-full ${className}`} style={{ width, height }}>
-      <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center">
+      <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-100 p-4">
         {pdfUrl && (
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(error) => {
-              console.error("Error loading document:", error);
-              setLoadingError('Error loading PDF. Please try again later.');
-              if (onLoadError) {
-                onLoadError(error);
-              }
-            }}
-            loading={
-              <div className="flex flex-col items-center justify-center p-4 bg-white rounded shadow-md">
-                <Loader className="h-8 w-8 animate-spin text-gray-700 mb-2" />
-                <p className="text-gray-700">Loading PDF...</p>
-              </div>
-            }
-            className="shadow-lg"
-          >
-            {loadingError ? (
-              <div className="p-4 bg-white rounded shadow-md">
-                <p className="text-red-500">{loadingError}</p>
-              </div>
-            ) : (
-              <Page 
-                pageNumber={pageNumber} 
-                scale={scale} 
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-                error={
-                  <div className="p-4 bg-white rounded shadow-md">
-                    <p className="text-red-500 font-medium">Error loading page {pageNumber}.</p>
-                  </div>
+          <div className="shadow-xl bg-white rounded-lg overflow-hidden">
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={(error) => {
+                console.error("Error loading document:", error);
+                setLoadingError('Error loading PDF. Please try again later.');
+                if (onLoadError) {
+                  onLoadError(error);
                 }
-              />
-            )}
-          </Document>
+              }}
+              loading={
+                <div className="flex flex-col items-center justify-center p-6 bg-white rounded shadow-md">
+                  <Loader className="h-8 w-8 animate-spin text-gray-700 mb-2" />
+                  <p className="text-gray-700 font-medium">Loading PDF content...</p>
+                </div>
+              }
+              className="max-h-full"
+              options={{
+                cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+                cMapPacked: true,
+                standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+              }}
+            >
+              {loadingError ? (
+                <div className="p-6 bg-white rounded shadow-md">
+                  <p className="text-red-500 font-medium">{loadingError}</p>
+                </div>
+              ) : (
+                <Page 
+                  pageNumber={pageNumber} 
+                  scale={scale} 
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
+                  className="pdf-page"
+                  error={
+                    <div className="p-6 bg-white rounded shadow-md">
+                      <p className="text-red-500 font-medium">Error loading page {pageNumber}.</p>
+                    </div>
+                  }
+                />
+              )}
+            </Document>
+          </div>
         )}
       </div>
       
@@ -260,7 +267,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             <ArrowLeft className="h-4 w-4" />
           </Button>
           
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 font-medium">
             Page {pageNumber} of {numPages || 1}
           </span>
           

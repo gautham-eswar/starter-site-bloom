@@ -62,7 +62,7 @@ const TestPDFViewer: React.FC = () => {
       setDirectUrl(data.publicUrl);
       
       toast({
-        title: "PDF Loaded",
+        title: "PDF URL Generated",
         description: "Successfully generated public URL for the PDF",
       });
       
@@ -85,6 +85,10 @@ const TestPDFViewer: React.FC = () => {
 
   const handlePdfLoadSuccess = () => {
     setPdfLoaded(true);
+    toast({
+      title: "PDF Loaded Successfully",
+      description: "The PDF document has been loaded and is now displaying",
+    });
   };
   
   const handlePdfLoadError = (error: Error) => {
@@ -115,24 +119,24 @@ const TestPDFViewer: React.FC = () => {
           <div>
             <h2 className="text-2xl font-serif text-draft-green mb-6">PDF Viewer Test</h2>
             
-            <div className="bg-white rounded-lg p-4 mb-4">
+            <div className="bg-white rounded-lg p-6 mb-6 shadow-md">
               <div className="grid gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Resume ID</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">Resume ID</label>
                   <Input 
                     value={resumeId}
                     onChange={(e) => setResumeId(e.target.value)}
-                    className="w-full"
+                    className="w-full border-gray-300"
                     placeholder="Enter resume ID"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">File Name</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">File Name</label>
                   <Input 
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
-                    className="w-full"
+                    className="w-full border-gray-300"
                     placeholder="Enter file name"
                   />
                 </div>
@@ -141,7 +145,7 @@ const TestPDFViewer: React.FC = () => {
                   variant="default" 
                   onClick={fetchDirectUrl}
                   disabled={isLoading}
-                  className="w-full"
+                  className="w-full bg-draft-green hover:bg-draft-green/90"
                 >
                   {isLoading ? 'Loading...' : 'Load PDF from Supabase Storage'}
                 </Button>
@@ -149,31 +153,35 @@ const TestPDFViewer: React.FC = () => {
               
               {isLoading && (
                 <div className="mt-4">
-                  <Progress value={50} className="h-2" />
+                  <Progress value={75} className="h-2 animate-pulse" />
                   <p className="text-sm text-gray-600 mt-2">Generating PDF URL...</p>
                 </div>
               )}
               
               {errorMessage && (
-                <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-600 font-medium">{errorMessage}</p>
+                </div>
               )}
               
               {directUrl && !errorMessage && (
-                <div className="mt-2 text-sm text-green-600">
-                  PDF URL generated successfully!
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-green-600 font-medium">PDF URL generated successfully!</p>
+                  <p className="text-sm text-green-500 mt-1 truncate">{directUrl}</p>
                 </div>
               )}
             </div>
             
-            <div className="bg-white rounded-lg h-[700px] overflow-hidden shadow-md relative">
+            <div className="bg-white rounded-lg h-[700px] overflow-hidden shadow-md relative border border-gray-200">
               {!directUrl && !isLoading ? (
                 <div className="h-full flex items-center justify-center text-gray-700 font-medium">
                   Generate a PDF URL to view the document
                 </div>
               ) : isLoading ? (
-                <div className="h-full flex items-center justify-center flex-col">
-                  <Skeleton className="w-1/2 h-4 bg-gray-300 mb-4" />
+                <div className="h-full flex items-center justify-center flex-col gap-4">
+                  <Skeleton className="w-1/2 h-4 bg-gray-300" />
                   <Skeleton className="w-1/3 h-4 bg-gray-300" />
+                  <p className="text-gray-500 mt-4">Loading PDF viewer...</p>
                 </div>
               ) : (
                 <PDFViewer 
