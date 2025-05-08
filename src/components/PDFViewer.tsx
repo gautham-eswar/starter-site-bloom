@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -19,7 +20,9 @@ interface PDFViewerProps {
   width?: number | string;
   height?: number | string;
   className?: string;
-  directUrl?: string; // Prop for direct URL testing
+  directUrl?: string | null; // Prop for direct URL testing
+  onLoadSuccess?: () => void;
+  onLoadError?: (error: Error) => void;
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -28,7 +31,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   width = '100%',
   height = '100%',
   className = '',
-  directUrl
+  directUrl,
+  onLoadSuccess,
+  onLoadError
 }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -135,6 +140,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       } catch (error) {
         console.error('Error loading PDF:', error);
         setError(error instanceof Error ? error.message : 'Failed to load PDF');
+        if (onLoadError && error instanceof Error) {
+          onLoadError(error);
+        }
         setLoading(false);
       }
     };
@@ -148,12 +156,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [resumeId, userId, directUrl]);
+  }, [resumeId, userId, directUrl, onLoadError]);
   
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     console.log("PDF loaded successfully with", numPages, "pages");
     setNumPages(numPages);
     setPageNumber(1);
+    if (onLoadSuccess) {
+      onLoadSuccess();
+    }
   };
   
   const changePage = (offset: number) => {
@@ -174,8 +185,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     return (
       <div className={`flex items-center justify-center h-full w-full ${className}`} style={{ height }}>
         <div className="flex flex-col items-center justify-center gap-2">
-          <Loader className="h-8 w-8 animate-spin text-draft-green" />
-          <p className="text-draft-green">Loading PDF...</p>
+          <Loader className="h-8 w-8 animate-spin text-gray-700" />
+          <p className="text-gray-700">Loading PDF...</p>
         </div>
       </div>
     );
@@ -204,8 +215,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             onLoadError={(error) => {
               console.error("Error loading document:", error);
               setLoadingError('Error loading PDF. Please try again later.');
+              if (onLoadError) {
+                onLoadError(error);
+              }
             }}
-            loading={<Loader className="h-8 w-8 animate-spin text-draft-green" />}
+            loading={
+              <div className="flex flex-col items-center justify-center p-4 bg-white rounded shadow-md">
+                <Loader className="h-8 w-8 animate-spin text-gray-700 mb-2" />
+                <p className="text-gray-700">Loading PDF...</p>
+              </div>
+            }
             className="shadow-lg"
           >
             {loadingError ? (
@@ -218,9 +237,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 scale={scale} 
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
-                error={<div className="p-4 bg-white rounded shadow-md">
-                  <p className="text-red-500">Error loading page {pageNumber}.</p>
-                </div>}
+                error={
+                  <div className="p-4 bg-white rounded shadow-md">
+                    <p className="text-red-500 font-medium">Error loading page {pageNumber}.</p>
+                  </div>
+                }
               />
             )}
           </Document>
@@ -239,7 +260,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             <ArrowLeft className="h-4 w-4" />
           </Button>
           
-          <span className="text-sm">
+          <span className="text-sm text-gray-700">
             Page {pageNumber} of {numPages || 1}
           </span>
           
