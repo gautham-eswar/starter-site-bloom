@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -65,15 +64,10 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
 
       // First attempt: Try public URL
       addLog('Attempting to get public URL...');
-      const { data: publicData, error: publicError } = supabase
+      const { data: publicData } = supabase
         .storage
         .from(bucketName)
         .getPublicUrl(storagePath);
-      
-      if (publicError) {
-        addLog(`Public URL error: ${publicError.message}`);
-        throw publicError;
-      }
       
       if (publicData && publicData.publicUrl) {
         addLog(`Got public URL: ${publicData.publicUrl}`);
