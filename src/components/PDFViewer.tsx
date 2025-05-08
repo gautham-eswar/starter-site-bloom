@@ -9,6 +9,7 @@ import { Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { apiRequest } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
 
 // Configure the PDF.js worker source with a more reliable CDN link
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -42,6 +43,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const { user } = useAuth();
   const userId = propUserId || user?.id;
   
+  // Function to get the direct Supabase storage URL
+  const getSupabaseStorageUrl = (resumeId: string, fileName: string) => {
+    if (!resumeId) return null;
+    
+    const bucketName = 'resumes';
+    const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
+    
+    // Create a public URL for the file
+    const { data } = supabase
+      .storage
+      .from(bucketName)
+      .getPublicUrl(storagePath);
+      
+    return data?.publicUrl || null;
+  };
+  
   useEffect(() => {
     const loadPdf = async () => {
       setError(null);
@@ -57,26 +74,42 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           return;
         }
         
-        if (!resumeId || !userId) {
-          setError('Resume ID or User ID not provided');
+        if (!resumeId) {
+          setError('Resume ID not provided');
           setLoading(false);
           return;
         }
         
-        // First try to see if the PDF exists in our storage
-        try {
-          const exists = await checkPdfExists(resumeId, userId);
-          setPdfExists(exists);
-          
-          if (exists) {
-            // If it exists in storage, get the URL
-            const url = await getPdfUrl(resumeId, userId);
-            setPdfUrl(url);
-            setLoading(false);
-            return;
+        // First try to access directly from Supabase storage
+        // For testing, we're using a hardcoded filename
+        const fileName = "ABHIRAJ SINGH_Resume - Supply Chain.pdf";
+        const storageUrl = getSupabaseStorageUrl(resumeId, fileName);
+        
+        if (storageUrl) {
+          console.log("Loading PDF from Supabase storage:", storageUrl);
+          setPdfUrl(storageUrl);
+          setPdfExists(true);
+          setLoading(false);
+          return;
+        }
+        
+        // If not found in storage directly, try our existing methods
+        if (userId) {
+          // First try to see if the PDF exists in our storage
+          try {
+            const exists = await checkPdfExists(resumeId, userId);
+            setPdfExists(exists);
+            
+            if (exists) {
+              // If it exists in storage, get the URL
+              const url = await getPdfUrl(resumeId, userId);
+              setPdfUrl(url);
+              setLoading(false);
+              return;
+            }
+          } catch (storageError) {
+            console.warn('Storage check failed, trying API instead:', storageError);
           }
-        } catch (storageError) {
-          console.warn('Storage check failed, trying API instead:', storageError);
         }
         
         // If not in storage, try to fetch it from the API
