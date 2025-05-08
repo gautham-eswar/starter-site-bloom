@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -12,11 +11,12 @@ import { Button } from '@/components/ui/button';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PDFViewerProps {
-  resumeId: string;
+  resumeId?: string;
   userId?: string;
   width?: number | string;
   height?: number | string;
   className?: string;
+  directUrl?: string; // New prop for direct URL testing
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -25,6 +25,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   width = '100%',
   height = '100%',
   className = '',
+  directUrl // New prop
 }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -39,6 +40,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   
   useEffect(() => {
     const loadPdf = async () => {
+      // If a direct URL is provided, use it instead of fetching from storage
+      if (directUrl) {
+        setPdfUrl(directUrl);
+        setPdfExists(true);
+        setLoading(false);
+        return;
+      }
+      
       if (!resumeId || !userId) {
         setError('Resume ID or User ID not provided');
         setLoading(false);
@@ -69,7 +78,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     
     setLoading(true);
     loadPdf();
-  }, [resumeId, userId]);
+  }, [resumeId, userId, directUrl]);
   
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
