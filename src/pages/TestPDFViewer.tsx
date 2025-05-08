@@ -107,6 +107,165 @@ const TestPDFViewer: React.FC = () => {
       addLog('Finished fetch attempt');
     }
   };
+  
+  // Function to try accessing file directly via Supabase authorization
+  const fetchAuthorizedUrl = async () => {
+    if (!resumeId || !fileName) return;
+    
+    setIsLoading(true);
+    setErrorMessage(null);
+    setPdfLoaded(false);
+    clearLogs();
+    addLog(`Starting to fetch authorized URL for resumeId: ${resumeId} and fileName: ${fileName}`);
+    
+    try {
+      const bucketName = 'resumes';
+      const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
+      
+      addLog(`Using bucket: ${bucketName}, path: ${storagePath}`);
+      
+      // Try to create a signed URL with direct access
+      addLog(`Calling supabase.storage.from(${bucketName}).createSignedUrl(${storagePath}, 3600)`);
+      const { data, error } = await supabase
+        .storage
+        .from(bucketName)
+        .createSignedUrl(storagePath, 3600); // 1 hour expiration
+        
+      if (error) {
+        addLog(`Supabase returned error on signed URL: ${error.message}`);
+        throw error;
+      }
+      
+      if (!data?.signedUrl) {
+        addLog('No signed URL returned from Supabase');
+        throw new Error('Failed to generate signed URL');
+      }
+      
+      addLog(`Generated signed URL: ${data.signedUrl}`);
+      setDirectUrl(data.signedUrl);
+      
+      toast({
+        title: "Authorized PDF URL Generated",
+        description: "Successfully generated signed URL for the PDF using backend authentication",
+      });
+      
+      return data.signedUrl;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to generate authorized URL';
+      addLog(`Error occurred: ${errorMsg}`);
+      console.error('Error generating authorized URL:', error);
+      setErrorMessage(errorMsg);
+      
+      toast({
+        title: "Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      
+      return null;
+    } finally {
+      setIsLoading(false);
+      addLog('Finished authorized fetch attempt');
+    }
+  };
+  
+  // Function to download the file directly
+  const downloadFileDirectly = async () => {
+    if (!resumeId || !fileName) return;
+    
+    setIsLoading(true);
+    clearLogs();
+    addLog(`Starting direct download for resumeId: ${resumeId} and fileName: ${fileName}`);
+    
+    try {
+      const bucketName = 'resumes';
+      const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
+      
+      addLog(`Using bucket: ${bucketName}, path: ${storagePath}`);
+      
+      addLog(`Calling supabase.storage.from(${bucketName}).download(${storagePath})`);
+      const { data, error } = await supabase
+        .storage
+        .from(bucketName)
+        .download(storagePath);
+        
+      if (error) {
+        addLog(`Supabase returned download error: ${error.message}`);
+        throw error;
+      }
+      
+      if (!data) {
+        addLog('No data returned from download');
+        throw new Error('Failed to download file');
+      }
+      
+      addLog(`Downloaded file successfully, size: ${data.size} bytes`);
+      // Create an object URL from the blob
+      const objectUrl = URL.createObjectURL(data);
+      addLog(`Created object URL: ${objectUrl}`);
+      setDirectUrl(objectUrl);
+      
+      toast({
+        title: "File Downloaded",
+        description: "Successfully downloaded file directly from Supabase storage",
+      });
+      
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to download file';
+      addLog(`Error occurred during download: ${errorMsg}`);
+      console.error('Error downloading file:', error);
+      setErrorMessage(errorMsg);
+      
+      toast({
+        title: "Download Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+      addLog('Finished direct download attempt');
+    }
+  };
+  
+  // Check file metadata
+  const checkFileMetadata = async () => {
+    if (!resumeId || !fileName) return;
+    
+    clearLogs();
+    addLog(`Checking file metadata for resumeId: ${resumeId} and fileName: ${fileName}`);
+    
+    try {
+      const bucketName = 'resumes';
+      const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
+      
+      const { data, error } = await supabase
+        .storage
+        .from(bucketName)
+        .list(storagePath.split('/').slice(0, -1).join('/'));
+        
+      if (error) {
+        addLog(`Error listing files: ${error.message}`);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        addLog('No files found in this path');
+      } else {
+        addLog(`Files in directory: ${data.length}`);
+        data.forEach((file, i) => {
+          addLog(`File ${i+1}: ${file.name} (${file.metadata?.mimetype || 'unknown type'}, ${file.metadata?.size || 'unknown size'} bytes)`);
+        });
+      }
+      
+      // Check if specific file exists
+      const fileExists = data && data.some(f => f.name === fileName.split('/').pop());
+      addLog(`Does ${fileName.split('/').pop()} exist?: ${fileExists ? 'Yes' : 'No'}`);
+      
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to check metadata';
+      addLog(`Metadata check error: ${errorMsg}`);
+    }
+  };
 
   const handlePdfLoadSuccess = () => {
     setPdfLoaded(true);
@@ -168,20 +327,49 @@ const TestPDFViewer: React.FC = () => {
                   />
                 </div>
                 
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  <Button 
+                    variant="default" 
+                    onClick={fetchDirectUrl}
+                    disabled={isLoading}
+                    className="w-full bg-draft-green hover:bg-draft-green/90"
+                  >
+                    Get Public URL
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={fetchAuthorizedUrl}
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    Get Authorized URL
+                  </Button>
+                  
+                  <Button 
+                    variant="secondary" 
+                    onClick={downloadFileDirectly}
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    Download Directly
+                  </Button>
+                </div>
+                
                 <Button 
-                  variant="default" 
-                  onClick={fetchDirectUrl}
+                  variant="ghost" 
+                  onClick={checkFileMetadata}
                   disabled={isLoading}
-                  className="w-full bg-draft-green hover:bg-draft-green/90"
+                  className="w-full text-gray-600"
                 >
-                  {isLoading ? 'Loading...' : 'Load PDF from Supabase Storage'}
+                  Check File Metadata
                 </Button>
               </div>
               
               {isLoading && (
                 <div className="mt-4">
                   <Progress value={75} className="h-2 animate-pulse" />
-                  <p className="text-sm text-gray-600 mt-2">Generating PDF URL...</p>
+                  <p className="text-sm text-gray-600 mt-2">Processing request...</p>
                 </div>
               )}
               

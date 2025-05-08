@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -19,10 +19,10 @@ interface PDFViewerProps {
   width?: number | string;
   height?: number | string;
   className?: string;
-  directUrl?: string | null; // Prop for direct URL testing
+  directUrl?: string | null;
   onLoadSuccess?: () => void;
   onLoadError?: (error: Error) => void;
-  showDebugLogs?: boolean; // New prop to control debug logs visibility
+  showDebugLogs?: boolean;
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -54,6 +54,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     console.log(message); // Also log to console
     setDebugLogs(prev => [...prev, `${new Date().toISOString().split('T')[1].slice(0, -1)}: ${message}`]);
   };
+  
+  // Memoize PDF.js options to prevent unnecessary reloads
+  const pdfOptions = useMemo(() => ({
+    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+  }), []);
   
   // Function to get the direct Supabase storage URL
   const getSupabaseStorageUrl = (resumeId: string, fileName: string) => {
@@ -328,11 +335,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 </div>
               }
               className="max-h-full"
-              options={{
-                cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-                cMapPacked: true,
-                standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
-              }}
+              options={pdfOptions}
             >
               {loadingError ? (
                 <div className="p-6 bg-white rounded shadow-md">
