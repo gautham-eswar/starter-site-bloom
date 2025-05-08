@@ -1,5 +1,6 @@
-
 import { toast } from "@/hooks/use-toast";
+import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE_URL = "https://latest-try-psti.onrender.com/api";
 
@@ -80,10 +81,56 @@ export async function checkOptimizationStatus(jobId: string) {
 
 // Download optimized resume
 export async function downloadResume(resumeId: string, format: string = "pdf") {
-  const response = await fetch(`${API_BASE_URL}/download/${resumeId}/${format}`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Download failed with status ${response.status}`);
+  try {
+    // Get the current auth session
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    
+    // If we have userId and format is PDF, check if it exists in our storage
+    if (userId && format === "pdf") {
+      const exists = await checkPdfExists(resumeId, userId);
+      if (exists) {
+        // If it exists in our storage, get it from there
+        const response = await fetch(`${API_BASE_URL}/download/${resumeId}/${format}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Download failed with status ${response.status}`);
+        }
+        
+        // Store the PDF in Supabase storage for future use
+        const blob = await response.blob();
+        try {
+          await uploadPdfFromBlob(blob, `enhanced_resume_${resumeId}.pdf`, resumeId, userId);
+        } catch (uploadError) {
+          console.error("Failed to cache PDF in storage:", uploadError);
+          // Continue with the download even if storage fails
+        }
+        
+        return response;
+      }
+    }
+    
+    // Otherwise fetch directly from API
+    const response = await fetch(`${API_BASE_URL}/download/${resumeId}/${format}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Download failed with status ${response.status}`);
+    }
+    
+    // If it's PDF, try to store it for future use
+    if (format === "pdf" && userId) {
+      try {
+        const blobCopy = await response.clone().blob();
+        await uploadPdfFromBlob(blobCopy, `enhanced_resume_${resumeId}.pdf`, resumeId, userId);
+      } catch (uploadError) {
+        console.error("Failed to cache PDF in storage:", uploadError);
+        // Continue with the download even if storage fails
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    console.error("Download error:", error);
+    throw error;
   }
-  return response;
 }

@@ -1,14 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
-import { getOptimizationResults, downloadResume } from '@/services/api';
+import { getOptimizationResults } from '@/services/api';
 import { OptimizationResult } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
+import PDFViewer from '@/components/PDFViewer';
+import { downloadPdf, checkPdfExists } from '@/services/pdfStorage';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -24,13 +26,28 @@ const ComparisonPage: React.FC = () => {
     setOptimizationResult
   } = useResumeContext();
 
+  const { user } = useAuth();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [pdfExists, setPdfExists] = useState<boolean | null>(null);
 
   // Use URL params if available, otherwise use context
   const resumeId = resumeIdParam || contextResumeId;
   const jobId = jobIdParam || contextJobId;
+
+  // Check if PDF exists
+  useEffect(() => {
+    const checkPdf = async () => {
+      if (resumeId && user?.id) {
+        const exists = await checkPdfExists(resumeId, user.id);
+        setPdfExists(exists);
+      }
+    };
+    
+    checkPdf();
+  }, [resumeId, user?.id]);
 
   // Fetch optimization results
   useEffect(() => {
@@ -83,20 +100,34 @@ const ComparisonPage: React.FC = () => {
     setDownloadFormat(format);
 
     try {
-      const response = await downloadResume(resumeId, format);
-      
-      // Create a blob from the response
-      const blob = await response.blob();
-      
-      // Create a link element to trigger the download
-      const downloadUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `optimized_resume.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(downloadUrl);
+      if (format === 'pdf' && pdfExists && user?.id) {
+        // Download from Supabase storage if PDF exists there
+        const blob = await downloadPdf(resumeId, user.id);
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `optimized_resume.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+      } else {
+        // Fall back to the API if PDF doesn't exist in storage or format is not PDF
+        const response = await getOptimizationResults(resumeId, jobId);
+        
+        // Create a blob from the response
+        const blob = await response.blob();
+        
+        // Create a link element to trigger the download
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `optimized_resume.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+      }
       
       toast({
         title: "Download successful",
@@ -258,103 +289,112 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-white rounded-lg p-6 h-[600px] overflow-auto">
-              {/* This is a simplified preview - in a real app, you would render the actual resume content from the API */}
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>
-                  <p>CPA</p>
-                </div>
-                
-                <div className="flex justify-between text-sm">
-                  <div>
-                    <p>Phone: 942-957-0000</p>
-                    <p>Email: lucy@gmail.com</p>
-                  </div>
-                  <div>
-                    <p>LinkedIn: linkedin.com/in/lucycheng</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm">Results-focused senior CPA and CMA with 10 years of experience at Mastercard and Oracle. Seeking to leverage proven skills in account reconciliation and cloud-based accounting for Goldman Sachs. Enhanced Oracle's cloud computing process to save 900 department hours per year. Identified and rectified a recurring issue that saved $1.3 million annually.</p>
-                </div>
-                
-                <div>
-                  <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Experience</h2>
-                  
-                  <div className="mt-3">
-                    <div className="flex justify-between">
-                      <p className="font-medium">Senior CPA</p>
-                      <p>2017-07 - present</p>
+            <div className="bg-white rounded-lg h-[600px] overflow-hidden">
+              {resumeId && user?.id ? (
+                <PDFViewer 
+                  resumeId={resumeId}
+                  userId={user.id}
+                  height="100%"
+                />
+              ) : (
+                <div className="p-6 h-full">
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>
+                      <p>CPA</p>
                     </div>
-                    <p>Oracle, Chicago</p>
-                    <ul className="list-disc ml-5 mt-1 text-sm">
-                      <li>Supervised general accounting functions for monthly close process</li>
-                      <li>Improved use of cloud computing best practices to enhance data security and save 900 hours per year, saving the department $800,000 annually.</li>
-                      <li>Identified and resolved a company-wide process issue that saved $2 million per year.</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="mt-5">
-                    <div className="flex justify-between">
-                      <p className="font-medium">CPA, Capital Accounting</p>
-                      <p>2010-06 - 2015-06</p>
-                    </div>
-                    <p>Mastercard, Chicago</p>
-                    <ul className="list-disc ml-5 mt-1 text-sm">
-                      <li>Key member of accounting month-end close process.</li>
-                      <li>Through account analysis, identified opportunity to reduce certain variable costs by 15%, saving the company a total of $1.2 million annually.</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div>
-                  <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Education</h2>
-                  
-                  <div className="mt-3">
-                    <div className="flex justify-between">
-                      <p className="font-medium">MBA, Illinois State University</p>
-                      <p>2006-09 - 2010-06</p>
-                    </div>
-                    <ul className="list-disc ml-5 mt-1 text-sm">
-                      <li>Concentration in accounting</li>
-                      <li>Dean's List</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div>
-                  <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Skills</h2>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <p className="text-sm">Financial payments</p>
-                      <div className="flex mt-1">
-                        {Array(5).fill(0).map((_, i) => (
-                          <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                        ))}
+                    
+                    <div className="flex justify-between text-sm">
+                      <div>
+                        <p>Phone: 942-957-0000</p>
+                        <p>Email: lucy@gmail.com</p>
+                      </div>
+                      <div>
+                        <p>LinkedIn: linkedin.com/in/lucycheng</p>
                       </div>
                     </div>
+                    
                     <div>
-                      <p className="text-sm">Payroll</p>
-                      <div className="flex mt-1">
-                        {Array(5).fill(0).map((_, i) => (
-                          <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                        ))}
+                      <p className="text-sm">Results-focused senior CPA and CMA with 10 years of experience at Mastercard and Oracle. Seeking to leverage proven skills in account reconciliation and cloud-based accounting for Goldman Sachs. Enhanced Oracle's cloud computing process to save 900 department hours per year. Identified and rectified a recurring issue that saved $1.3 million annually.</p>
+                    </div>
+                    
+                    <div>
+                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Experience</h2>
+                      
+                      <div className="mt-3">
+                        <div className="flex justify-between">
+                          <p className="font-medium">Senior CPA</p>
+                          <p>2017-07 - present</p>
+                        </div>
+                        <p>Oracle, Chicago</p>
+                        <ul className="list-disc ml-5 mt-1 text-sm">
+                          <li>Supervised general accounting functions for monthly close process</li>
+                          <li>Improved use of cloud computing best practices to enhance data security and save 900 hours per year, saving the department $800,000 annually.</li>
+                          <li>Identified and resolved a company-wide process issue that saved $2 million per year.</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="mt-5">
+                        <div className="flex justify-between">
+                          <p className="font-medium">CPA, Capital Accounting</p>
+                          <p>2010-06 - 2015-06</p>
+                        </div>
+                        <p>Mastercard, Chicago</p>
+                        <ul className="list-disc ml-5 mt-1 text-sm">
+                          <li>Key member of accounting month-end close process.</li>
+                          <li>Through account analysis, identified opportunity to reduce certain variable costs by 15%, saving the company a total of $1.2 million annually.</li>
+                        </ul>
                       </div>
                     </div>
+                    
                     <div>
-                      <p className="text-sm">IT skills</p>
-                      <div className="flex mt-1">
-                        {Array(5).fill(0).map((_, i) => (
-                          <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                        ))}
+                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Education</h2>
+                      
+                      <div className="mt-3">
+                        <div className="flex justify-between">
+                          <p className="font-medium">MBA, Illinois State University</p>
+                          <p>2006-09 - 2010-06</p>
+                        </div>
+                        <ul className="list-disc ml-5 mt-1 text-sm">
+                          <li>Concentration in accounting</li>
+                          <li>Dean's List</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Skills</h2>
+                      
+                      <div className="grid grid-cols-2 gap-4 mt-3">
+                        <div>
+                          <p className="text-sm">Financial payments</p>
+                          <div className="flex mt-1">
+                            {Array(5).fill(0).map((_, i) => (
+                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm">Payroll</p>
+                          <div className="flex mt-1">
+                            {Array(5).fill(0).map((_, i) => (
+                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm">IT skills</p>
+                          <div className="flex mt-1">
+                            {Array(5).fill(0).map((_, i) => (
+                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

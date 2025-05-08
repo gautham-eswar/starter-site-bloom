@@ -9,122 +9,11 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      enhanced_resumes: {
-        Row: {
-          analysis_data: Json | null
-          created_at: string
-          enhanced_data: Json | null
-          job_description_text: string | null
-          resume_id: string
-        }
-        Insert: {
-          analysis_data?: Json | null
-          created_at?: string
-          enhanced_data?: Json | null
-          job_description_text?: string | null
-          resume_id: string
-        }
-        Update: {
-          analysis_data?: Json | null
-          created_at?: string
-          enhanced_data?: Json | null
-          job_description_text?: string | null
-          resume_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_resume"
-            columns: ["resume_id"]
-            isOneToOne: true
-            referencedRelation: "resumes_new"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      job_descriptions: {
-        Row: {
-          created_at: string | null
-          description: string
-          id: string
-          requirements: Json | null
-          title: string
-        }
-        Insert: {
-          created_at?: string | null
-          description: string
-          id: string
-          requirements?: Json | null
-          title: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string
-          id?: string
-          requirements?: Json | null
-          title?: string
-        }
-        Relationships: []
-      }
-      jobs: {
-        Row: {
-          current_stage: string | null
-          duration: string | null
-          id: string
-          status: string
-          timestamp: string
-          type: string
-        }
-        Insert: {
-          current_stage?: string | null
-          duration?: string | null
-          id: string
-          status: string
-          timestamp?: string
-          type: string
-        }
-        Update: {
-          current_stage?: string | null
-          duration?: string | null
-          id?: string
-          status?: string
-          timestamp?: string
-          type?: string
-        }
-        Relationships: []
-      }
-      openai_usage: {
-        Row: {
-          cost: number
-          created_at: string
-          id: string
-          job_id: string
-          model: string
-          tokens_completion: number
-          tokens_prompt: number
-        }
-        Insert: {
-          cost: number
-          created_at?: string
-          id?: string
-          job_id: string
-          model: string
-          tokens_completion: number
-          tokens_prompt: number
-        }
-        Update: {
-          cost?: number
-          created_at?: string
-          id?: string
-          job_id?: string
-          model?: string
-          tokens_completion?: number
-          tokens_prompt?: number
-        }
-        Relationships: []
-      }
       optimization_jobs: {
         Row: {
           created_at: string
+          enhanced_resume_id: string | null
+          error_message: string | null
           id: string
           job_description: string
           keywords_extracted: Json | null
@@ -133,9 +22,12 @@ export type Database = {
           modifications: Json | null
           resume_id: string
           status: string
+          user_id: string
         }
         Insert: {
           created_at?: string
+          enhanced_resume_id?: string | null
+          error_message?: string | null
           id?: string
           job_description: string
           keywords_extracted?: Json | null
@@ -144,9 +36,12 @@ export type Database = {
           modifications?: Json | null
           resume_id: string
           status: string
+          user_id: string
         }
         Update: {
           created_at?: string
+          enhanced_resume_id?: string | null
+          error_message?: string | null
           id?: string
           job_description?: string
           keywords_extracted?: Json | null
@@ -155,41 +50,24 @@ export type Database = {
           modifications?: Json | null
           resume_id?: string
           status?: string
+          user_id?: string
         }
-        Relationships: []
-      }
-      resume_optimizer_errors: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          id: string
-          job_description: string | null
-          keywords: Json | null
-          pipeline_step: string | null
-          resume_bullet_points: Json | null
-          resume_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          id: string
-          job_description?: string | null
-          keywords?: Json | null
-          pipeline_step?: string | null
-          resume_bullet_points?: Json | null
-          resume_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          job_description?: string | null
-          keywords?: Json | null
-          pipeline_step?: string | null
-          resume_bullet_points?: Json | null
-          resume_id?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "optimization_jobs_enhanced_resume_id_fkey"
+            columns: ["enhanced_resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "optimization_jobs_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resumes: {
         Row: {
@@ -198,6 +76,7 @@ export type Database = {
           enhancement_id: string | null
           file_name: string
           id: string
+          original_resume_id: string | null
           user_id: string
         }
         Insert: {
@@ -206,6 +85,7 @@ export type Database = {
           enhancement_id?: string | null
           file_name: string
           id: string
+          original_resume_id?: string | null
           user_id: string
         }
         Update: {
@@ -214,96 +94,25 @@ export type Database = {
           enhancement_id?: string | null
           file_name?: string
           id?: string
+          original_resume_id?: string | null
           user_id?: string
         }
-        Relationships: []
-      }
-      resumes_enhanced: {
-        Row: {
-          content_type: string
-          created_at: string | null
-          data: Json
-          enhanced_data: Json | null
-          id: string
-          original_filename: string
-          updated_at: string | null
-        }
-        Insert: {
-          content_type: string
-          created_at?: string | null
-          data: Json
-          enhanced_data?: Json | null
-          id: string
-          original_filename: string
-          updated_at?: string | null
-        }
-        Update: {
-          content_type?: string
-          created_at?: string | null
-          data?: Json
-          enhanced_data?: Json | null
-          id?: string
-          original_filename?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      resumes_new: {
-        Row: {
-          created_at: string
-          id: string
-          original_filename: string | null
-          parsed_data: Json | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          original_filename?: string | null
-          parsed_data?: Json | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          original_filename?: string | null
-          parsed_data?: Json | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          completed_at: string | null
-          duration: number | null
-          endpoint: string
-          error: string | null
-          id: string
-          method: string
-          started_at: string | null
-          status: string
-        }
-        Insert: {
-          completed_at?: string | null
-          duration?: number | null
-          endpoint: string
-          error?: string | null
-          id: string
-          method: string
-          started_at?: string | null
-          status: string
-        }
-        Update: {
-          completed_at?: string | null
-          duration?: number | null
-          endpoint?: string
-          error?: string | null
-          id?: string
-          method?: string
-          started_at?: string | null
-          status?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resumes_enhancement_id_fkey"
+            columns: ["enhancement_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resumes_original_resume_id_fkey"
+            columns: ["original_resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
