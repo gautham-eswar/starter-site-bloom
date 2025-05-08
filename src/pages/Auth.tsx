@@ -14,7 +14,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  // Only add the name field if it's going to be used
 });
 
 const Auth: React.FC = () => {
@@ -105,7 +104,8 @@ const Auth: React.FC = () => {
         options: {
           redirectTo: `${window.location.origin}/`,
           queryParams: {
-            prompt: 'select_account',
+            access_type: 'offline',
+            prompt: 'consent',
           }
         },
       });
