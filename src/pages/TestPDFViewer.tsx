@@ -1,15 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import PDFViewer from '@/components/PDFViewer';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { apiRequest } from '@/services/api';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from '@/hooks/use-toast';
 
 const TestPDFViewer: React.FC = () => {
   const navigate = useNavigate();
-  const [pdfUrl, setPdfUrl] = useState<string>("https://mlvlovbfzgvdggoudgsr.supabase.co/storage/v1/object/public/resumes/41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266/ABHIRAJ%20SINGH_Resume%20-%20Supply%20Chain.pdf");
+  const { user } = useAuth();
+  const [resumeId, setResumeId] = useState<string>("41600801-46c5-4d56-a248-f8c3585cc486");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -31,26 +37,56 @@ const TestPDFViewer: React.FC = () => {
             <h2 className="text-2xl font-serif text-draft-green mb-6">PDF Viewer Test</h2>
             
             <div className="bg-white rounded-lg p-4 mb-4">
-              <label className="block text-sm font-medium mb-2">PDF URL</label>
+              <label className="block text-sm font-medium mb-2">Resume ID</label>
               <div className="flex gap-3">
                 <Input 
-                  value={pdfUrl}
-                  onChange={(e) => setPdfUrl(e.target.value)}
+                  value={resumeId}
+                  onChange={(e) => setResumeId(e.target.value)}
                   className="flex-1"
-                  placeholder="Enter direct PDF URL"
+                  placeholder="Enter resume ID"
                 />
                 <Button 
-                  variant="outline" 
-                  onClick={() => setPdfUrl("https://mlvlovbfzgvdggoudgsr.supabase.co/storage/v1/object/public/resumes/41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266/ABHIRAJ%20SINGH_Resume%20-%20Supply%20Chain.pdf")}
+                  variant="default" 
+                  onClick={async () => {
+                    if (!user) {
+                      toast({
+                        title: "Authentication Required",
+                        description: "Please login to view resumes",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    setIsLoading(true);
+                    setErrorMessage(null);
+                    
+                    try {
+                      // Fetch the PDF from your backend API
+                      const response = await apiRequest(`/download/${resumeId}/pdf`);
+                      if (!response) {
+                        throw new Error('Failed to fetch PDF');
+                      }
+                      setIsLoading(false);
+                    } catch (error) {
+                      console.error('Error fetching PDF:', error);
+                      setErrorMessage(error instanceof Error ? error.message : 'Unknown error occurred');
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading}
                 >
-                  Reset URL
+                  {isLoading ? 'Loading...' : 'Fetch PDF'}
                 </Button>
               </div>
+              {errorMessage && (
+                <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+              )}
             </div>
             
             <div className="bg-white rounded-lg h-[700px] overflow-hidden shadow-md">
               <PDFViewer 
-                directUrl={pdfUrl}
+                resumeId={resumeId}
+                userId={user?.id}
                 height="100%"
               />
             </div>

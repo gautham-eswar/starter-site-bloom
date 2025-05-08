@@ -8,9 +8,10 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { apiRequest } from '@/services/api';
 
 // Configure the PDF.js worker source with a more reliable CDN link
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 interface PDFViewerProps {
   resumeId?: string;
@@ -62,20 +63,43 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           return;
         }
         
-        // Check if PDF exists
-        const exists = await checkPdfExists(resumeId, userId);
-        setPdfExists(exists);
-        
-        if (!exists) {
-          setError('PDF not found');
-          setLoading(false);
-          return;
+        // First try to see if the PDF exists in our storage
+        try {
+          const exists = await checkPdfExists(resumeId, userId);
+          setPdfExists(exists);
+          
+          if (exists) {
+            // If it exists in storage, get the URL
+            const url = await getPdfUrl(resumeId, userId);
+            setPdfUrl(url);
+            setLoading(false);
+            return;
+          }
+        } catch (storageError) {
+          console.warn('Storage check failed, trying API instead:', storageError);
         }
         
-        // Get PDF URL
-        const url = await getPdfUrl(resumeId, userId);
-        setPdfUrl(url);
-        setLoading(false);
+        // If not in storage, try to fetch it from the API
+        try {
+          console.log(`Fetching PDF from API for resume ID: ${resumeId}`);
+          const response = await fetch(`https://latest-try-psti.onrender.com/api/download/${resumeId}/pdf`);
+          
+          if (!response.ok) {
+            throw new Error(`API returned status ${response.status}`);
+          }
+          
+          // Create a blob URL from the response
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setPdfExists(true);
+          setLoading(false);
+        } catch (apiError) {
+          console.error('API fetch failed:', apiError);
+          setError('Failed to fetch PDF from API');
+          setPdfExists(false);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error loading PDF:', error);
         setError(error instanceof Error ? error.message : 'Failed to load PDF');
@@ -85,6 +109,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     
     setLoading(true);
     loadPdf();
+    
+    // Clean up object URL on unmount
+    return () => {
+      if (pdfUrl && pdfUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
   }, [resumeId, userId, directUrl]);
   
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -124,7 +155,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         <Alert variant="destructive" className="max-w-md">
           <AlertTitle>Resume PDF not available</AlertTitle>
           <AlertDescription>
-            The enhanced PDF for this resume is not available yet. This could be because the optimization is still in progress.
+            {error || "The enhanced PDF for this resume is not available yet. This could be because the optimization is still in progress."}
           </AlertDescription>
         </Alert>
       </div>
