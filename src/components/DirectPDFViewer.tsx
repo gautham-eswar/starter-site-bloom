@@ -19,6 +19,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   
   // Memoize PDF options to prevent unnecessary rerenders
   const pdfOptions = useMemo(() => ({
@@ -29,10 +30,15 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
 
   // Handle document load success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    console.log(`PDF loaded successfully with ${numPages} pages`);
     setNumPages(numPages);
     setPageNumber(1);
     setError(null);
+    setLoading(false);
   };
+
+  // Log the URL being used
+  console.log('Attempting to load PDF from URL:', url);
 
   // Navigation functions
   const previousPage = () => setPageNumber(prev => Math.max(prev - 1, 1));
@@ -46,6 +52,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
   // Refresh function - forces reload of PDF
   const handleRefresh = () => {
     setError(null);
+    setLoading(true);
     // Force re-render by adding timestamp to URL
     const refreshedUrl = url.includes('?') 
       ? `${url}&refresh=${Date.now()}` 
@@ -60,7 +67,11 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
         <Document
           file={url}
           onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={(err) => setError(`Failed to load PDF: ${err.message}`)}
+          onLoadError={(err) => {
+            console.error('PDF load error:', err);
+            setError(`Failed to load PDF: ${err.message}`);
+            setLoading(false);
+          }}
           options={pdfOptions}
           loading={
             <div className="flex flex-col items-center justify-center p-8">
