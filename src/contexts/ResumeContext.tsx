@@ -90,7 +90,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       setUploadState(NOT_UPLOADED);
-      console.log(`Upload ${file.filename} from user ID: ${userId} failed. Error message: ${error}`)
+      console.error(`Upload ${file.filename} from user ID: ${userId} failed. Error message: ${error}`)
       toast({
         title: "Upload failed",
         description: "There was an error uploading your resume. Please try again.",
@@ -101,7 +101,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setPipelineState(UPLOADED)
     setResumeId(data["resume_id"])
     setParsedResume(data["resume_id"])
-    console.error(`Resume ${file.filename} uploaded successfully. Resume ID: ${data["resume_id"]}`)
+    console.log(`Resume ${file.filename} uploaded successfully. Resume ID: ${data["resume_id"]}`)
 
 
   }
