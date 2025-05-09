@@ -66,7 +66,7 @@ const ProcessStep = ({
   }, [delay, number]);
 
   return <div ref={stepRef} className="flex-1 relative mx-2 opacity-0 translate-y-4 transition-all duration-400 ease-out hover:scale-103 hover:shadow-md hover:z-10">
-      {/* Number Circle with enhanced styling - updated for better theming */}
+      {/* Number Circle with enhanced styling - fixed for dark mode */}
       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-md">
         <span className="font-serif">{number}</span>
       </div>
@@ -80,7 +80,7 @@ const ProcessStep = ({
         </div>
         
         <h3 className="text-xl font-semibold text-center mb-4 text-draft-green dark:text-draft-yellow font-serif">{title}</h3>
-        <p className="text-draft-text dark:text-gray-300 text-center">{description}</p>
+        <p className="text-draft-text dark:text-gray-300 text-center font-serif">{description}</p>
       </div>
       
       {/* Connection Arrow (except for last step) - updated for better theming */}
@@ -141,11 +141,11 @@ const BalanceSection: React.FC = () => {
     };
   }, []);
 
-  return <section ref={sectionRef} className="py-24 relative overflow-hidden bg-draft-bg dark:bg-[#1A3F35]">
+  return <section ref={sectionRef} className="py-24 relative overflow-hidden bg-draft-bg dark:bg-[#0A2218]">
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-6 relative z-10">
         <div ref={headingRef} className="text-center mb-5 opacity-0 translate-y-6 transition-all duration-700">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md inline-block mb-6">
-            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">Our Process</span>
+            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium font-serif">Our Process</span>
           </div>
           
           <h2 className="text-heading font-serif mb-6 text-center text-draft-green dark:text-draft-yellow">
@@ -153,7 +153,7 @@ const BalanceSection: React.FC = () => {
           </h2>
         </div>
         
-        <p ref={subheadingRef} className="text-center text-lg text-draft-text dark:text-gray-300 max-w-3xl mx-auto mb-16 opacity-0 translate-y-4 transition-all duration-700 delay-300">
+        <p ref={subheadingRef} className="text-center text-lg text-draft-text dark:text-gray-300 max-w-3xl mx-auto mb-16 opacity-0 translate-y-4 transition-all duration-700 delay-300 font-serif">
           While other candidates wait in the application black hole, you'll be preparing for interviews.
         </p>
         
