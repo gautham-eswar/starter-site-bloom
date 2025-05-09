@@ -127,8 +127,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
 
     // Ignore optimization if another one was started (although it shouldn't)
-    if (currentResumeId != resumeId)
-      return
+    if (currentResumeId != resumeId) return
 
     if (error) {
       setUploadState(UPLOADED);
@@ -140,10 +139,10 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
     }
 
+    setPipelineState(ENHANCED)
     setJobId(data["job_id"])
     setEnhancementAnalysis(data["analysis"])
-    setEnhancedResumeId(data["enhanced_resume_id"])
-    
+    setEnhancedResumeId(data["enhanced_resume_id"]) 
   }
 
   const uploadResume = async (file: File) => {
