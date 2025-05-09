@@ -25,6 +25,45 @@ type PipelineContextType = {
   setResumeId: (id: string | null) => void;
 }
 
+const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
+
+export const usePipelineContext = () => {
+  const context = useContext(PipelineContext);
+  if (!context) {
+    throw new Error('useResumeContext must be used within a ResumeProvider');
+  }
+  return context;
+};
+
+export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [resumeId, setResumeId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobDescription, setJobDescription] = useState<string>('');
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+
+  return (
+    <ResumeContext.Provider
+      value={{
+        resumeId,
+        setResumeId,
+        jobId,
+        setJobId,
+        jobDescription,
+        setJobDescription,
+        optimizationResult,
+        setOptimizationResult,
+        isOptimizing,
+        setIsOptimizing
+      }}
+    >
+      {children}
+    </ResumeContext.Provider>
+  );
+};
+
+
+
 
 
 type ResumeContextType = {
