@@ -43,16 +43,22 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Data for UPLOADED stage
   const [resumeId, setResumeId] = useState<string | null>(null);
+  const [parsedResume, setParsedResume] = useState<Object | null>(null);
 
   // Data for ENHANCING Stage
   const [jobDescription, setJobDescription] = useState<string>('');
 
   // Data for ENHANCED Stage
   const [jobId, setJobId] = useState<string | null>(null);
+  const [enhancements, setEnhancements] = useState<Object | null>(null);
+  const [enhancedResumeId, setEnhancedResumeId] = useState<string | null>(null);
   
-  
-  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
-  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+  // Data for RENDERING Stage
+
+  // Data for RENDERED Stage
+  const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
+  const [enhancedResumeFileId, setEnhancedResumeFileId] = useState<File | null>(null);
+
 
   return (
     <PipelineContext.Provider
