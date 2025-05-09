@@ -44,9 +44,10 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Data for UPLOADING stage
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+  const [enhancementPending, setEnhancementPending] = useState(false)
 
   // Data for UPLOADED stage
-  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [resumeId, setResumeId] = useState<string | null>(null);
   const [parsedSelectedResume, setParsedSelectedResume] = useState<Object | null>(null);
 
   // Data for ENHANCING Stage
@@ -99,11 +100,45 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     setPipelineState(UPLOADED)
-    setResumeId(data["resume_id"])
+    setSelectedResumeId(data["resume_id"])
     setParsedSelectedResume(data["resume_id"])
     console.log(`Resume ${file.filename} uploaded successfully. Resume ID: ${data["resume_id"]}`)
+  }
 
+  const enhanceResume = (jd: string) =>{
 
+    if (!user.id){
+      toast({
+        title: "Not Authenticated",
+        description: "Please sign in or singup to continue",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!jd.trim()){
+      toast({
+        title: "No job description to enhance from",
+        description: "Please type or paste a job listing and try again",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (pipelineState == NOT_UPLOADED){
+      toast({
+        title: "No resume selected",
+        description: "Please select or upload a resume and try again",
+        variant: "destructive"
+      });
+      return;
+    }
+    setJobDescription(jd)
+    if (pipelineState == UPLOADING){
+      setEnhancementPending(true)
+      console.log("Waiting for resume upload completion to start optimization job")
+      return
+    }
+    
+    
   }
 
   return (
