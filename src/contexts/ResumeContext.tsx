@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiRequest } from '@/services/api';
-import { toast } from '@/hooks/use-toast';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -47,8 +46,8 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
 
   // Data for UPLOADED stage
-  const [selectedResumeId, selectdResumeId] = useState<string | null>(null);
-  const [parsedSelectedResume, setSelectedParsedResume] = useState<Object | null>(null);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [parsedSelectedResume, setParsedSelectedResume] = useState<Object | null>(null);
 
   // Data for ENHANCING Stage
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -70,7 +69,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const uploadResume = async (file: File) => {
     
-    console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
+    console.log(`Uploading resume ${file.filename} from user ID: ${userId}`)
     setPipelineState(UPLOADING)
   
     const formData = new FormData();
@@ -91,7 +90,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       setUploadState(NOT_UPLOADED);
-      console.error(`Upload ${file.filename} from user ID: ${user.id} failed. Error message: ${error}`)
+      console.error(`Upload ${file.filename} from user ID: ${userId} failed. Error message: ${error}`)
       toast({
         title: "Upload failed",
         description: "There was an error uploading your resume. Please try again.",
@@ -101,30 +100,10 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setPipelineState(UPLOADED)
     setResumeId(data["resume_id"])
-    setSelectedParsedResume(data["resume_id"])
+    setParsedSelectedResume(data["resume_id"])
     console.log(`Resume ${file.filename} uploaded successfully. Resume ID: ${data["resume_id"]}`)
-  }
 
-  const enhanceResume(resumeId:str, jobDescription: str){
-    if (!user.id || !resumeId || pipelineState < UPLOADED){
-      toast({
-        title: "No Resume Selected for optimization",
-        description: "Please select a resume and try again.",
-        variant: "destructive"
-      });
-      return 
-    }
-    if (!jobDescription.trim()){
-      toast({
-        title: "No Job Description to optimize to",
-        description: "Please type or paste a Job Posting and try again.",
-        variant: "destructive"
-      });
-      return 
-    }
 
-    console.log(`Enhancing resume with ID ${resmeId} from user ID: ${user.id}`)
-    
   }
 
   return (
