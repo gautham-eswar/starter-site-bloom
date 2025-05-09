@@ -55,7 +55,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Data for ENHANCED Stage
   const [jobId, setJobId] = useState<string | null>(null);
-  const [enhancements, setEnhancements] = useState<Object | null>(null);
+  const [enhancementAnalysis, setEnhancementAnalysis] = useState<Object | null>(null);
   const [enhancedResumeId, setEnhancedResumeId] = useState<string | null>(null);
   
   // Data for RENDERING Stage
@@ -140,7 +140,9 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
     }
 
-    
+    setJobId(data["job_id"])
+    setEnhancementAnalysis(data["analysis"])
+    setEnhancedResumeId(data["enhanced_resume_id"])
     
   }
 
