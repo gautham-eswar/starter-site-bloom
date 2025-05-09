@@ -13,17 +13,44 @@ const NOT_UPLOADED = 0,
 const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED, RENDERING, RENDERED] as const;
 type PipelineState = typeof stateValuesArray[number];
 
-type ProcessContextType = {
+type PipelineContextType = {
 
   pipelineState: PipelineState;
   setPipelineState: (state: PipelineState) => void;
 
+  // Data for "UPLOADING" process
   resumeFile: File | null;
   setResumeFile: (file: File | null) => void;
-  
+
+  resumeFilename: string | null;
+  setResumeFilename: (filename: string| null) => void;
+
+  // Data for "UPLOADED" process
   resumeId: string | null;
   setResumeId: (id: string | null) => void;
+
+  // Data for "ENHANCING" process
+  jobDescription: string | null;
+  setJobDescrpition: (description: string | null) => void;
   
+  // Data for "ENHANCED" process
+  jobId: string | null;
+  setJobId: (id: string | null) => void;
+
+  enhancements: Object | null;
+  setEnhancements: (enhancements: Object | null) => void;
+
+  enhancedResumeId: string | null;
+  setEnhancedResumeId: (id: string | null) => void;
+
+  // Data for "RENDERING" process
+
+  // Data for "RENDERED" process
+  enhancedResumeFile: File | null;
+  setEnhancedResumeFile: (file: File | null) => void;
+
+  enhancedResumeFileId: str | null;
+  setEnhancedResumeFileId: (id: string | null) => void;
 }
 
 type ResumeContextType = {
