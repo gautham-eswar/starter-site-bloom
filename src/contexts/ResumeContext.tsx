@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { apiRequest } from '@/services/api';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -31,12 +32,14 @@ const PipelineContext = createContext<PipelineContextType | undefined>(undefined
 export const usePipelineContext = () => {
   const context = useContext(PipelineContext);
   if (!context) {
-    throw new Error('useResumeContext must be used within a ResumeProvider');
+    throw new Error('usePipelineContext must be used within a PipelineProvider');
   }
   return context;
 };
 
 export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+
+  const [pipelineState, setPipelineState] = useState<PipelineState>(NOT_UPLOADED);
   
   // Data for UPLOADING stage
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -65,13 +68,15 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   } = useAuth();
 
   const uploadResume = async (file: File) => {
+    
     const formData = new FormData();
   
     formData.append("file", file);
     if (userId) {
-        formData.append('user_id', userId);
+        formData.append('user_id', user.id);
     }
     console.log(`Starting resume upload from user ID: ${userId}`)
+    
     return await apiRequest("/upload", {
       method: "POST",
       headers: {}, // Let browser set content-type for FormData
