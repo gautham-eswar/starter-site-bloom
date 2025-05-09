@@ -10,7 +10,21 @@ const NOT_UPLOADED = 0,
   RENDERING = 5,
   RENDERED = 6;
 
+const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED, RENDERING, RENDERED] as const;
+type PipelineState = typeof stateValuesArray[number];
 
+type ProcessContextType = {
+
+  pipelineState: PipelineState;
+  setPipelineState: (state: PipelineState) => void;
+
+  resumeFile: File | null;
+  setResumeFile: (file: File | null) => void;
+  
+  resumeId: string | null;
+  setResumeId: (id: string | null) => void;
+  
+}
 
 type ResumeContextType = {
   resumeId: string | null;
