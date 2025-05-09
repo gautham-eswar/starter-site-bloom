@@ -126,7 +126,7 @@
   }
   
   .dark .bg-[#F7F4ED] {
-    background-color: #1E433A;
+    background-color: #0A2218;
   }
   
   .dark .text-draft-green {
@@ -183,9 +183,9 @@
     border-color: rgba(26, 63, 53, 0.3);
   }
   
-  /* Stats section in dark mode - using the same background color as testimonials section */
+  /* Stats section and Features section in dark mode - using the same background color as testimonials */
   .dark .bg-\[\#F7F4ED\] {
-    background-color: #1E433A;
+    background-color: #0A2218;
   }
   
   /* Footer in dark mode */
