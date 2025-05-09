@@ -59,6 +59,9 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
   const [enhancedResumeFileId, setEnhancedResumeFileId] = useState<File | null>(null);
 
+  const uploadResume(file: File) =>{
+    
+  }
 
   return (
     <PipelineContext.Provider
