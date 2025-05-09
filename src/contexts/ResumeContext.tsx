@@ -18,40 +18,56 @@ type PipelineContextType = {
   pipelineState: PipelineState;
   setPipelineState: (state: PipelineState) => void;
 
-  // Data for "UPLOADING" process
   resumeFile: File | null;
   setResumeFile: (file: File | null) => void;
-
-  resumeFilename: string | null;
-  setResumeFilename: (filename: string| null) => void;
-
-  // Data for "UPLOADED" process
+  
   resumeId: string | null;
   setResumeId: (id: string | null) => void;
-
-  // Data for "ENHANCING" process
-  jobDescription: string | null;
-  setJobDescrpition: (description: string | null) => void;
   
-  // Data for "ENHANCED" process
-  jobId: string | null;
-  setJobId: (id: string | null) => void;
-
-  enhancements: Object | null;
-  setEnhancements: (enhancements: Object | null) => void;
-
-  enhancedResumeId: string | null;
-  setEnhancedResumeId: (id: string | null) => void;
-
-  // Data for "RENDERING" process
-
-  // Data for "RENDERED" process
-  enhancedResumeFile: File | null;
-  setEnhancedResumeFile: (file: File | null) => void;
-
-  enhancedResumeFileId: str | null;
-  setEnhancedResumeFileId: (id: string | null) => void;
 }
+
+const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
+
+export const usePipelineContext = () => {
+  const context = useContext(PipelineContext);
+  if (!context) {
+    throw new Error('useResumeContext must be used within a ResumeProvider');
+  }
+  return context;
+};
+
+export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  
+  const [resumeId, setResumeId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobDescription, setJobDescription] = useState<string>('');
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+
+  return (
+    <PipelineContext.Provider
+      value={{
+        resumeId,
+        setResumeId,
+        jobId,
+        setJobId,
+        jobDescription,
+        setJobDescription,
+        optimizationResult,
+        setOptimizationResult,
+        isOptimizing,
+        setIsOptimizing
+      }}
+    >
+      {children}
+    </PipelineContext.Provider>
+  );
+};
+
+
+
+
+
 
 type ResumeContextType = {
   resumeId: string | null;
