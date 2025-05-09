@@ -94,24 +94,53 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return;
     }
+
+    if (pipelineState == ENHANCING){
+      toast({
+        title: "Already enhancing a resume",
+        description: "Please wait for the current optimization job to finish before starting a new one",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setJobDescription(jd)
     if (pipelineState == UPLOADING){
       setEnhancementPending(true)
-      console.log(`Waiting for resume ${resumeFilename} to finish uploading before startingoptimization job`)
+      console.log(`Waiting for resume ${resumeFilename} to finish uploading before starting optimization job`)
       return
     } 
 
+    setPipelineState(ENHANCING)
+    
     console.log(`Initializing enhancement for resume with ID: ${resumeID}`)
+
+    const currentResumeId = resumeId
     const formData = new FormData();
     formData.append("resume_id", resumeId)
     formData.append("user_id", user.id)
     formData.append("job_description", jd)
-    const {data, response} await apiRequest("/optimize", {
+    const {data, error} await apiRequest("/optimize", {
       method: "POST",
       headers: {}, // Let browser set content-type for FormData
       body: formData,
     });
+
+    // Ignore optimization if another one was started (although it shouldn't)
+    if (currentResumeId != resumeId)
+      return
+
+    if (error) {
+      setUploadState(UPLOADED);
+      console.error(`Enhancement of resume with ID: ${currentResumeId} failed. Error message: ${error}`)
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive"
+      });
+    }
+
+    
     
   }
 
