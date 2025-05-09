@@ -90,7 +90,7 @@ const ProcessStep = ({
       </div>
       
       {/* Content Box */}
-      <div className="pt-16 pb-8 px-6 bg-gradient-to-b from-draft-green/10 to-draft-green/20 dark:from-draft-green/30 dark:to-draft-green/40 backdrop-blur-sm rounded-lg transition-all duration-300 h-full">
+      <div className="pt-16 pb-8 px-6 bg-draft-green/10 dark:bg-draft-green/30 backdrop-blur-sm rounded-lg transition-all duration-300 h-full">
         <div className="flex justify-center mb-6 text-draft-yellow">
           <div className="w-12 h-12">
             {icon}
@@ -180,7 +180,7 @@ const BalanceSection: React.FC = () => {
   }, []);
   
   return (
-    <section ref={sectionRef} className="py-24 relative overflow-hidden bg-gradient-to-b from-[#F7F4ED] to-[#F0EDE6] dark:from-draft-green/10 dark:to-draft-green/30">
+    <section ref={sectionRef} className="py-24 relative overflow-hidden bg-[#F7F4ED] dark:bg-[#0A2218]">
       {/* Particle Background */}
       <div id="particle-container" className="absolute inset-0 z-0"></div>
       

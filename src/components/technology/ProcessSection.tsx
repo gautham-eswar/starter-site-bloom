@@ -94,7 +94,7 @@ const ProcessSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-[#F7F4ED] dark:bg-draft-green/10">
+    <section className="py-20 bg-[#F7F4ED] dark:bg-[#0A2218]">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-6">
         <div 
           ref={sectionRef}
