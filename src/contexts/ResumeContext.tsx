@@ -36,9 +36,21 @@ export const usePipelineContext = () => {
 };
 
 export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+
+  // Data for UPLOADING stage
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+
+  // Data for UPLOADED stage
   const [resumeId, setResumeId] = useState<string | null>(null);
-  const [jobId, setJobId] = useState<string | null>(null);
+
+  // Data for ENHANCING Stage
   const [jobDescription, setJobDescription] = useState<string>('');
+
+  // Data for ENHANCED Stage
+  const [jobId, setJobId] = useState<string | null>(null);
+  
+  
   const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 
