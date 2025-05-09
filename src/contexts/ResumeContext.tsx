@@ -18,13 +18,15 @@ type PipelineState = typeof stateValuesArray[number];
 type PipelineContextType = {
 
   pipelineState: PipelineState;
-  setPipelineState: (state: PipelineState) => void;
 
-  resumeFile: File | null;
-  setResumeFile: (file: File | null) => void;
-  
+  resumeFilename: string | null;
   resumeId: string | null;
-  setResumeId: (id: string | null) => void;
+  
+  jobDescription: string | null;
+
+  jobId: string | null:
+  enhancedResumeId: str | null;
+  enhancementAnalysis: Object | null;
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
