@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -36,7 +37,7 @@ export const usePipelineContext = () => {
 };
 
 export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-
+  
   // Data for UPLOADING stage
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
@@ -58,9 +59,24 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Data for RENDERED Stage
   const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
   const [enhancedResumeFileId, setEnhancedResumeFileId] = useState<File | null>(null);
+  
+  const {
+    user
+  } = useAuth();
 
-  const uploadResume = (file: File) => {
-    
+  const uploadResume = async (file: File) => {
+    const formData = new FormData();
+  
+    formData.append("file", file);
+    if (userId) {
+        formData.append('user_id', userId);
+    }
+    console.log(`Starting resume upload from user ID: ${userId}`)
+    return await apiRequest("/upload", {
+      method: "POST",
+      headers: {}, // Let browser set content-type for FormData
+      body: formData,
+    });
   }
 
   return (
