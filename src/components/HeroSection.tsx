@@ -208,7 +208,7 @@ const HeroSection: React.FC = () => {
                 {isWriteExpanded ? (
                   <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
-                    <div className="border-t border-draft-green dark:border-draft-yellow p-3">
+                    <div className="p-2">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
