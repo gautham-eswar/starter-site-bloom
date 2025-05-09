@@ -1,3 +1,4 @@
+
 /* Import GT Alpina Trial font */
 @font-face {
   font-family: 'GT Alpina Trial';
@@ -182,9 +183,9 @@
     border-color: rgba(26, 63, 53, 0.3);
   }
   
-  /* WHAT WE DO section (Stats section) in dark mode - now matches footer color */
+  /* Stats section in dark mode - using the same background color as testimonials section */
   .dark .bg-\[\#F7F4ED\] {
-    background-color: #0A2920;
+    background-color: #1E433A;
   }
   
   /* Footer in dark mode */
@@ -205,11 +206,6 @@
   /* Authentication page specific dark mode overrides */
   .dark .border-\[\#e6e6e0\] {
     border-color: #1E433A;
-  }
-  
-  /* Testimonials section in dark mode - lighter dark green */
-  .dark .bg-\[\#0A2218\] {
-    background-color: #1E433A;
   }
 
   .hide {
@@ -353,3 +349,4 @@
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
