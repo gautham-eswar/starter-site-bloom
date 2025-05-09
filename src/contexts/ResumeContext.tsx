@@ -16,22 +16,18 @@ const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED
 type PipelineState = typeof stateValuesArray[number];
 
 type PipelineContextType = {
-
   pipelineState: PipelineState;
-
   resumeFilename: string | null;
-  
   resumeId: string | null;
-  
   jobDescription: string | null;
-  setJobDescription: (string) => void;
-
   jobId: string | null:
   enhancedResumeId: str | null;
   enhancementAnalysis: Object | null;
-
+  
   uploadResume: (file: File) => void;
+  setJobDescription: (string) => void;
   enhanceResume: () => void;
+  renderEnhancedResume: () => void;
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
@@ -75,7 +71,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     user
   } = useAuth();
 
-  const enhanceResume = () => {
+  const renderEnhancedResume = async () => {
+    return
+  }
+
+  const enhanceResume = async () => {
 
     if (!user.id){
       toast({
@@ -196,16 +196,18 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <PipelineContext.Provider
       value={{
+        pipelineState,
+        resumeFilename,
         resumeId,
-        setResumeId,
-        jobId,
-        setJobId,
         jobDescription,
+        jobId,
+        enhancedResumeId,
+        enhancementAnalysis,
+        
+        uploadResume,
         setJobDescription,
-        optimizationResult,
-        setOptimizationResult,
-        isOptimizing,
-        setIsOptimizing
+        enhanceResume,
+        renderEnhancedResume,
       }}
     >
       {children}
