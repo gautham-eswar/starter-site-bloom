@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Scan, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,7 @@ const BalanceIcon = (props: React.SVGProps<SVGSVGElement>) => {
       <path d="M4 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"></path>
     </svg>;
 };
+
 const ProcessStep = ({
   number,
   title,
@@ -28,6 +30,7 @@ const ProcessStep = ({
   delay: number;
 }) => {
   const stepRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -50,15 +53,18 @@ const ProcessStep = ({
     }, {
       threshold: 0.2
     });
+
     if (stepRef.current) {
       observer.observe(stepRef.current);
     }
+
     return () => {
       if (stepRef.current) {
         observer.unobserve(stepRef.current);
       }
     };
   }, [delay, number]);
+
   return <div ref={stepRef} className="flex-1 relative mx-2 opacity-0 translate-y-4 transition-all duration-400 ease-out hover:scale-103 hover:shadow-md hover:z-10">
       {/* Number Circle with enhanced styling - fixed for dark mode */}
       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-md">
@@ -66,7 +72,7 @@ const ProcessStep = ({
       </div>
       
       {/* Content Box - updated background for better theming */}
-      <div className="pt-16 pb-8 px-6 bg-white dark:bg-draft-green/30 shadow-sm rounded-lg transition-all duration-300 h-full/font-serif">
+      <div className="pt-16 pb-8 px-6 bg-white dark:bg-draft-green/30 shadow-sm rounded-lg transition-all duration-300 h-full">
         <div className="flex justify-center mb-6 text-draft-green dark:text-draft-yellow">
           <div className="w-12 h-12">
             {icon}
@@ -84,12 +90,14 @@ const ProcessStep = ({
         </div>}
     </div>;
 };
+
 const BalanceSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const subheadingRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     // Animate elements on scroll
     const observer = new IntersectionObserver(entries => {
@@ -115,12 +123,14 @@ const BalanceSection: React.FC = () => {
     }, {
       threshold: 0.1
     });
+
     if (headingRef.current) {
       observer.observe(headingRef.current);
     }
     if (ctaRef.current) {
       observer.observe(ctaRef.current);
     }
+
     return () => {
       if (headingRef.current) {
         observer.unobserve(headingRef.current);
@@ -130,6 +140,7 @@ const BalanceSection: React.FC = () => {
       }
     };
   }, []);
+
   return <section ref={sectionRef} className="py-24 relative overflow-hidden bg-draft-bg dark:bg-[#0A2218]">
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-6 relative z-10">
         <div ref={headingRef} className="text-center mb-5 opacity-0 translate-y-6 transition-all duration-700">
@@ -161,4 +172,5 @@ const BalanceSection: React.FC = () => {
       </div>
     </section>;
 };
+
 export default BalanceSection;
