@@ -44,12 +44,12 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ number, title, description, i
       ref={stepRef}
       className="flex-1 relative group opacity-0 translate-y-4 transition-all duration-700"
     >
-      {/* Number Circle */}
-      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg z-10 font-serif">
+      {/* Number Circle - updated for better theming */}
+      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg z-10 font-serif">
         {number}
       </div>
       
-      {/* Content Box */}
+      {/* Content Box - updated for better theming */}
       <div className="pt-10 px-6 pb-6 bg-white dark:bg-draft-green/10 rounded-lg shadow-sm border border-gray-100 dark:border-draft-green/30 transition-all duration-300 group-hover:shadow-md group-hover:scale-105 h-full">
         <div className="flex justify-center mb-4 text-draft-green dark:text-draft-yellow transition-all duration-300 group-hover:transform group-hover:scale-110">
           {icon}
@@ -58,9 +58,9 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ number, title, description, i
         <p className="text-draft-text dark:text-gray-300 text-center text-[1.1rem] font-serif">{description}</p>
       </div>
       
-      {/* Connecting line (except for last item) */}
+      {/* Connecting line (except for last item) - updated for better theming */}
       {number < 3 && (
-        <div className="hidden md:block absolute top-[4.5rem] right-0 w-[calc(50%-1.5rem)] h-[2px] bg-gray-200 dark:bg-draft-green/30"></div>
+        <div className="hidden md:block absolute top-[4.5rem] right-0 w-[calc(50%-1.5rem)] h-[2px] bg-gray-200 dark:bg-draft-yellow/30"></div>
       )}
     </div>
   );
@@ -94,7 +94,7 @@ const ProcessSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-[#F7F4ED] dark:bg-[#0A2218]">
+    <section className="py-20 bg-draft-bg dark:bg-[#1A3F35]">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-6">
         <div 
           ref={sectionRef}

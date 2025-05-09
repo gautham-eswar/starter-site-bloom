@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Scan, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,7 @@ const BalanceIcon = (props: React.SVGProps<SVGSVGElement>) => {
       <path d="M4 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"></path>
     </svg>;
 };
+
 const ProcessStep = ({
   number,
   title,
@@ -28,6 +30,7 @@ const ProcessStep = ({
   delay: number;
 }) => {
   const stepRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -50,24 +53,27 @@ const ProcessStep = ({
     }, {
       threshold: 0.2
     });
+
     if (stepRef.current) {
       observer.observe(stepRef.current);
     }
+
     return () => {
       if (stepRef.current) {
         observer.unobserve(stepRef.current);
       }
     };
   }, [delay, number]);
+
   return <div ref={stepRef} className="flex-1 relative mx-2 opacity-0 translate-y-4 transition-all duration-400 ease-out hover:scale-103 hover:shadow-md hover:z-10">
-      {/* Number Circle with enhanced styling */}
-      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-draft-green/90 dark:bg-draft-green/70 text-draft-yellow dark:text-draft-yellow w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-[0_0_10px_rgba(233,255,125,0.3)] dark:shadow-[0_0_15px_rgba(233,255,125,0.4)]">
+      {/* Number Circle with enhanced styling - updated for better theming */}
+      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-md">
         <span className="font-serif">{number}</span>
       </div>
       
-      {/* Content Box */}
-      <div className="pt-16 pb-8 px-6 bg-draft-green/10 dark:bg-draft-green/30 backdrop-blur-sm rounded-lg transition-all duration-300 h-full">
-        <div className="flex justify-center mb-6 text-draft-yellow">
+      {/* Content Box - updated background for better theming */}
+      <div className="pt-16 pb-8 px-6 bg-white dark:bg-draft-green/30 shadow-sm rounded-lg transition-all duration-300 h-full">
+        <div className="flex justify-center mb-6 text-draft-green dark:text-draft-yellow">
           <div className="w-12 h-12">
             {icon}
           </div>
@@ -77,33 +83,22 @@ const ProcessStep = ({
         <p className="text-draft-text dark:text-gray-300 text-center">{description}</p>
       </div>
       
-      {/* Connection Arrow (except for last step) */}
+      {/* Connection Arrow (except for last step) - updated for better theming */}
       {number < 3 && <div id={`arrow-${number}`} className="hidden md:flex absolute top-1/3 -right-4 w-8 h-8 opacity-0 transition-opacity duration-700 justify-center items-center z-20">
-          <div className="w-10 h-0.5 bg-draft-yellow dark:bg-draft-yellow opacity-85 animate-pulse-opacity"></div>
-          <div className="absolute right-0 w-0 h-0 border-t-[6px] border-r-0 border-b-[6px] border-l-[8px] border-t-transparent border-r-transparent border-b-transparent border-l-draft-yellow dark:border-l-draft-yellow"></div>
+          <div className="w-10 h-0.5 bg-draft-green dark:bg-draft-yellow opacity-85 animate-pulse-opacity"></div>
+          <div className="absolute right-0 w-0 h-0 border-t-[6px] border-r-0 border-b-[6px] border-l-[8px] border-t-transparent border-r-transparent border-b-transparent border-l-draft-green dark:border-l-draft-yellow"></div>
         </div>}
     </div>;
 };
+
 const BalanceSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const subheadingRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  useEffect(() => {
-    // Generate particle background
-    const particleContainer = document.getElementById('particle-container');
-    if (particleContainer) {
-      for (let i = 0; i < 40; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.top = `${Math.random() * 100}%`;
-        particle.style.animationDelay = `${Math.random() * 30}s`;
-        particleContainer.appendChild(particle);
-      }
-    }
 
+  useEffect(() => {
     // Animate elements on scroll
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -128,12 +123,14 @@ const BalanceSection: React.FC = () => {
     }, {
       threshold: 0.1
     });
+
     if (headingRef.current) {
       observer.observe(headingRef.current);
     }
     if (ctaRef.current) {
       observer.observe(ctaRef.current);
     }
+
     return () => {
       if (headingRef.current) {
         observer.unobserve(headingRef.current);
@@ -143,10 +140,8 @@ const BalanceSection: React.FC = () => {
       }
     };
   }, []);
-  return <section ref={sectionRef} className="py-24 relative overflow-hidden bg-[#F7F4ED] dark:bg-[#0A2218]">
-      {/* Particle Background */}
-      <div id="particle-container" className="absolute inset-0 z-0"></div>
-      
+
+  return <section ref={sectionRef} className="py-24 relative overflow-hidden bg-draft-bg dark:bg-[#1A3F35]">
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-6 relative z-10">
         <div ref={headingRef} className="text-center mb-5 opacity-0 translate-y-6 transition-all duration-700">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md inline-block mb-6">
@@ -177,4 +172,5 @@ const BalanceSection: React.FC = () => {
       </div>
     </section>;
 };
+
 export default BalanceSection;
