@@ -69,19 +69,39 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const uploadResume = async (file: File) => {
     
-    const formData = new FormData();
+    console.log(`Uploading resume ${file.filename} from user ID: ${userId}`)
+    setPipelineState(UPLOADING)
   
+    const formData = new FormData();
     formData.append("file", file);
     if (userId) {
         formData.append('user_id', user.id);
     }
-    console.log(`Starting resume upload from user ID: ${userId}`)
     
-    return await apiRequest("/upload", {
+    const{data, error} = await apiRequest("/upload", {
       method: "POST",
       headers: {}, // Let browser set content-type for FormData
       body: formData,
     });
+
+    // Ignore older uploads
+    if (file.filename != resumeFilename)
+      return
+
+    if (error) {
+      setUploadState(NOT_UPLOADED);
+      console.error(`Starting resume upload from user ID: ${userId}`)
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive"
+      });
+    }
+
+    setPipelineState(UPLOADED)
+    setResumeId(data["resume_id"])
+    setParsedResume(data["resume_id"])
+
   }
 
   return (
