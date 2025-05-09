@@ -43,7 +43,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 
   return (
-    <ResumeContext.Provider
+    <PipelineContext.Provider
       value={{
         resumeId,
         setResumeId,
@@ -58,7 +58,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       }}
     >
       {children}
-    </ResumeContext.Provider>
+    </PipelineContext.Provider>
   );
 };
 
