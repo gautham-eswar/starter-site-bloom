@@ -36,6 +36,7 @@ const HeroSection: React.FC = () => {
     user
   } = useAuth();
   const navigate = useNavigate();
+  
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
@@ -135,6 +136,7 @@ const HeroSection: React.FC = () => {
       setIsProcessing(false);
     }
   };
+  
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
@@ -202,7 +204,7 @@ const HeroSection: React.FC = () => {
                 </div>
               </div>
               
-              <div className="mt-4 h-[200px] relative">
+              <div className="mt-4 h-[200px] relative flex flex-col">
                 {isWriteExpanded ? (
                   <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
                     <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
@@ -213,16 +215,17 @@ const HeroSection: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex flex-row justify-between">
+                  <div className="flex flex-col items-start">
                     <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
                       Write <ArrowRight size={16} />
                     </Button>
                     
-                    {/* Make it better button - moved to align with Write button when collapsed */}
+                    {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!selectedFile || !jobDescription.trim() || isProcessing} 
-                      className="text-lime-950 mr-4"
+                      disabled={!selectedFile || !jobDescription.trim() || isProcessing}
+                      variant="outline" 
+                      className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
                       {isProcessing ? "Processing..." : "Make it better"}
                     </Button>
@@ -231,11 +234,12 @@ const HeroSection: React.FC = () => {
                 
                 {/* Make it better button - only shown when textarea is expanded */}
                 {isWriteExpanded && (
-                  <div className="mt-4 pt-4">
+                  <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!selectedFile || !jobDescription.trim() || isProcessing} 
-                      className="text-lime-950"
+                      disabled={!selectedFile || !jobDescription.trim() || isProcessing}
+                      variant="outline" 
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
                       {isProcessing ? "Processing..." : "Make it better"}
                     </Button>
