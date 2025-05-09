@@ -28,43 +28,43 @@ const Header: React.FC = () => {
   return (
     <header className="flex justify-between items-center py-5 px-8 md:px-12 lg:px-20">
       <div className="flex items-center">
-        <Link to="/" className="logo text-draft-green dark:text-draft-yellow font-serif text-2xl font-medium hover:opacity-90 transition-opacity">
+        <Link to="/" className="logo text-draft-green dark:text-draft-yellow font-serif text-2xl font-medium hover:opacity-90 transition-opacity lowercase">
           draft_zero
         </Link>
         <ThemeToggle className="ml-1" />
       </div>
       
       <div className="flex items-center gap-4">
-        <div className="hidden md:flex items-center space-x-4 mr-4">
+        <div className="hidden md:flex items-center space-x-4 mr-4 font-serif lowercase">
           <Link 
             to="/technology" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/technology') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/technology') ? 'font-medium' : ''}`}
           >
-            Technology
+            technology
           </Link>
           <Link 
             to="/pricing" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/pricing') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/pricing') ? 'font-medium' : ''}`}
           >
-            Pricing
+            pricing
           </Link>
           <Link 
             to="/faq" 
-            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity font-serif ${isActive('/faq') ? 'font-medium' : ''}`}
+            className={`text-draft-green dark:text-draft-yellow hover:opacity-80 transition-opacity ${isActive('/faq') ? 'font-medium' : ''}`}
           >
-            FAQ
+            faq
           </Link>
         </div>
         
         {user ? (
           <div className="flex items-center gap-2">
-            <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow font-serif">
+            <div className="hidden md:block text-sm text-draft-green dark:text-draft-yellow font-serif lowercase">
               {user.email}
             </div>
             <Button 
               variant="outline"
               size="icon"
-              className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif"
+              className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif lowercase"
               onClick={handleSignOut}
             >
               <LogOut size={18} />
@@ -73,10 +73,10 @@ const Header: React.FC = () => {
         ) : (
           <Button 
             variant="outline" 
-            className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif"
+            className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 font-serif lowercase"
             onClick={handleSignIn}
           >
-            Sign in
+            sign in
           </Button>
         )}
       </div>
