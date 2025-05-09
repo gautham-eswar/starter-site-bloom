@@ -2,6 +2,16 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 
+const NOT_UPLOADED = 0,
+  UPLOADING = 1,
+  UPLOADED = 2,
+  ENHANCING = 3,
+  ENHANCED = 4,
+  RENDERING = 5,
+  RENDERED = 6;
+
+
+
 type ResumeContextType = {
   resumeId: string | null;
   setResumeId: (id: string | null) => void;
