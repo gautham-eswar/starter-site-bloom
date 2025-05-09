@@ -20,13 +20,18 @@ type PipelineContextType = {
   pipelineState: PipelineState;
 
   resumeFilename: string | null;
+  
   resumeId: string | null;
   
   jobDescription: string | null;
+  setJobDescription: (string) => void;
 
   jobId: string | null:
   enhancedResumeId: str | null;
   enhancementAnalysis: Object | null;
+
+  uploadResume: (file: File) => void;
+  enhanceResume: () => void;
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
@@ -70,7 +75,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     user
   } = useAuth();
 
-  const enhanceResume = (jd: string) =>{
+  const enhanceResume = () => {
 
     if (!user.id){
       toast({
@@ -80,7 +85,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return;
     }
-    if (!jd.trim()){
+    if (!jobDescription.trim()){
       toast({
         title: "No job description to enhance from",
         description: "Please type or paste a job listing and try again",
@@ -106,18 +111,18 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
     
-    setJobDescription(jd)
     if (pipelineState == UPLOADING){
       setEnhancementPending(true)
       console.log(`Waiting for resume ${resumeFilename} to finish uploading before starting optimization job`)
       return
     } 
 
-    setPipelineState(ENHANCING)
-    
     console.log(`Initializing enhancement for resume with ID: ${resumeID}`)
+    setPipelineState(ENHANCING)
 
-    const currentResumeId = resumeId
+    const currentResumeId = resumeId;
+    const currentJobDescription = jobDescription; 
+      
     const formData = new FormData();
     formData.append("resume_id", resumeId)
     formData.append("user_id", user.id)
@@ -129,7 +134,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
 
     // Ignore optimization if another one was started (although it shouldn't)
-    if (currentResumeId != resumeId) return
+    if (currentResumeId != resumeId || currentJobDescription != jobDescription) return
 
     if (error) {
       setUploadState(UPLOADED);
