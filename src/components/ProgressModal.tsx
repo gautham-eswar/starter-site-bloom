@@ -67,8 +67,6 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   } else if (currentStep == 1 && pipelineState >= RENDERED){
     setCurrentStep(2)
     setProgress(0)
-  } else {
-    setProgress(0)
   }
   
   const isComplete = (pipelineState >= RENDERED);
