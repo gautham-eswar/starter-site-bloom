@@ -107,7 +107,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setPipelineState(UPLOADED)
     setResumeId(data["resume_id"])
     setParsedSelectedResume(data["resume_id"])
-    console.log(`${file.filename} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
+    console.log(`${file.name} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
   }
 
   const enhanceResume = async (jd:string) => {
