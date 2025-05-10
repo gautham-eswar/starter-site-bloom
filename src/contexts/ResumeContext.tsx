@@ -156,6 +156,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
     setPipelineState(UPLOADING)
+    setResumeFilename(file.filename)
   
     const formData = new FormData();
     formData.append("file", file);
