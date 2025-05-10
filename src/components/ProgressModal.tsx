@@ -78,7 +78,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     })
     return clearInterval(t)
-  }, [pipelineState, enhancementPending])
+  }, [pipelineState, enhancementPending, currentStep])
   
 
   // // Poll for optimization status
