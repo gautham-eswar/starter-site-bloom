@@ -114,7 +114,7 @@ const HeroSection: React.FC = () => {
                 </Button>
                 {resumeFilename && <p className="text-sm text-draft-green mt-2">
                     { isNotStarted ? 
-                      "Couldn't upload file:" : "Selected file:"
+                      "Couldn't upload file:" : "Selected file: "
                     }
                     {resumeFilename}
                   </p>}

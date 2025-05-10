@@ -152,7 +152,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return
     } 
 
-    console.log(`Initializing enhancement for resume with ID: ${resumeID}`)
+    console.log(`Initializing enhancement for resume with ID: ${resumeId}`)
     setPipelineState(ENHANCING)
 
     const currentResumeId = resumeId;
