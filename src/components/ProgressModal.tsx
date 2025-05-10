@@ -44,6 +44,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   // const [isComplete, setIsComplete] = useState(false);
   // const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
   const [progress, setProgress] = useState(0);
+  console.log(progress)
   
 
   const steps = [
