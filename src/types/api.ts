@@ -44,3 +44,12 @@ export interface OptimizationStatus {
   message: string;
   progress?: number;
 }
+
+export interface EnhancementAnalysis {
+  modifications_summary: Modification[];
+  old_score: number;
+  improved_score: number;
+  match_percentage: number;
+  keyword_matches: number;
+  total_keywords: number;
+}

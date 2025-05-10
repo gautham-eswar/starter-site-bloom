@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { OptimizationResult } from '@/types/api';
+import { OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiRequest } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ type PipelineContextType = {
   jobDescription: string;
   jobId: string | null;
   enhancedResumeId: string | null;
-  enhancementAnalysis: Object | null;
+  enhancementAnalysis: EnhancementAnalysis | null;
   enhancementPending: boolean;
   
   uploadResume: (file: File) => Promise<void>;
@@ -58,7 +58,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Data for ENHANCED Stage
   const [jobId, setJobId] = useState<string | null>(null);
-  const [enhancementAnalysis, setEnhancementAnalysis] = useState<Object | null>(null);
+  const [enhancementAnalysis, setEnhancementAnalysis] = useState<EnhancementAnalysis | null>(null);
   const [enhancedResumeId, setEnhancedResumeId] = useState<string | null>(null);
   
   // Data for RENDERING Stage

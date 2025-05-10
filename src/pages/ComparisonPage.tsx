@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -7,7 +6,7 @@ import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { usePipelineContext } from '@/contexts/ResumeContext'; // Also import usePipelineContext
 import { getOptimizationResults } from '@/services/api';
-import { Modification, OptimizationResult } from '@/types/api';
+import { Modification, OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
@@ -102,19 +101,23 @@ const ComparisonPage: React.FC = () => {
         // Check if we already have enhancement data from PipelineContext
         if (enhancementAnalysis) {
           console.log("Using data from PipelineContext:", enhancementAnalysis);
+          
+          // Safely cast enhancementAnalysis to the typed interface
+          const typedAnalysis = enhancementAnalysis as unknown as EnhancementAnalysis;
+          
           // Convert enhancementAnalysis to match OptimizationResult structure
           const pipelineData: OptimizationResult = {
             resume_id: resumeId || '',
             job_id: jobId || '',
             status: 'completed',
             created_at: new Date().toISOString(),
-            modifications: enhancementAnalysis.modifications_summary || [],
+            modifications: typedAnalysis.modifications_summary || [],
             analysis_data: {
-              old_score: enhancementAnalysis.old_score || 0,
-              improved_score: enhancementAnalysis.improved_score || 0,
-              match_percentage: enhancementAnalysis.match_percentage || 0,
-              keyword_matches: enhancementAnalysis.keyword_matches || 0,
-              total_keywords: enhancementAnalysis.total_keywords || 0
+              old_score: typedAnalysis.old_score || 0,
+              improved_score: typedAnalysis.improved_score || 0,
+              match_percentage: typedAnalysis.match_percentage || 0,
+              keyword_matches: typedAnalysis.keyword_matches || 0,
+              total_keywords: typedAnalysis.total_keywords || 0
             }
           };
           setOptimizationResult(pipelineData);
@@ -133,18 +136,22 @@ const ComparisonPage: React.FC = () => {
         // If API call fails but we have enhancementAnalysis, use that
         if (enhancementAnalysis) {
           console.log("API call failed, using PipelineContext data instead");
+          
+          // Safely cast enhancementAnalysis to the typed interface
+          const typedAnalysis = enhancementAnalysis as unknown as EnhancementAnalysis;
+          
           const fallbackData: OptimizationResult = {
             resume_id: resumeId || '',
             job_id: jobId || '',
             status: 'completed',
             created_at: new Date().toISOString(),
-            modifications: enhancementAnalysis.modifications_summary || [],
+            modifications: typedAnalysis.modifications_summary || [],
             analysis_data: {
-              old_score: enhancementAnalysis.old_score || 0,
-              improved_score: enhancementAnalysis.improved_score || 0,
-              match_percentage: enhancementAnalysis.match_percentage || 0,
-              keyword_matches: enhancementAnalysis.keyword_matches || 0,
-              total_keywords: enhancementAnalysis.total_keywords || 0
+              old_score: typedAnalysis.old_score || 0,
+              improved_score: typedAnalysis.improved_score || 0,
+              match_percentage: typedAnalysis.match_percentage || 0,
+              keyword_matches: typedAnalysis.keyword_matches || 0,
+              total_keywords: typedAnalysis.total_keywords || 0
             }
           };
           setOptimizationResult(fallbackData);
@@ -528,4 +535,3 @@ const ComparisonPage: React.FC = () => {
 };
 
 export default ComparisonPage;
-
