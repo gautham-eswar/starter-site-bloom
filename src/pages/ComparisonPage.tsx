@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
+import { usePipelineContext } from '@/contexts/ResumeContext'; // Also import usePipelineContext
 import { getOptimizationResults } from '@/services/api';
 import { Modification, OptimizationResult } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
@@ -39,6 +41,7 @@ const ComparisonPage: React.FC = () => {
   const resumeIdParam = searchParams.get('resumeId');
   const jobIdParam = searchParams.get('jobId');
 
+  // Import from both contexts
   const { 
     resumeId: contextResumeId, 
     setResumeId,
@@ -47,6 +50,13 @@ const ComparisonPage: React.FC = () => {
     optimizationResult,
     setOptimizationResult
   } = useResumeContext();
+
+  // Get data from PipelineContext as a fallback
+  const {
+    resumeId: pipelineResumeId,
+    jobId: pipelineJobId,
+    enhancementAnalysis,
+  } = usePipelineContext();
 
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -57,8 +67,8 @@ const ComparisonPage: React.FC = () => {
   const [pdfExists, setPdfExists] = useState<boolean | null>(null);
 
   // Use URL params if available, otherwise use context
-  const resumeId = resumeIdParam || contextResumeId;
-  const jobId = jobIdParam || contextJobId;
+  const resumeId = resumeIdParam || contextResumeId || pipelineResumeId;
+  const jobId = jobIdParam || contextJobId || pipelineJobId;
 
   // Check if PDF exists
   useEffect(() => {
@@ -89,25 +99,69 @@ const ComparisonPage: React.FC = () => {
           setJobId(jobIdParam);
         }
 
-        // Fetch results
+        // Check if we already have enhancement data from PipelineContext
+        if (enhancementAnalysis) {
+          console.log("Using data from PipelineContext:", enhancementAnalysis);
+          // Convert enhancementAnalysis to match OptimizationResult structure
+          const pipelineData: OptimizationResult = {
+            resume_id: resumeId || '',
+            job_id: jobId || '',
+            status: 'completed',
+            created_at: new Date().toISOString(),
+            modifications: enhancementAnalysis.modifications_summary || [],
+            analysis_data: {
+              old_score: enhancementAnalysis.old_score || 0,
+              improved_score: enhancementAnalysis.improved_score || 0,
+              match_percentage: enhancementAnalysis.match_percentage || 0,
+              keyword_matches: enhancementAnalysis.keyword_matches || 0,
+              total_keywords: enhancementAnalysis.total_keywords || 0
+            }
+          };
+          setOptimizationResult(pipelineData);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Fetch results from API if not available in PipelineContext
         setIsLoading(true);
         const results = await getOptimizationResults(resumeId, jobId);
         console.log("Optimization results:", results);
         setOptimizationResult(results);
       } catch (error) {
         console.error("Error fetching optimization results:", error);
-        toast({
-          title: "Error fetching results",
-          description: "There was an error fetching your optimization results.",
-          variant: "destructive",
-        });
+        
+        // If API call fails but we have enhancementAnalysis, use that
+        if (enhancementAnalysis) {
+          console.log("API call failed, using PipelineContext data instead");
+          const fallbackData: OptimizationResult = {
+            resume_id: resumeId || '',
+            job_id: jobId || '',
+            status: 'completed',
+            created_at: new Date().toISOString(),
+            modifications: enhancementAnalysis.modifications_summary || [],
+            analysis_data: {
+              old_score: enhancementAnalysis.old_score || 0,
+              improved_score: enhancementAnalysis.improved_score || 0,
+              match_percentage: enhancementAnalysis.match_percentage || 0,
+              keyword_matches: enhancementAnalysis.keyword_matches || 0,
+              total_keywords: enhancementAnalysis.total_keywords || 0
+            }
+          };
+          setOptimizationResult(fallbackData);
+        } else {
+          toast({
+            title: "Error fetching results",
+            description: "There was an error fetching your optimization results.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchResults();
-  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, setOptimizationResult]);
+  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, setOptimizationResult, enhancementAnalysis]);
 
   // Handle download
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
@@ -216,6 +270,10 @@ const ComparisonPage: React.FC = () => {
     keyword_matches: 0,
     total_keywords: 0
   };
+  
+  // Log data for debugging
+  console.log("Analysis data:", analysisData);
+  console.log("Improvements data:", improvementData);
 
   // Group modifications by company and position
   const groupedImprovements: GroupedModifications = {};
@@ -470,3 +528,4 @@ const ComparisonPage: React.FC = () => {
 };
 
 export default ComparisonPage;
+
