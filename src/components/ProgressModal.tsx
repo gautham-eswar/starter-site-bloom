@@ -60,13 +60,15 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     setIsOptimizing(false);
   };
 
-  // if (currentStep == 0 && pipelineState >= ENHANCED){
-  //   setCurrentStep(1)
-  //   setProgress(0)
-  // } else if (currentStep == 1 && pipelineState >= RENDERED){
-  //   setCurrentStep(2)
-  //   setProgress(0)
-  // }
+  if (currentStep == 0 && pipelineState >= UPLOADED){
+    setCurrentStep(1)
+    setProgress(0)
+  } else if (currentStep == 1 && pipelineState >= ENHANCED){
+    setCurrentStep(2)
+    setProgress(0)
+  } else if (currentStep == 2 && pipelineState >= RENDERED){
+    setCurrentStep(3)
+  }
   
   const isComplete = (pipelineState >= RENDERED);
 
