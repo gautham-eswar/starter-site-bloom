@@ -189,6 +189,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setParsedSelectedResume(data["resume_id"])
     console.log(`Resume ${file.filename} uploaded successfully! Resume ID: ${data["resume_id"]}`)
 
+    console.log("Enhancement pending: "+ enhancementPending)
     if (enhancementPending){
       await enhanceResume(jobDescription)
     }
