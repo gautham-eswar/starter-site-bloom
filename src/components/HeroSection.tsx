@@ -1,20 +1,13 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
-import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
+import { usePipelineContext, NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
-
-const NOT_UPLOADED = 0,
-  UPLOADING = 1,
-  UPLOADED = 2,
-  ENHANCING = 3,
-  ENHANCED = 4,
-  RENDERING = 5,
-  RENDERED = 6;
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
@@ -100,10 +93,29 @@ const HeroSection: React.FC = () => {
   };
   
   const handleMakeItBetter = async () => {
-    if (!jobDescription.trim()) {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to enhance your resume",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    if (!jobDescription?.trim()) {
       toast({
         title: "Job description required",
         description: "Please enter a job description to enhance your resume.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!resumeId) {
+      toast({
+        title: "No resume available",
+        description: "Please upload a resume first before enhancing.",
         variant: "destructive"
       });
       return;
@@ -124,7 +136,7 @@ const HeroSection: React.FC = () => {
   const isUploading = pipelineState === UPLOADING;
   const isNotStarted = pipelineState === NOT_UPLOADED;
   const isEnhancing = pipelineState === ENHANCING;
-  const isComplete = pipelineState === ENHANCED || pipelineState === RENDERED;
+  const isComplete = pipelineState === ENHANCED;
   
   // Modify the ProgressModal open state to close automatically when complete
   useEffect(() => {
@@ -196,7 +208,7 @@ const HeroSection: React.FC = () => {
               <div className="mt-4 h-[200px] relative flex flex-col">
                 {isWriteExpanded ? (
                   <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
-                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
+                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription || ''} onChange={handleJobDescriptionChange} />
                     <div className="p-2">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
@@ -212,7 +224,7 @@ const HeroSection: React.FC = () => {
                     {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing || isUploading}
+                      disabled={!jobDescription?.trim() || isEnhancing || isUploading || !resumeId}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -226,7 +238,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing || isUploading}
+                      disabled={!jobDescription?.trim() || isEnhancing || isUploading || !resumeId}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >

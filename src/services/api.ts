@@ -48,7 +48,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     
     // Add timeout to fetch request to prevent long hanging requests
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (increased from 30)
     
     const response = await fetch(url, {
       ...options,
@@ -72,7 +72,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   } catch (error) {
     // Check if this is an abort error (timeout)
     if (error instanceof DOMException && error.name === "AbortError") {
-      const timeoutError = "Request timed out. The server might be unavailable.";
+      const timeoutError = "Request timed out. The server might be unavailable or overloaded. Please try again later.";
       handleApiError({ message: timeoutError });
       return { error: timeoutError, data: null };
     }
@@ -100,7 +100,7 @@ export async function uploadResume(file: File, userId: string) {
 
 // Optimize resume with job description
 export async function optimizeResume(resumeId: string, jobDescription: string, userId: string) {
-  console.log(userId)
+  console.log(`Starting optimization for resume ID: ${resumeId}, user ID: ${userId}`);
   const formData = new FormData();
   formData.append("resume_id", resumeId)
   formData.append("user_id", userId)

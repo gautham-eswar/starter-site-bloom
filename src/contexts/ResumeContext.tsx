@@ -2,18 +2,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiRequest } from '@/services/api';
+import { apiRequest, optimizeResume as apiOptimizeResume } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
-const NOT_UPLOADED = 0,
-  UPLOADING = 1,
-  UPLOADED = 2,
-  ENHANCING = 3,
-  ENHANCED = 4,
-  RENDERING = 5,
-  RENDERED = 6;
+// Pipeline state constants
+export const NOT_UPLOADED = 0;
+export const UPLOADING = 1;
+export const UPLOADED = 2;
+export const ENHANCING = 3;
+export const ENHANCED = 4;
+export const RENDERING = 5;
+export const RENDERED = 6;
 
-const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED, RENDERING, RENDERED] as const;
+export const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED, RENDERING, RENDERED] as const;
 export type PipelineState = typeof stateValuesArray[number];
 
 type PipelineContextType = {
@@ -25,11 +26,13 @@ type PipelineContextType = {
   enhancedResumeId: string | null;
   enhancementAnalysis: Object | null;
   enhancementPending: boolean;
+  apiError: string | null;
   
   uploadResume: (file: File) => Promise<void>;
   setJobDescription: (jd: string) => void;
   enhanceResume: (jd: string) => Promise<void>;
   renderEnhancedResume: () => Promise<void>;
+  clearError: () => void;
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
@@ -50,6 +53,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [enhancementPending, setEnhancementPending] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Data for UPLOADED stage
   const [resumeId, setResumeId] = useState<string | null>(null);
@@ -73,6 +77,10 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     user
   } = useAuth();
 
+  const clearError = () => {
+    setApiError(null);
+  };
+
   const uploadResume = async (file: File): Promise<void> => {
     if (!user?.id) {
       console.error("No user ID available for upload");
@@ -84,6 +92,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
     
+    setApiError(null);
     console.log(`Uploading ${file.name} from user ID: ${user.id}`);
     setPipelineState(UPLOADING);
     setResumeFilename(file.name);
@@ -109,6 +118,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       if (response.error) {
         setPipelineState(NOT_UPLOADED);
+        setApiError(response.error);
         console.error(`Upload ${file.name} from user ID: ${user.id} failed. Error message: ${response.error}`);
         toast({
           title: "Upload failed",
@@ -125,6 +135,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     } catch (error) {
       console.error("Error in uploadResume:", error);
       setPipelineState(NOT_UPLOADED);
+      setApiError(error instanceof Error ? error.message : "Unknown error");
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "Network error. Please check your connection and try again.",
@@ -142,6 +153,8 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return;
     }
+    
+    setApiError(null);
     
     if (!jd.trim()) {
       toast({
@@ -182,25 +195,18 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setPipelineState(ENHANCING);
 
     try {
-      const formData = new FormData();
       if (!resumeId) {
         throw new Error("No resume ID available");
       }
       
-      formData.append("resume_id", resumeId);
-      formData.append("user_id", user.id);
-      formData.append("job_description", jd);
-      
-      const response = await apiRequest("/optimize", {
-        method: "POST",
-        headers: {}, // Let browser set content-type for FormData
-        body: formData,
-      });
+      console.log(`Making API call to optimize resume ID: ${resumeId} with job description`);
+      const response = await apiOptimizeResume(resumeId, jd, user.id);
       
       console.log("Enhance API response:", response);
 
       if (response.error) {
         setPipelineState(UPLOADED);
+        setApiError(response.error);
         console.error(`Enhancement failed. Error: ${response.error}`);
         toast({
           title: "Enhancement failed",
@@ -218,6 +224,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     } catch (error) {
       console.error("Error in enhanceResume:", error);
       setPipelineState(UPLOADED);
+      setApiError(error instanceof Error ? error.message : "Unknown error");
       toast({
         title: "Enhancement failed",
         description: error instanceof Error ? error.message : "Network error. Please check your connection and try again.",
@@ -250,11 +257,13 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         enhancedResumeId,
         enhancementAnalysis,
         enhancementPending,
+        apiError,
         
         uploadResume,
         setJobDescription,
         enhanceResume,
         renderEnhancedResume,
+        clearError,
       }}
     >
       {children}

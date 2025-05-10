@@ -21,6 +21,10 @@ interface BulletComparisonContainerProps {
 
 const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ modifications }) => {
   const groupedModifications = useMemo(() => {
+    if (!modifications || !modifications.length) {
+      return [];
+    }
+    
     const groupedByCompany: Record<string, CompanySectionProps> = {};
     
     modifications.forEach(mod => {
@@ -56,7 +60,7 @@ const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ m
     });
   }, [modifications]);
   
-  if (groupedModifications.length === 0) {
+  if (!modifications || groupedModifications.length === 0) {
     return (
       <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
         <p className="text-gray-500">No modifications found for this resume.</p>
