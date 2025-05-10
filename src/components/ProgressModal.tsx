@@ -62,6 +62,13 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
 
   const currentStep = (pipelineState >= RENDERING) + (pipelineState >= RENDERED);
   const isComplete = (pipelineState >= RENDERED);
+
+  useEffect( ()=>{
+    const t = setTimeout(2000, ()=>{
+      setProgress(prev => (prev >= 100) ? 0 : prev + 5);
+    })
+    return ()=>{clearTimeout(t)}
+  }, [progress])
   
 
   // // Poll for optimization status
