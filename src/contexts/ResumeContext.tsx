@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiRequest } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -189,7 +190,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setParsedSelectedResume(data["resume_id"])
     console.log(`Resume ${file.filename} uploaded successfully! Resume ID: ${data["resume_id"]}`)
 
-    console.log("Enhancement pending: "+ enhancementPending)
+    console.log("Enhancement pending: " + enhancementPending)
     if (enhancementPending){
       await enhanceResume(jobDescription)
     }
