@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Loader } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
-import { getOptimizationResults } from '@/services/api';
+import { getOptimizationResults, downloadResume as apiDownloadResume } from '@/services/api';
 import { OptimizationResult } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
@@ -115,20 +115,24 @@ const ComparisonPage: React.FC = () => {
         URL.revokeObjectURL(downloadUrl);
       } else {
         // Fall back to the API if PDF doesn't exist in storage or format is not PDF
-        const response = await getOptimizationResults(resumeId, jobId);
+        const response = await apiDownloadResume(resumeId, format);
         
-        // Create a blob from the response
-        const blob = await response.blob();
-        
-        // Create a link element to trigger the download
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `optimized_resume.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(downloadUrl);
+        if (response instanceof Response) {
+          // Create a blob from the response
+          const blob = await response.blob();
+          
+          // Create a link element to trigger the download
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = `optimized_resume.${format}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(downloadUrl);
+        } else {
+          throw new Error("Invalid response format from API");
+        }
       }
       
       toast({

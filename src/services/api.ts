@@ -1,6 +1,8 @@
+
 import { toast } from "@/hooks/use-toast";
 import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage";
 import { supabase } from "@/integrations/supabase/client";
+import { OptimizationResult } from "@/types/api";
 
 const API_BASE_URL = "https://latest-try-psti.onrender.com/api";
 
@@ -94,8 +96,12 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
 }
 
 // Get optimization results
-export async function getOptimizationResults(resumeId: string, jobId: string) {
-  return apiRequest(`/results/${resumeId}/${jobId}`);
+export async function getOptimizationResults(resumeId: string, jobId: string): Promise<OptimizationResult> {
+  const response = await apiRequest(`/results/${resumeId}/${jobId}`);
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
 }
 
 // Check optimization status
