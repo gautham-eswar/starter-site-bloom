@@ -82,7 +82,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   }, [isOpen, pipelineState, currentStep])
   useEffect( ()=>{
     console.log("hmmm")
-  }, [])
+  }, [progress])
   
 
   // // Poll for optimization status
