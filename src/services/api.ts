@@ -46,7 +46,17 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       }
     }
     
-    const response = await fetch(url, options);
+    // Add timeout to fetch request to prevent long hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
     console.log(`API Response: ${response.status} ${response.statusText}`);
     
     if (!response.ok) {
@@ -60,6 +70,13 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     console.log("API Response data:", data);
     return { error: null, data };
   } catch (error) {
+    // Check if this is an abort error (timeout)
+    if (error instanceof DOMException && error.name === "AbortError") {
+      const timeoutError = "Request timed out. The server might be unavailable.";
+      handleApiError({ message: timeoutError });
+      return { error: timeoutError, data: null };
+    }
+    
     handleApiError(error);
     return { error: error instanceof Error ? error.message : String(error), data: null };
   }

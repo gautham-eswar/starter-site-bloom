@@ -112,7 +112,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         console.error(`Upload ${file.name} from user ID: ${user.id} failed. Error message: ${response.error}`);
         toast({
           title: "Upload failed",
-          description: "There was an error uploading your resume. Please try again.",
+          description: response.error || "There was an error uploading your resume. Please try again.",
           variant: "destructive"
         });
         return;
@@ -127,7 +127,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       setPipelineState(NOT_UPLOADED);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
+        description: error instanceof Error ? error.message : "Network error. Please check your connection and try again.",
         variant: "destructive"
       });
     }
@@ -204,7 +204,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         console.error(`Enhancement failed. Error: ${response.error}`);
         toast({
           title: "Enhancement failed",
-          description: "There was an error enhancing your resume. Please try again.",
+          description: response.error || "There was an error enhancing your resume. Please try again.",
           variant: "destructive"
         });
         return;
@@ -220,7 +220,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       setPipelineState(UPLOADED);
       toast({
         title: "Enhancement failed",
-        description: "There was an error enhancing your resume. Please try again.",
+        description: error instanceof Error ? error.message : "Network error. Please check your connection and try again.",
         variant: "destructive"
       });
     }

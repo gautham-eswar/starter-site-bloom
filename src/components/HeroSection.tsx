@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
@@ -84,17 +83,15 @@ const HeroSection: React.FC = () => {
     }
     
     setIsWriteExpanded(true);
+    setIsProgressModalOpen(true);
+    
     try {
       console.log("Starting resume upload");
       await uploadResume(file);
       console.log("Resume upload complete, pipeline state:", pipelineState);
     } catch (error) {
       console.error("Error uploading resume:", error);
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
-        variant: "destructive"
-      });
+      // Don't close modal - the error state will be shown in the modal
     }
   };
   
@@ -120,12 +117,7 @@ const HeroSection: React.FC = () => {
       console.log("Resume enhancement initiated, pipeline state:", pipelineState);
     } catch (error) {
       console.error("Error enhancing resume:", error);
-      setIsProgressModalOpen(false);
-      toast({
-        title: "Enhancement failed",
-        description: "There was an error enhancing your resume. Please try again.",
-        variant: "destructive"
-      });
+      // Don't close modal - the error state will be shown in the modal
     }
   };
 
