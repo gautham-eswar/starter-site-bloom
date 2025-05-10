@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { usePipelineContext } from '@/contexts/ResumeContext';
+import { AlertCircle } from 'lucide-react';
 
 // Define constants for pipeline states
 const NOT_UPLOADED = 0,
@@ -22,6 +23,7 @@ interface ProgressModalProps {
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("Starting optimization");
+  const [hasError, setHasError] = useState(false);
 
   // Use the pipeline context to get the current state
   const { pipelineState } = usePipelineContext();
@@ -29,6 +31,11 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   // Update progress based on pipeline state
   useEffect(() => {
     console.log("ProgressModal: Pipeline state changed to", pipelineState);
+    
+    // Reset error state when starting a new process
+    if (pipelineState === UPLOADING || pipelineState === ENHANCING) {
+      setHasError(false);
+    }
     
     if (pipelineState === UPLOADING) {
       setProgress(10);
@@ -48,8 +55,12 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     } else if (pipelineState === RENDERED) {
       setProgress(100);
       setStatusText("Your resume is ready!");
+    } else if (pipelineState === NOT_UPLOADED && progress > 0) {
+      // Only show error if we were in the middle of a process
+      setHasError(true);
+      setStatusText("There was an error processing your request. Please try again.");
     }
-  }, [pipelineState]);
+  }, [pipelineState, progress]);
 
   // Simulate a gradual progress increase for smoother UX
   useEffect(() => {
@@ -89,19 +100,35 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">Optimizing Your Resume</DialogTitle>
+          <DialogTitle className="text-center">
+            {hasError ? "Processing Error" : "Optimizing Your Resume"}
+          </DialogTitle>
           <DialogDescription className="text-center">
-            Please wait while we tailor your resume to match the job description.
+            {hasError 
+              ? "We encountered an issue while processing your resume." 
+              : "Please wait while we tailor your resume to match the job description."}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6">
-          <Progress value={progress} className="h-2" />
-          <p className="text-center mt-4 text-sm text-gray-600">{statusText}</p>
-        </div>
-        <div className="text-center mt-4">
-          <p className="text-xs text-muted-foreground">
-            This may take a minute or two. Please don't close this window.
-          </p>
+          {hasError ? (
+            <div className="flex flex-col items-center justify-center text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
+              <p className="text-sm text-gray-600">{statusText}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                This may be due to a network issue or server unavailability. Please try again later.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Progress value={progress} className="h-2" />
+              <p className="text-center mt-4 text-sm text-gray-600">{statusText}</p>
+              <div className="text-center mt-4">
+                <p className="text-xs text-muted-foreground">
+                  This may take a minute or two. Please don't close this window.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
