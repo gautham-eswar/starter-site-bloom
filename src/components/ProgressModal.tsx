@@ -24,22 +24,28 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   useEffect(() => {
     if (isOpen) {
       setProgress(0);
+      setHasError(false);
+      console.log("Progress modal opened, resetting state");
     }
   }, [isOpen]);
   
   // Update progress based on pipeline state
   useEffect(() => {
+    console.log("Pipeline state updated:", pipelineState);
     // Reset error state when starting a new process
     if (pipelineState === ENHANCING) {
       setHasError(false);
       setProgress(40);
       setStatusText("Enhancing your resume to match the job description...");
+      console.log("Enhancing resume, updating progress state");
     } else if (pipelineState === ENHANCED) {
       setProgress(100);
       setStatusText("Your resume is ready!");
+      console.log("Resume enhanced, progress complete");
     } else if (apiError) {
       setHasError(true);
       setStatusText(apiError || "There was an error processing your request. Please try again.");
+      console.log("Error in pipeline:", apiError);
     }
   }, [pipelineState, apiError]);
 

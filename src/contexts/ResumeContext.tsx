@@ -110,15 +110,27 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
       
-      console.log(`${file.name} uploaded successfully! Resume ID: ${response.data.resume_id}`);
-      setPipelineState(UPLOADED);
-      setResumeId(response.data.resume_id);
-      setParsedResume(response.data.parsed_resume);
-      
-      toast({
-        title: "Upload successful",
-        description: "Your resume has been uploaded successfully. Now add a job description to enhance it.",
-      });
+      // Check if we have a valid resume_id in the response
+      if (response.data?.data?.resume_id) {
+        console.log(`${file.name} uploaded successfully! Resume ID: ${response.data.data.resume_id}`);
+        setPipelineState(UPLOADED);
+        setResumeId(response.data.data.resume_id);
+        setParsedResume(response.data.data.parsed_resume);
+        
+        toast({
+          title: "Upload successful",
+          description: "Your resume has been uploaded successfully. Now add a job description to enhance it.",
+        });
+      } else {
+        console.error("Resume ID missing in response", response);
+        setPipelineState(NOT_UPLOADED);
+        setApiError("Invalid server response: Resume ID missing");
+        toast({
+          title: "Upload error",
+          description: "Server returned an invalid response. Please try again.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Error in uploadResume:", error);
       setPipelineState(NOT_UPLOADED);
@@ -183,11 +195,28 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
 
-      console.log(`Resume enhanced successfully! Job ID: ${response.data.job_id}, Enhanced Resume ID: ${response.data.enhanced_resume_id}`);
-      setPipelineState(ENHANCED);
-      setJobId(response.data.job_id);
-      setEnhancementAnalysis(response.data.analysis);
-      setEnhancedResumeId(response.data.enhanced_resume_id);
+      // Verify that we have the expected data
+      if (response.data?.job_id && response.data?.enhanced_resume_id) {
+        console.log(`Resume enhanced successfully! Job ID: ${response.data.job_id}, Enhanced Resume ID: ${response.data.enhanced_resume_id}`);
+        setPipelineState(ENHANCED);
+        setJobId(response.data.job_id);
+        setEnhancementAnalysis(response.data.analysis || {});
+        setEnhancedResumeId(response.data.enhanced_resume_id);
+        
+        toast({
+          title: "Enhancement complete",
+          description: "Your resume has been optimized for the job description.",
+        });
+      } else {
+        console.error("Missing job_id or enhanced_resume_id in response", response);
+        setPipelineState(UPLOADED);
+        setApiError("Invalid server response: Missing expected data");
+        toast({
+          title: "Enhancement error",
+          description: "Server returned an invalid response. Please try again.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Error in enhanceResume:", error);
       setPipelineState(UPLOADED);

@@ -41,6 +41,7 @@ const HeroSection: React.FC = () => {
     if (apiError && isProgressModalOpen) {
       // Keep the modal open to show the error
       // The user can close it manually
+      console.log("Error encountered during process:", apiError);
     }
   }, [apiError, isProgressModalOpen]);
 
@@ -85,10 +86,6 @@ const HeroSection: React.FC = () => {
     try {
       console.log("Starting resume upload");
       await uploadResume(file);
-      toast({
-        title: "Resume uploaded",
-        description: "Your resume has been uploaded successfully.",
-      });
     } catch (error) {
       console.error("Error uploading resume:", error);
       toast({
@@ -132,6 +129,7 @@ const HeroSection: React.FC = () => {
       return;
     }
     
+    // Show progress modal before starting the enhancement
     setIsProgressModalOpen(true);
     
     try {
