@@ -110,7 +110,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     console.log(`${file.filename} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
   }
 
-  const enhanceResume = async (jd:string = jobDescription) => {
+  const enhanceResume = async (jd:string) => {
 
     if (!user.id){
       toast({
@@ -193,7 +193,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(()=>{
     if (pipelineState == UPLOADED && enhancementPending){
       setEnhancementPending(false)
-      enhanceResume()
+      enhanceResume(jobDescription)
     }
   }, [pipelineState])
 
