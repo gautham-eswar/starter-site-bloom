@@ -15,7 +15,7 @@ import Test2 from "./pages/Test2"; // Add new Test2 page
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
-import { PipelineProvider } from "./contexts/ResumeContext";
+import { PipelineProvider, ResumeProvider } from "./contexts/ResumeContext";
 
 const queryClient = new QueryClient();
 
@@ -34,23 +34,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <AuthProvider>
-      <PipelineProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/technology" element={<Technology />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/comparison" element={
-            <ProtectedRoute>
-              <ComparisonPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/test2" element={<Test2 />} />
-          <Route path="/auth" element={<Auth />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </PipelineProvider>
+      <ResumeProvider>
+        <PipelineProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/technology" element={<Technology />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/comparison" element={
+              <ProtectedRoute>
+                <ComparisonPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/test2" element={<Test2 />} />
+            <Route path="/auth" element={<Auth />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </PipelineProvider>
+      </ResumeProvider>
     </AuthProvider>
   );
 };
