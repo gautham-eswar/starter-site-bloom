@@ -40,9 +40,9 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     } = usePipelineContext();
   const navigate = useNavigate();
   
-  // const [currentStep, setCurrentStep] = useState(0);
   // const [isComplete, setIsComplete] = useState(false);
   // const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   console.log(progress)
   
@@ -61,6 +61,16 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     setIsOptimizing(false);
   };
 
+  if (currentStep == 0 && pipelineState >= ENHANCED){
+    setCurrentStep(1)
+    setProgress(0)
+  } else if (currentStep == 1 && pipelineState >= RENDERED){
+    setCurrentStep(2)
+    setProgress(0)
+  } else {
+    setProgress(0)
+  }
+  
   const isComplete = (pipelineState >= RENDERED);
 
   useEffect( ()=>{
