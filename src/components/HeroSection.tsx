@@ -1,4 +1,5 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
+
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +29,7 @@ const HeroSection: React.FC = () => {
       jobId,
       enhancedResumeId,
       enhancementAnalysis,
+      enhancementPending,
       uploadResume,
       setJobDescription,
       enhanceResume,
@@ -35,9 +37,30 @@ const HeroSection: React.FC = () => {
     } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Log the pipeline state whenever it changes
+    console.log("Pipeline state changed:", pipelineState, {
+      resumeFilename,
+      resumeId,
+      jobDescription,
+      jobId,
+      enhancedResumeId,
+      enhancementPending
+    });
+    
+    // If enhancement is complete, navigate to comparison page
+    if (pipelineState === ENHANCED && enhancedResumeId) {
+      console.log("Enhancement complete, navigating to comparison page");
+      setIsProgressModalOpen(false);
+      navigate(`/comparison?resumeId=${enhancedResumeId}&jobId=${jobId}`);
+    }
+  }, [pipelineState, enhancedResumeId, jobId, navigate, resumeFilename, resumeId, jobDescription, enhancementPending]);
+
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
+  
   const handleUploadClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -48,6 +71,7 @@ const HeroSection: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     console.log(`File selected: ${file.name}`);
+    
     // Check if file is PDF or DOCX
     const fileType = file.name.split('.').pop()?.toLowerCase();
     if (fileType !== 'pdf' && fileType !== 'docx') {
@@ -60,22 +84,62 @@ const HeroSection: React.FC = () => {
     }
     
     setIsWriteExpanded(true);
-    await uploadResume(file)
-    
+    try {
+      console.log("Starting resume upload");
+      await uploadResume(file);
+      console.log("Resume upload complete, pipeline state:", pipelineState);
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
+  
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
+  
   const handleMakeItBetter = async () => {
-    if (jobDescription.trim())
-      setIsProgressModalOpen(true);
-    await enhanceResume(jobDescription);
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description required",
+        description: "Please enter a job description to enhance your resume.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsProgressModalOpen(true);
+    
+    try {
+      console.log("Starting resume enhancement");
+      await enhanceResume(jobDescription);
+      console.log("Resume enhancement initiated, pipeline state:", pipelineState);
+    } catch (error) {
+      console.error("Error enhancing resume:", error);
+      setIsProgressModalOpen(false);
+      toast({
+        title: "Enhancement failed",
+        description: "There was an error enhancing your resume. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const isUploading = pipelineState == UPLOADING;
-  const isNotStarted = pipelineState == NOT_UPLOADED;
-  const isEnhancing = pipelineState == ENHANCING;
+  const isUploading = pipelineState === UPLOADING;
+  const isNotStarted = pipelineState === NOT_UPLOADED;
+  const isEnhancing = pipelineState === ENHANCING;
+  const isComplete = pipelineState === ENHANCED || pipelineState === RENDERED;
   
+  // Modify the ProgressModal open state to close automatically when complete
+  useEffect(() => {
+    if (isComplete && isProgressModalOpen) {
+      setIsProgressModalOpen(false);
+    }
+  }, [isComplete, isProgressModalOpen]);
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -156,7 +220,7 @@ const HeroSection: React.FC = () => {
                     {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isEnhancing || isUploading}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -170,7 +234,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isEnhancing || isUploading}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >

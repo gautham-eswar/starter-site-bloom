@@ -20,6 +20,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    console.log(`API Request: ${options.method || 'GET'} ${url}`);
+    
     // Set default headers if not provided
     if (!options.headers) {
       options.headers = {
@@ -27,15 +29,37 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       };
     }
     
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(errorData.message || `Request failed with status ${response.status}`);
+    // Log request details (without sensitive data)
+    const logOptions = { ...options };
+    if (logOptions.body instanceof FormData) {
+      console.log("Request contains FormData", {
+        keys: Array.from((logOptions.body as FormData).keys())
+      });
+    } else if (typeof logOptions.body === 'string') {
+      try {
+        const parsed = JSON.parse(logOptions.body);
+        console.log("Request body:", { ...parsed, password: parsed.password ? '[REDACTED]' : undefined });
+      } catch (e) {
+        console.log("Request body is not JSON");
+      }
     }
     
-    return await response.json();
+    const response = await fetch(url, options);
+    console.log(`API Response: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `Request failed with status ${response.status}`;
+      console.error(errorMessage, errorData);
+      return { error: errorMessage, data: null };
+    }
+    
+    const data = await response.json();
+    console.log("API Response data:", data);
+    return { error: null, data };
   } catch (error) {
     handleApiError(error);
+    return { error: error instanceof Error ? error.message : String(error), data: null };
   }
 }
 
