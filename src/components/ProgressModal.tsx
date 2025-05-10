@@ -74,9 +74,10 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   const isComplete = (pipelineState >= RENDERED);
 
   useEffect( ()=>{
-    const t = setTimeout(2000, ()=>{
+    const t = setInterval(2000, ()=>{
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     })
+    return clearInterval(t)
   }, [pipelineState, enhancementPending])
   
 
