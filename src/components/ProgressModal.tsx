@@ -23,6 +23,8 @@ const NOT_UPLOADED = 0,
   RENDERED = 6;
 
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
+
+  
   const {
       pipelineState,
       resumeFilename,
@@ -38,10 +40,11 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     } = usePipelineContext();
   const navigate = useNavigate();
   
+  // const [currentStep, setCurrentStep] = useState(0);
   // const [isComplete, setIsComplete] = useState(false);
   // const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
-  const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  console.log(progress)
   
 
   const steps = [
@@ -58,23 +61,14 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     setIsOptimizing(false);
   };
 
-  if (currentStep == 0 && pipelineState >= ENHANCING){
-    setCurrentStep(1)
-    setProgress(0)
-  } else if (currentStep == 0 && pipelineState >= RENDERING){
-    setCurrentStep(2)
-    setProgress(0)
-  } else{
-    setCurrentStep(0)
-  }
-  const isComplete = currentStep == 2;
+  const isComplete = (pipelineState >= RENDERED);
 
-  useEffect(()=>{
+  useEffect( ()=>{
     const t = setTimeout(2000, ()=>{
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     })
     return ()=>{clearTimeout(t)}
-  }, [progress, currentStep])
+  }, [progress])
   
 
   // // Poll for optimization status
