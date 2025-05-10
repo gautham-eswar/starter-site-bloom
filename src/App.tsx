@@ -13,7 +13,7 @@ import Technology from "./pages/Technology";
 import FAQ from "./pages/FAQ";
 import Test2 from "./pages/Test2";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
-import { AuthProvider } from "./components/auth/AuthProvider";
+import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { ResumeProvider, PipelineProvider } from "./contexts/ResumeContext";
 
 const queryClient = new QueryClient();

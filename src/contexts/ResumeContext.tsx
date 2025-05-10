@@ -110,10 +110,15 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
       
-      console.log(`${file.name} uploaded successfully! Resume ID: ${response.data["resume_id"]}`);
+      console.log(`${file.name} uploaded successfully! Resume ID: ${response.data.resume_id}`);
       setPipelineState(UPLOADED);
-      setResumeId(response.data["resume_id"]);
-      setParsedResume(response.data["parsed_resume"]);
+      setResumeId(response.data.resume_id);
+      setParsedResume(response.data.parsed_resume);
+      
+      toast({
+        title: "Upload successful",
+        description: "Your resume has been uploaded successfully. Now add a job description to enhance it.",
+      });
     } catch (error) {
       console.error("Error in uploadResume:", error);
       setPipelineState(NOT_UPLOADED);
@@ -178,11 +183,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
 
-      console.log(`Resume enhanced successfully! Job ID: ${response.data["job_id"]}, Enhanced Resume ID: ${response.data["enhanced_resume_id"]}`);
+      console.log(`Resume enhanced successfully! Job ID: ${response.data.job_id}, Enhanced Resume ID: ${response.data.enhanced_resume_id}`);
       setPipelineState(ENHANCED);
-      setJobId(response.data["job_id"]);
-      setEnhancementAnalysis(response.data["analysis"]);
-      setEnhancedResumeId(response.data["enhanced_resume_id"]);
+      setJobId(response.data.job_id);
+      setEnhancementAnalysis(response.data.analysis);
+      setEnhancedResumeId(response.data.enhanced_resume_id);
     } catch (error) {
       console.error("Error in enhanceResume:", error);
       setPipelineState(UPLOADED);

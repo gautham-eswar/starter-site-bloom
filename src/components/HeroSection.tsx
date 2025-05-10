@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
@@ -23,6 +22,7 @@ const HeroSection: React.FC = () => {
     uploadResume,
     setJobDescription,
     enhanceResume,
+    apiError,
   } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +35,14 @@ const HeroSection: React.FC = () => {
       navigate(`/comparison?resumeId=${enhancedResumeId}&jobId=${jobId}`);
     }
   }, [pipelineState, enhancedResumeId, jobId, navigate]);
+
+  // Close the progress modal if there's an error
+  useEffect(() => {
+    if (apiError && isProgressModalOpen) {
+      // Keep the modal open to show the error
+      // The user can close it manually
+    }
+  }, [apiError, isProgressModalOpen]);
 
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
@@ -51,6 +59,16 @@ const HeroSection: React.FC = () => {
     if (!file) return;
     console.log(`File selected: ${file.name}`);
     
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload a resume",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    
     // Check if file is PDF or DOCX
     const fileType = file.name.split('.').pop()?.toLowerCase();
     if (fileType !== 'pdf' && fileType !== 'docx') {
@@ -66,7 +84,6 @@ const HeroSection: React.FC = () => {
     
     try {
       console.log("Starting resume upload");
-      // No progress modal for upload
       await uploadResume(file);
       toast({
         title: "Resume uploaded",
@@ -122,7 +139,7 @@ const HeroSection: React.FC = () => {
       await enhanceResume(jobDescription);
     } catch (error) {
       console.error("Error enhancing resume:", error);
-      // Error will be shown in the modal
+      // Error will be handled by the pipeline context and shown in the modal
     }
   };
 

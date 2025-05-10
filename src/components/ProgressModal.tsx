@@ -2,18 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { usePipelineContext } from '@/contexts/ResumeContext';
+import { usePipelineContext, NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED } from '@/contexts/ResumeContext';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
-
-// Define constants for pipeline states
-const NOT_UPLOADED = 0,
-  UPLOADING = 1,
-  UPLOADED = 2,
-  ENHANCING = 3,
-  ENHANCED = 4,
-  RENDERING = 5,
-  RENDERED = 6;
 
 // Define props interface
 interface ProgressModalProps {
@@ -46,7 +37,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     } else if (pipelineState === ENHANCED) {
       setProgress(100);
       setStatusText("Your resume is ready!");
-    } else if (pipelineState === NOT_UPLOADED && apiError) {
+    } else if (apiError) {
       setHasError(true);
       setStatusText(apiError || "There was an error processing your request. Please try again.");
     }
@@ -56,7 +47,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     
-    if (isOpen && progress < 95 && pipelineState === ENHANCING) {
+    if (isOpen && progress < 95 && pipelineState === ENHANCING && !hasError) {
       interval = setInterval(() => {
         setProgress(prev => {
           // Only increment if we haven't reached the target yet
@@ -71,7 +62,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isOpen, progress, pipelineState]);
+  }, [isOpen, progress, pipelineState, hasError]);
 
   const handleTryAgain = () => {
     clearError();
