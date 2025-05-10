@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { getOptimizationResults } from '@/services/api';
@@ -11,6 +10,9 @@ import { useSearchParams } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
 import { downloadPdf, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
+import SummaryPanel from '@/components/comparison/SummaryPanel';
+import BulletComparisonContainer from '@/components/comparison/BulletComparisonContainer';
+import ComparisonSkeleton from '@/components/comparison/ComparisonSkeleton';
 
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -150,10 +152,24 @@ const ComparisonPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-draft-bg">
         <Header />
-        <div className="h-[calc(100vh-80px)] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
-            <p className="text-draft-green">Loading optimization results...</p>
+        <div className="px-8 py-6 md:px-12 lg:px-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
+            {/* Left side - Loading skeleton */}
+            <div className="space-y-8">
+              <h2 className="text-2xl font-serif text-draft-green">Improvements</h2>
+              <ComparisonSkeleton />
+            </div>
+            
+            {/* Right side - Loading state */}
+            <div className="space-y-4 bg-[#F7F4ED] p-6 rounded-lg">
+              <h2 className="text-2xl font-serif text-draft-green">Resume Preview</h2>
+              <div className="bg-white rounded-lg h-[600px] flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                  <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
+                  <p className="text-draft-green">Loading resume preview...</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -183,8 +199,8 @@ const ComparisonPage: React.FC = () => {
     );
   }
 
-  // Prepare the data for the comparison table
-  const improvementData = optimizationResult?.modifications || [];
+  // Prepare the data for the comparison
+  const modifications = optimizationResult?.modifications || [];
 
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -219,42 +235,11 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-white overflow-hidden">
-              <Table>
-                <TableHeader className="bg-[#f1f1eb]">
-                  <TableRow>
-                    <TableHead className="text-draft-green">Section</TableHead>
-                    <TableHead className="text-draft-green">Original</TableHead>
-                    <TableHead className="text-draft-green w-[40%]">Improved</TableHead>
-                    <TableHead className="text-draft-green">Type</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {improvementData.length > 0 ? (
-                    improvementData.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{row.section}</TableCell>
-                        <TableCell>{row.original}</TableCell>
-                        <TableCell className="text-draft-green">{row.improved}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            row.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
-                          }`}>
-                            {row.type}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        No improvements found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            {/* Summary Panel */}
+            <SummaryPanel modifications={modifications} />
+            
+            {/* Bullet Comparisons */}
+            <BulletComparisonContainer modifications={modifications} />
           </div>
           
           {/* Right side - Resume Preview */}
