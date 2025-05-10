@@ -141,8 +141,8 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       // Only allow closing if complete or error
+      onOpenChange(open);
       if (isComplete) {
-        onOpenChange(open);
       }
     }}>
       <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
