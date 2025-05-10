@@ -25,7 +25,6 @@ type PipelineContextType = {
   jobId: string | null;
   enhancedResumeId: string | null;
   enhancementAnalysis: Object | null;
-  enhancementPending: boolean;
   apiError: string | null;
   
   uploadResume: (file: File) => Promise<void>;
@@ -46,36 +45,25 @@ export const usePipelineContext = () => {
 };
 
 export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-
   const [pipelineState, setPipelineState] = useState<PipelineState>(NOT_UPLOADED);
   
   // Data for UPLOADING stage
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
-  const [enhancementPending, setEnhancementPending] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
   // Data for UPLOADED stage
   const [resumeId, setResumeId] = useState<string | null>(null);
-  const [parsedSelectedResume, setParsedSelectedResume] = useState<Object | null>(null);
+  const [parsedResume, setParsedResume] = useState<Object | null>(null);
 
   // Data for ENHANCING Stage
-  const [jobDescription, setJobDescription] = useState<string>('');
+  const [jobDescription, setJobDescription] = useState<string | null>(null);
 
   // Data for ENHANCED Stage
   const [jobId, setJobId] = useState<string | null>(null);
   const [enhancementAnalysis, setEnhancementAnalysis] = useState<Object | null>(null);
   const [enhancedResumeId, setEnhancedResumeId] = useState<string | null>(null);
   
-  // Data for RENDERING Stage
-
-  // Data for RENDERED Stage
-  const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
-  const [enhancedResumeFileId, setEnhancedResumeFileId] = useState<File | null>(null);
-  
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
 
   const clearError = () => {
     setApiError(null);
@@ -110,12 +98,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       
       console.log("Upload API response:", response);
 
-      // Ignore older uploads
-      if (file.name !== resumeFilename) {
-        console.log("Ignoring response for old upload");
-        return;
-      }
-
       if (response.error) {
         setPipelineState(NOT_UPLOADED);
         setApiError(response.error);
@@ -131,7 +113,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.log(`${file.name} uploaded successfully! Resume ID: ${response.data["resume_id"]}`);
       setPipelineState(UPLOADED);
       setResumeId(response.data["resume_id"]);
-      setParsedSelectedResume(response.data["parsed_resume"]);
+      setParsedResume(response.data["parsed_resume"]);
     } catch (error) {
       console.error("Error in uploadResume:", error);
       setPipelineState(NOT_UPLOADED);
@@ -165,7 +147,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
     
-    if (pipelineState === NOT_UPLOADED) {
+    if (!resumeId) {
       toast({
         title: "No resume selected",
         description: "Please select or upload a resume and try again",
@@ -174,31 +156,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    if (pipelineState === ENHANCING) {
-      toast({
-        title: "Already enhancing a resume",
-        description: "Please wait for the current optimization job to finish before starting a new one",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setJobDescription(jd);
-    
-    if (pipelineState === UPLOADING) {
-      console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`);
-      setEnhancementPending(true);
-      return;
-    } 
-
     console.log(`Initializing enhancement for resume with ID: ${resumeId}`);
     setPipelineState(ENHANCING);
+    setJobDescription(jd);
 
     try {
-      if (!resumeId) {
-        throw new Error("No resume ID available");
-      }
-      
       console.log(`Making API call to optimize resume ID: ${resumeId} with job description`);
       const response = await apiOptimizeResume(resumeId, jd, user.id);
       
@@ -238,14 +200,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     return Promise.resolve();
   };
 
-  useEffect(() => {
-    if (pipelineState === UPLOADED && enhancementPending && jobDescription) {
-      console.log("Resume uploaded and enhancement is pending, starting enhancement now");
-      setEnhancementPending(false);
-      enhanceResume(jobDescription);
-    }
-  }, [pipelineState, enhancementPending, jobDescription]);
-
   return (
     <PipelineContext.Provider
       value={{
@@ -256,7 +210,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         jobId,
         enhancedResumeId,
         enhancementAnalysis,
-        enhancementPending,
         apiError,
         
         uploadResume,
@@ -271,10 +224,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   );
 };
 
-
-
-
-
+// Legacy context for comparison page
 type ResumeContextType = {
   resumeId: string | null;
   setResumeId: (id: string | null) => void;

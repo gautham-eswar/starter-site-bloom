@@ -22,9 +22,11 @@ interface BulletComparisonContainerProps {
 const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ modifications }) => {
   const groupedModifications = useMemo(() => {
     if (!modifications || !modifications.length) {
+      console.log("No modifications found or empty array");
       return [];
     }
     
+    console.log("Processing modifications:", modifications);
     const groupedByCompany: Record<string, CompanySectionProps> = {};
     
     modifications.forEach(mod => {
@@ -33,6 +35,11 @@ const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ m
       const position = mod.position || '';
       const original = mod.original_bullet || mod.original || '';
       const enhanced = mod.enhanced_bullet || mod.improved || '';
+      
+      if (!original || !enhanced) {
+        console.log("Skipping modification with missing content:", mod);
+        return;
+      }
       
       if (!groupedByCompany[company]) {
         groupedByCompany[company] = {
@@ -45,8 +52,8 @@ const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ m
       groupedByCompany[company].bullets.push({
         original,
         enhanced,
-        experience_idx: mod.experience_idx,
-        bullet_idx: mod.bullet_idx
+        experience_idx: mod.experience_idx !== undefined ? mod.experience_idx : 0,
+        bullet_idx: mod.bullet_idx !== undefined ? mod.bullet_idx : 0
       });
     });
     
@@ -60,7 +67,7 @@ const BulletComparisonContainer: React.FC<BulletComparisonContainerProps> = ({ m
     });
   }, [modifications]);
   
-  if (!modifications || groupedModifications.length === 0) {
+  if (!modifications || modifications.length === 0 || groupedModifications.length === 0) {
     return (
       <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
         <p className="text-gray-500">No modifications found for this resume.</p>

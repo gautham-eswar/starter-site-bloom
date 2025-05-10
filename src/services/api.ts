@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage";
 import { supabase } from "@/integrations/supabase/client";
