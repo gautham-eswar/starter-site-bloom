@@ -62,8 +62,6 @@ const HeroSection: React.FC = () => {
     setIsWriteExpanded(true);
     await uploadResume(file)
     
-    // Just store the file for later processing
-    setSelectedFile(file);
   };
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
