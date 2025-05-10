@@ -180,6 +180,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
     }
 
+    console.error(`Resume with ID: ${currentResumeId} ehnanced successfully! \nJob Id: ${data["job_id"]}\nEnhanced Resume Id: ${data["enhanced_resume_id"]}`)
     setPipelineState(ENHANCED)
     setJobId(data["job_id"])
     setEnhancementAnalysis(data["analysis"])
