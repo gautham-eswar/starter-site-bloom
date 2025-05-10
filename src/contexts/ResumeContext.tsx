@@ -73,10 +73,10 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   } = useAuth();
 
   const uploadResume = async (file: File) => {
-    console.log(file)
-    console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
+    
+    console.log(`Uploading resume ${file.name} from user ID: ${user.id}`)
     setPipelineState(UPLOADING)
-    setResumeFilename(file.filename)
+    setResumeFilename(file.name)
   
     const formData = new FormData();
     formData.append("file", file);
@@ -96,7 +96,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       setUploadState(NOT_UPLOADED);
-      console.error(`Upload ${file.filename} from user ID: ${user.id} failed. Error message: ${error}`)
+      console.error(`Upload ${file.name} from user ID: ${user.id} failed. Error message: ${error}`)
       toast({
         title: "Upload failed",
         description: "There was an error uploading your resume. Please try again.",
