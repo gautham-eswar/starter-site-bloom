@@ -67,7 +67,8 @@ const HeroSection: React.FC = () => {
     setJobDescription(e.target.value);
   };
   const handleMakeItBetter = async () => {
-    setIsProgressModalOpen(true);
+    if (jobDescription.trim())
+      setIsProgressModalOpen(true);
     await enhanceResume(jobDescription);
   };
 
