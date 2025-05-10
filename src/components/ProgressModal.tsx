@@ -75,14 +75,12 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
 
   useEffect( ()=>{
     let interval = setInterval( function () {
-      console.log("Is this running?")
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     }, 2000)
-    return clearInterval(interval)
+    
+    return () =>clearInterval(interval)
   }, [isOpen, pipelineState, currentStep])
-  useEffect( ()=>{
-    console.log("hmmm")
-  }, [progress])
+  
   
 
   // // Poll for optimization status
