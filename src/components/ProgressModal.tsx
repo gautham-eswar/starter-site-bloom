@@ -154,11 +154,11 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
       }
     }}>
       <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
-        <DialogTitle className="DialogTitle"><h2 className="text-2xl font-serif text-draft-green text-center mb-8">
-            Making your resume better
-          </h2></DialogTitle>
+        <DialogTitle className="DialogTitle" style="display:none"></DialogTitle>
         <div className="py-6">
-          
+          <h2 className="text-2xl font-serif text-draft-green text-center mb-8">
+            Making your resume better
+          </h2>
           
           <div className="space-y-8">
             {steps.map((step, index) => {
