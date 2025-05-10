@@ -55,8 +55,9 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     
-    // Fix the comparison to use type-safe checks
+    // Fix the comparison to use consistent type checks with the pipeline state constants
     if (isOpen && progress < 95 && 
+        pipelineState !== NOT_UPLOADED &&
         pipelineState !== ENHANCED && 
         pipelineState !== RENDERED) {
       interval = setInterval(() => {
