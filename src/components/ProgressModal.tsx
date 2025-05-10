@@ -39,6 +39,9 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
       enhanceResume,
       renderEnhancedResume,
     } = usePipelineContext();
+    
+  // Get the isOptimizing state from ResumeContext
+  const { isOptimizing, setIsOptimizing } = useResumeContext();
   const navigate = useNavigate();
   
   // const [isComplete, setIsComplete] = useState(false);

@@ -22,9 +22,9 @@ type PipelineContextType = {
   resumeId: string | null;
   jobDescription: string | null;
   jobId: string | null;
-  enhancedResumeId: str | null;
+  enhancedResumeId: string | null;
   enhancementAnalysis: Object | null;
-  enhancementPending: true | false;
+  enhancementPending: boolean;
   
   uploadResume: (file: File) => void;
   setJobDescription: (jd: string) => void;
@@ -92,11 +92,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
 
     // Ignore older uploads
-    if (file.filename != resumeFilename)
+    if (file.name != resumeFilename)
       return
 
     if (error) {
-      setUploadState(NOT_UPLOADED);
+      setPipelineState(NOT_UPLOADED);
       console.error(`Upload ${file.name} from user ID: ${user.id} failed. Error message: ${error}`)
       toast({
         title: "Upload failed",
@@ -172,7 +172,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
 
     if (error) {
-      setUploadState(UPLOADED);
+      setPipelineState(UPLOADED);
       console.error(`Enhancement of resume with ID: ${currentResumeId} failed. Error message: ${error}`)
       toast({
         title: "Upload failed",
@@ -209,6 +209,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         jobId,
         enhancedResumeId,
         enhancementAnalysis,
+        enhancementPending,
         
         uploadResume,
         setJobDescription,
