@@ -61,7 +61,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   };
 
   const currentStep = (pipelineState >= RENDERING) + (pipelineState >= RENDERED);
-  const isCompleted = (pipelineState >= RENDERED);
+  const isComplete = (pipelineState >= RENDERED);
   
 
   // // Poll for optimization status
