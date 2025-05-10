@@ -3,40 +3,38 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
-import { useResumeContext } from '@/contexts/ResumeContext';
-import { uploadResume, optimizeResume } from '@/services/api';
+import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
-  UPLOADED = 2;
+  UPLOADED = 2,
+  ENHANCING = 3,
+  ENHANCED = 4,
+  RENDERING = 5,
+  RENDERED = 6;
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadState, setUploadState] = useState(NOT_UPLOADED);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    resumeId,
-    setResumeId,
-    jobId,
-    setJobId,
-    jobDescription,
-    setJobDescription,
-    optimizationResult,
-    setOptimizationResult,
-    isOptimizing,
-    setIsOptimizing
-  } = useResumeContext();
-  const {
-    user
-  } = useAuth();
+      pipelineState,
+      resumeFilename,
+      resumeId,
+      jobDescription,
+      jobId,
+      enhancedResumeId,
+      enhancementAnalysis,
+      uploadResume,
+      setJobDescription,
+      enhanceResume,
+      renderEnhancedResume,
+    } = usePipelineContext();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
@@ -45,10 +43,11 @@ const HeroSection: React.FC = () => {
       fileInputRef.current.click();
     }
   };
+  
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    console.log(`File selected: ${file.name}`);
     // Check if file is PDF or DOCX
     const fileType = file.name.split('.').pop()?.toLowerCase();
     if (fileType !== 'pdf' && fileType !== 'docx') {
@@ -59,83 +58,26 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-
+    
+    setIsWriteExpanded(true);
+    await uploadResume(file)
+    
     // Just store the file for later processing
-    console.log(`File selected: ${file.name}`);
     setSelectedFile(file);
-    setUploadState(UPLOADING);
-    const {
-      data,
-      error
-    } = await uploadResume(file, user.id);
-    if (error) {
-      setUploadState(NOT_UPLOADED);
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
-        variant: "destructive"
-      });
-    }
-    setUploadState(UPLOADED);
-    setResumeId(data.resume_id)
-    console.log(`Resume Uploaded Successfully!\nResume ID: ${data.resume_id}`);
-
-    // Auto expand the job description textarea when a file is selected
-    if (!isWriteExpanded) {
-      setIsWriteExpanded(true);
-    }
   };
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
   const handleMakeItBetter = async () => {
-    if (!selectedFile) {
-      toast({
-        title: "No resume selected",
-        description: "Please select a resume file first",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (!jobDescription.trim()) {
-      toast({
-        title: "No job description",
-        description: "Please enter a job description",
-        variant: "destructive"
-      });
-      return;
-    }
-    setIsProcessing(true);
+    setIsProgressModalOpen(false);
+    await enhanceResume();
     setIsProgressModalOpen(true);
-    setIsOptimizing(true);
-    try {
-      // The resume has already been uploaded at this point, and the resumeId is stored in the context
-      // No need to upload again, just optimize using the stored resumeId
-      if (!resumeId) {
-        throw new Error("Resume ID not found");
-      }
-
-      // Then optimize it
-      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
-      if (!optimizeResponse || !optimizeResponse.job_id) {
-        throw new Error("Failed to optimize resume");
-      }
-
-      // Store the job ID
-      setJobId(optimizeResponse.job_id);
-    } catch (error) {
-      console.error("Process error:", error);
-      toast({
-        title: "Process failed",
-        description: "There was an error processing your resume. Please try again.",
-        variant: "destructive"
-      });
-      setIsProgressModalOpen(false);
-      setIsOptimizing(false);
-    } finally {
-      setIsProcessing(false);
-    }
   };
+
+  const isUploading = pipelineState == UPLOADING;
+  const isNotStarted = pipelineState == NOT_UPLOADED;
+  const isEnhancing = pipelineState == ENHANCING;
+  
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -170,20 +112,13 @@ const HeroSection: React.FC = () => {
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
                 <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={uploadState == UPLOADING}>
-                  {uploadState == UPLOADING ? "Uploading..." : selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
+                  {isUploading ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {selectedFile && <p className="text-sm text-draft-green mt-2">
-                    {(() => {
-                  switch (uploadState) {
-                    case UPLOADING:
-                      return `Selected File: `;
-                    case UPLOADED:
-                      return `Uploaded File: `;
-                    case NOT_UPLOADED:
-                      return `Couldn't Upload File: `;
-                  }
-                })()}
-                    {selectedFile.name}
+                {resumeFilename && <p className="text-sm text-draft-green mt-2">
+                    { isNotStarted ? 
+                      "Couldn't upload file:" : "Selected file:"
+                    }
+                    {resumeFilename}
                   </p>}
               </div>
               <div className="absolute right-0 h-full flex items-center">
@@ -223,11 +158,11 @@ const HeroSection: React.FC = () => {
                     {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!selectedFile || !jobDescription.trim() || isProcessing}
+                      disabled={!jobDescription.trim() || isEnhancing}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isProcessing ? "Processing..." : "Make it better"}
+                      {isEnhancing ? "Processing..." : "Make it better"}
                     </Button>
                   </div>
                 )}
@@ -237,11 +172,11 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!selectedFile || !jobDescription.trim() || isProcessing}
+                      disabled={!jobDescription.trim() || isEnhancing}
                       variant="outline" 
-                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isProcessing ? "Processing..." : "Make it better"}
+                      {isEnhancing ? "Processing..." : "Make it better"}
                     </Button>
                   </div>
                 )}

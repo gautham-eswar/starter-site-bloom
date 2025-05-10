@@ -13,7 +13,7 @@ const NOT_UPLOADED = 0,
   RENDERED = 6;
 
 const stateValuesArray = [NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED, RENDERING, RENDERED] as const;
-type PipelineState = typeof stateValuesArray[number];
+export type PipelineState = typeof stateValuesArray[number];
 
 type PipelineContextType = {
   pipelineState: PipelineState;
