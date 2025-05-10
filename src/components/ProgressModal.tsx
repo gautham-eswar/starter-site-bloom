@@ -1,119 +1,217 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { usePipelineContext, NOT_UPLOADED, UPLOADING, UPLOADED, ENHANCING, ENHANCED } from '@/contexts/ResumeContext';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from './ui/button';
+import { Dialog, DialogContent,DialogTitle } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { CircleCheck, Rocket, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useResumeContext } from '@/contexts/ResumeContext';
+import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
+import { toast } from '@/hooks/use-toast';
 
-// Define props interface
 interface ProgressModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const NOT_UPLOADED = 0,
+  UPLOADING = 1,
+  UPLOADED = 2,
+  ENHANCING = 3,
+  ENHANCED = 4,
+  RENDERING = 5,
+  RENDERED = 6;
+
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
+
+  
+  const {
+      pipelineState,
+      resumeFilename,
+      resumeId,
+      jobDescription,
+      jobId,
+      enhancementPending,
+      enhancedResumeId,
+      enhancementAnalysis,
+      uploadResume,
+      setJobDescription,
+      enhanceResume,
+      renderEnhancedResume,
+    } = usePipelineContext();
+  const navigate = useNavigate();
+  
+  // const [isComplete, setIsComplete] = useState(false);
+  // const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState("Optimizing your resume");
-  const [hasError, setHasError] = useState(false);
-
-  // Use the pipeline context to get the current state
-  const { pipelineState, apiError, clearError } = usePipelineContext();
   
-  // Reset error state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setProgress(0);
-      setHasError(false);
-      console.log("Progress modal opened, resetting state");
-    }
-  }, [isOpen]);
-  
-  // Update progress based on pipeline state
-  useEffect(() => {
-    console.log("Pipeline state updated:", pipelineState);
-    // Reset error state when starting a new process
-    if (pipelineState === ENHANCING) {
-      setHasError(false);
-      setProgress(40);
-      setStatusText("Enhancing your resume to match the job description...");
-      console.log("Enhancing resume, updating progress state");
-    } else if (pipelineState === ENHANCED) {
-      setProgress(100);
-      setStatusText("Your resume is ready!");
-      console.log("Resume enhanced, progress complete");
-    } else if (apiError) {
-      setHasError(true);
-      setStatusText(apiError || "There was an error processing your request. Please try again.");
-      console.log("Error in pipeline:", apiError);
-    }
-  }, [pipelineState, apiError]);
 
-  // Simulate a gradual progress increase for smoother UX
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    
-    if (isOpen && progress < 95 && pipelineState === ENHANCING && !hasError) {
-      interval = setInterval(() => {
-        setProgress(prev => {
-          // Only increment if we haven't reached the target yet
-          if (prev < 90) {
-            return prev + 0.5;
-          }
-          return prev;
-        });
-      }, 300);
-    }
+  const steps = [
+    { name: 'Uploading resume', icon: <Rocket className="text-draft-coral" /> },
+    { name: 'Organizing content', icon: <Sparkles className="text-draft-purple" /> },
+    { name: 'Applying template', icon: <CircleCheck className="text-draft-mint" /> }
+  ];
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isOpen, progress, pipelineState, hasError]);
-
-  const handleTryAgain = () => {
-    clearError();
+  const handleDoneClick = () => {
     onOpenChange(false);
+    if (resumeId && jobId) {
+      navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
+    }
+    setIsOptimizing(false);
   };
 
+  if (currentStep == 0 && pipelineState >= UPLOADED){
+    setCurrentStep(1)
+    setProgress(0)
+  } else if (currentStep == 1 && pipelineState >= ENHANCED){
+    setCurrentStep(2)
+    setProgress(0)
+  } else if (currentStep == 2 && pipelineState >= RENDERED){
+    setCurrentStep(3)
+  }
+  
+  const isComplete = (pipelineState >= RENDERED);
+
+  useEffect( ()=>{
+    let interval = setInterval( function () {
+      setProgress(prev => (prev >= 100) ? 0 : prev + 5);
+    }, 2000)
+    
+    return () =>clearInterval(interval)
+  }, [isOpen, pipelineState, currentStep])
+  
+  
+
+  // // Poll for optimization status
+  // useEffect(() => {
+  //   if (!isOpen || !jobId || !isOptimizing) return;
+
+  //   let interval: NodeJS.Timeout;
+  //   const checkStatus = async () => {
+  //     try {
+  //       const status = await checkOptimizationStatus(jobId);
+  //       setOptimizationStatus(status);
+        
+  //       // Update current step based on status
+  //       if (status.status === 'pending') {
+  //         setCurrentStep(0);
+  //       } else if (status.status === 'processing') {
+  //         setCurrentStep(1);
+  //       } else if (status.status === 'completed') {
+  //         setCurrentStep(2);
+  //         setIsComplete(true);
+  //         clearInterval(interval);
+  //         toast({
+  //           title: "Optimization complete",
+  //           description: "Your resume has been optimized successfully!",
+  //         });
+  //       } else if (status.status === 'error') {
+  //         clearInterval(interval);
+  //         toast({
+  //           title: "Optimization failed",
+  //           description: status.message || "There was an error optimizing your resume",
+  //           variant: "destructive",
+  //         });
+  //         onOpenChange(false);
+  //         setIsOptimizing(false);
+  //       }
+        
+  //       // Update progress if available
+  //       if (status.progress !== undefined) {
+  //         setProgress(status.progress);
+  //       } else {
+  //         // Simulate progress if not provided by API
+  //         setProgress(prev => (prev >= 100) ? 0 : prev + 5);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking optimization status:", error);
+  //     }
+  //   };
+    
+  //   // Initial check
+  //   checkStatus();
+    
+  //   // Set up polling interval
+  //   interval = setInterval(checkStatus, 2000);
+    
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [isOpen, jobId, isOptimizing, onOpenChange, setIsOptimizing]);
+
+  // Reset state when modal closes
+  // useEffect(() => {
+  //   if (!isOpen) {
+  //     if (!isComplete) {
+  //       setCurrentStep(0);
+  //       setProgress(0);
+  //     }
+  //   }
+  // }, [isOpen, isComplete]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center">
-            {hasError ? "Processing Error" : "Optimizing Your Resume"}
-          </DialogTitle>
-          <DialogDescription className="text-center">
-            {hasError 
-              ? "We encountered an issue while processing your resume." 
-              : "Please wait while we tailor your resume to match the job description."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="mt-6">
-          {hasError ? (
-            <div className="flex flex-col items-center justify-center text-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
-              <p className="text-sm text-gray-600">{statusText}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                This may be due to a network issue or server unavailability. Please try again later.
-              </p>
-              <Button onClick={handleTryAgain} className="mt-4">
-                Try Again
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only allow closing if complete or error
+      onOpenChange(open);
+      if (isComplete) {
+      }
+    }}>
+      <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
+        <DialogTitle className="DialogTitle" style={{display:"none"}}></DialogTitle>
+        <div className="py-6">
+          <h2 className="text-2xl font-serif text-draft-green text-center mb-8">
+            Making your resume better
+          </h2>
+          
+          <div className="space-y-8">
+            {steps.map((step, index) => {
+              const isActive = currentStep === index;
+              const isCompleted = currentStep > index;
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`flex items-center ${isActive || isCompleted ? 'opacity-100' : 'opacity-50'}`}
+                >
+                  <div className="mr-4 h-10 w-10 flex items-center justify-center rounded-full bg-[#f1f1eb]">
+                    {step.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-draft-green">{step.name}</p>
+                    {isActive && (
+                      <div className="mt-2">
+                        <Progress 
+                          value={progress} 
+                          className="h-2 bg-[#f1f1eb] bg-opacity-70"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <div className="flex flex-col items-center gap-2">
+              {!isComplete && (
+                <p className="text-draft-green italic mb-4">
+                  {currentStep === 0 && "Preparing to make magic..."}
+                  {currentStep === 1 && "Finding the perfect words..."}
+                  {currentStep === 2 && "Adding that special touch..."}
+                </p>
+              )}
+              
+              <Button 
+                className="bg-draft-green hover:bg-draft-green/90 text-white"
+                onClick={handleDoneClick}
+                disabled={!isComplete}
+              >
+                {isComplete ? "View Results" : "Processing..."}
               </Button>
             </div>
-          ) : (
-            <>
-              <Progress value={progress} className="h-2" />
-              <p className="text-center mt-4 text-sm text-gray-600">{statusText}</p>
-              <div className="flex justify-center mt-4">
-                <Loader2 className="h-8 w-8 text-draft-green animate-spin" />
-              </div>
-              <div className="text-center mt-4">
-                <p className="text-xs text-muted-foreground">
-                  This may take a minute or two. Please don't close this window.
-                </p>
-              </div>
-            </>
-          )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

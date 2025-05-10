@@ -17,12 +17,10 @@ export type Database = {
           id: string
           job_description: string
           keywords_extracted: Json | null
-          match_count: number | null
           match_details: Json | null
+          matches: number | null
           modifications: Json | null
-          new_skills_section: Json | null
           resume_id: string
-          skills_selection_log: Json | null
           status: string
           user_id: string
         }
@@ -33,12 +31,10 @@ export type Database = {
           id?: string
           job_description: string
           keywords_extracted?: Json | null
-          match_count?: number | null
           match_details?: Json | null
+          matches?: number | null
           modifications?: Json | null
-          new_skills_section?: Json | null
           resume_id: string
-          skills_selection_log?: Json | null
           status: string
           user_id: string
         }
@@ -49,12 +45,10 @@ export type Database = {
           id?: string
           job_description?: string
           keywords_extracted?: Json | null
-          match_count?: number | null
           match_details?: Json | null
+          matches?: number | null
           modifications?: Json | null
-          new_skills_section?: Json | null
           resume_id?: string
-          skills_selection_log?: Json | null
           status?: string
           user_id?: string
         }
