@@ -26,8 +26,8 @@ type PipelineContextType = {
   enhancementAnalysis: Object | null;
   
   uploadResume: (file: File) => void;
-  setJobDescription: (string) => void;
-  enhanceResume: () => void;
+  setJobDescription: (jd: string) => void;
+  enhanceResume: (jd: string) => void;
   renderEnhancedResume: () => void;
 }
 
@@ -110,7 +110,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     console.log(`${file.filename} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
   }
 
-  const enhanceResume = async () => {
+  const enhanceResume = async (jd:string) => {
 
     if (!user.id){
       toast({
@@ -145,6 +145,8 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return;
     }
+
+    setJobDescription(jd)
     
     if (pipelineState == UPLOADING){
       setEnhancementPending(true)
@@ -161,15 +163,12 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     const formData = new FormData();
     formData.append("resume_id", resumeId)
     formData.append("user_id", user.id)
-    formData.append("job_description", jobDescription)
+    formData.append("job_description", jd)
     const {data, error} =  await apiRequest("/optimize", {
       method: "POST",
       headers: {}, // Let browser set content-type for FormData
       body: formData,
     });
-
-    // Ignore optimization if another one was started (although it shouldn't)
-    if (currentResumeId != resumeId || currentJobDescription != jobDescription) return
 
     if (error) {
       setUploadState(UPLOADED);
