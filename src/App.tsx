@@ -15,7 +15,7 @@ import Test2 from "./pages/Test2"; // Add new Test2 page
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
-import { ResumeProvider } from "./contexts/ResumeContext";
+import { PipelineProvider } from "./contexts/ResumeContext";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <AuthProvider>
-      <ResumeProvider>
+      <PipelineProvider>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/pricing" element={<Pricing />} />
@@ -50,7 +50,7 @@ const AppRoutes = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </ResumeProvider>
+      </PipelineProvider>
     </AuthProvider>
   );
 };
