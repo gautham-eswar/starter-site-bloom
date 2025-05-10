@@ -67,9 +67,8 @@ const HeroSection: React.FC = () => {
     setJobDescription(e.target.value);
   };
   const handleMakeItBetter = async () => {
-    setIsProgressModalOpen(false);
-    await enhanceResume(jobDescription);
     setIsProgressModalOpen(true);
+    await enhanceResume(jobDescription);
   };
 
   const isUploading = pipelineState == UPLOADING;
