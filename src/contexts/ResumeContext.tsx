@@ -110,7 +110,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     console.log(`${file.filename} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
   }
 
-  const enhanceResume = async (jd:string) => {
+  const enhanceResume = async (jd:string = jobDescription) => {
 
     if (!user.id){
       toast({
