@@ -25,6 +25,11 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent
+} from '@/components/ui/collapsible';
 
 // Helper interface for grouped modifications
 interface GroupedModifications {
@@ -308,72 +313,108 @@ const ComparisonPage: React.FC = () => {
     <div className="min-h-screen bg-draft-bg">
       <Header />
       
-      <main className="px-4 py-6 md:px-12 lg:px-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
-          {/* Left side - Improvements */}
-          <div className="space-y-8">
-            <h2 className="text-2xl font-serif text-draft-green">Resume Improvements</h2>
+      <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
+        <h1 className="text-3xl font-serif text-draft-green mb-8 text-center">Resume Enhancement Results</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Left side - Score Summary and Improvements */}
+          <div className="space-y-10">
+            {/* Score Summary Cards */}
+            <div>
+              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Scorecard</h2>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
+                  <p className="text-draft-green text-sm mb-2 font-medium">Original Score</p>
+                  <p className="text-4xl font-bold text-draft-green">
+                    {analysisData.old_score}/100
+                  </p>
+                </div>
+                
+                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
+                  <p className="text-draft-green text-sm mb-2 font-medium">Enhanced Score</p>
+                  <p className="text-4xl font-bold text-draft-green">
+                    {analysisData.improved_score}/100
+                  </p>
+                </div>
+                
+                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
+                  <p className="text-draft-green text-sm mb-2 font-medium">Job Match</p>
+                  <p className="text-4xl font-bold text-draft-green">
+                    {analysisData.match_percentage}%
+                  </p>
+                </div>
+              </div>
+            </div>
             
-            {/* Score Summary */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
-                <p className="text-draft-green mb-2">Old Score</p>
-                <p className="text-4xl font-bold text-draft-green">
-                  {analysisData.old_score}/100
-                </p>
+            {/* Keyword Summary */}
+            <div className="bg-white border border-draft-green/10 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-draft-green">Keyword Optimization</h3>
+                <div className="text-sm text-draft-green/80">
+                  <span className="font-medium">{analysisData.keyword_matches}</span> of {analysisData.total_keywords} keywords
+                </div>
               </div>
-              
-              <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
-                <p className="text-draft-green mb-2">Improved Score</p>
-                <p className="text-4xl font-bold text-draft-green">
-                  {analysisData.improved_score}/100
-                </p>
-              </div>
-              
-              <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
-                <p className="text-draft-green mb-2">Match Rate</p>
-                <p className="text-4xl font-bold text-draft-green">
-                  {analysisData.match_percentage}%
-                </p>
+              <div className="bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-draft-green h-full rounded-full"
+                  style={{ width: `${analysisData.total_keywords > 0 ? (analysisData.keyword_matches / analysisData.total_keywords) * 100 : 0}%` }}
+                ></div>
               </div>
             </div>
             
             {/* Improvements by Company */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-serif text-draft-green">Detailed Improvements</h3>
+            <div>
+              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
               
               {Object.keys(groupedImprovements).length > 0 ? (
-                <Accordion type="multiple" className="w-full bg-white rounded-md overflow-hidden">
+                <Accordion 
+                  type="multiple" 
+                  defaultValue={Object.keys(groupedImprovements).map((_, i) => `item-${i}`)} 
+                  className="space-y-4"
+                >
                   {Object.entries(groupedImprovements).map(([key, group], index) => (
-                    <AccordionItem value={`item-${index}`} key={index} className="border-b">
-                      <AccordionTrigger className="px-4 py-2 hover:bg-gray-50">
+                    <AccordionItem 
+                      value={`item-${index}`} 
+                      key={index} 
+                      className="border border-draft-green/10 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:shadow-md"
+                    >
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-draft-green/5 data-[state=open]:bg-draft-green/5">
                         <div className="text-left">
-                          <h4 className="font-medium text-draft-green">{group.company}</h4>
-                          {group.position && <p className="text-sm text-gray-600">{group.position}</p>}
+                          <h3 className="font-medium text-draft-green text-lg">{group.company}</h3>
+                          {group.position && (
+                            <p className="text-sm text-draft-green/70">{group.position}</p>
+                          )}
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="px-4 py-2">
-                        <div className="space-y-4">
+                      
+                      <AccordionContent className="px-6 pb-6 pt-2">
+                        <div className="space-y-6">
                           {group.modifications.map((mod, idx) => (
-                            <Card key={idx} className="border-0 shadow-sm overflow-hidden">
-                              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                                <div className="bg-[#F1F0FB] p-4 rounded-l">
-                                  <p className="text-sm font-medium text-gray-600 mb-2">ORIGINAL</p>
-                                  <p>{mod.original}</p>
+                            <div key={idx} className="border border-draft-green/10 rounded-lg overflow-hidden shadow-sm">
+                              <div className={`grid ${isMobile ? 'grid-cols-1 gap-0' : 'grid-cols-2 gap-0'}`}>
+                                <div className="bg-[#F1F0FB] p-5 border-b md:border-b-0 md:border-r border-draft-green/10">
+                                  <h4 className="uppercase text-xs font-semibold text-draft-green/70 mb-3 tracking-wider">Original</h4>
+                                  <p className="font-serif text-draft-text leading-relaxed">{mod.original}</p>
                                 </div>
-                                <div className="bg-[#F2FCE2] p-4 rounded-r">
-                                  <p className="text-sm font-medium text-draft-green mb-2">ENHANCED</p>
-                                  <p>{mod.improved}</p>
+                                
+                                <div className="bg-[#F2FCE2] p-5">
+                                  <h4 className="uppercase text-xs font-semibold text-draft-green mb-3 tracking-wider">Enhanced</h4>
+                                  <p className="font-serif text-draft-green leading-relaxed">{mod.improved}</p>
                                 </div>
                               </div>
-                              <div className="bg-white px-4 py-2 border-t">
-                                <span className={`px-2 py-1 rounded text-xs ${
-                                  mod.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
-                                }`}>
-                                  {mod.type} Change
-                                </span>
-                              </div>
-                            </Card>
+                              
+                              {mod.type && (
+                                <div className="bg-white px-5 py-3 border-t border-draft-green/10">
+                                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                                    mod.type === 'Major' 
+                                      ? 'bg-draft-coral bg-opacity-10 text-draft-coral' 
+                                      : 'bg-draft-mint bg-opacity-10 text-draft-green'
+                                  }`}>
+                                    {mod.type} Enhancement
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </AccordionContent>
@@ -381,151 +422,64 @@ const ComparisonPage: React.FC = () => {
                   ))}
                 </Accordion>
               ) : (
-                <div className="bg-white p-8 text-center rounded-lg">
-                  <p className="text-gray-500">No improvements found</p>
+                <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
+                  <p className="text-draft-green/70">No enhancements found</p>
                 </div>
               )}
             </div>
           </div>
           
           {/* Right side - Resume Preview */}
-          <div className="space-y-4 bg-[#F7F4ED] p-6 rounded-lg">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-serif text-draft-green">Resume Preview</h2>
-              <div className="flex gap-2">
-                <Button 
-                  className="bg-draft-green hover:bg-draft-green/90 text-white"
-                  onClick={() => handleDownload('pdf')}
-                  disabled={isDownloading}
-                >
-                  {isDownloading && downloadFormat === 'pdf' ? (
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="mr-2 h-4 w-4" />
-                  )}
-                  PDF
-                </Button>
-                <Button 
-                  className="bg-draft-green hover:bg-draft-green/90 text-white"
-                  onClick={() => handleDownload('docx')}
-                  disabled={isDownloading}
-                >
-                  {isDownloading && downloadFormat === 'docx' ? (
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="mr-2 h-4 w-4" />
-                  )}
-                  DOCX
-                </Button>
+          <div>
+            <div className="sticky top-24 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
+                <div className="flex gap-3">
+                  <Button 
+                    className="bg-draft-green hover:bg-draft-green/90 text-white"
+                    onClick={() => handleDownload('pdf')}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading && downloadFormat === 'pdf' ? (
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    PDF
+                  </Button>
+                  <Button 
+                    className="bg-draft-green hover:bg-draft-green/90 text-white"
+                    onClick={() => handleDownload('docx')}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading && downloadFormat === 'docx' ? (
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    DOCX
+                  </Button>
+                </div>
               </div>
-            </div>
-            
-            <div className="bg-white rounded-lg h-[600px] overflow-hidden">
-              {resumeId && user?.id ? (
-                <PDFViewer 
-                  resumeId={resumeId}
-                  userId={user.id}
-                  height="100%"
-                />
-              ) : (
-                <div className="p-6 h-full">
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h1 className="text-2xl font-bold text-draft-green">Lucy Cheng</h1>
-                      <p>CPA</p>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <div>
-                        <p>Phone: 942-957-0000</p>
-                        <p>Email: lucy@gmail.com</p>
-                      </div>
-                      <div>
-                        <p>LinkedIn: linkedin.com/in/lucycheng</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm">Results-focused senior CPA and CMA with 10 years of experience at Mastercard and Oracle. Seeking to leverage proven skills in account reconciliation and cloud-based accounting for Goldman Sachs. Enhanced Oracle's cloud computing process to save 900 department hours per year. Identified and rectified a recurring issue that saved $1.3 million annually.</p>
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Experience</h2>
-                      
-                      <div className="mt-3">
-                        <div className="flex justify-between">
-                          <p className="font-medium">Senior CPA</p>
-                          <p>2017-07 - present</p>
-                        </div>
-                        <p>Oracle, Chicago</p>
-                        <ul className="list-disc ml-5 mt-1 text-sm">
-                          <li>Supervised general accounting functions for monthly close process</li>
-                          <li>Improved use of cloud computing best practices to enhance data security and save 900 hours per year, saving the department $800,000 annually.</li>
-                          <li>Identified and resolved a company-wide process issue that saved $2 million per year.</li>
-                        </ul>
-                      </div>
-                      
-                      <div className="mt-5">
-                        <div className="flex justify-between">
-                          <p className="font-medium">CPA, Capital Accounting</p>
-                          <p>2010-06 - 2015-06</p>
-                        </div>
-                        <p>Mastercard, Chicago</p>
-                        <ul className="list-disc ml-5 mt-1 text-sm">
-                          <li>Key member of accounting month-end close process.</li>
-                          <li>Through account analysis, identified opportunity to reduce certain variable costs by 15%, saving the company a total of $1.2 million annually.</li>
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Education</h2>
-                      
-                      <div className="mt-3">
-                        <div className="flex justify-between">
-                          <p className="font-medium">MBA, Illinois State University</p>
-                          <p>2006-09 - 2010-06</p>
-                        </div>
-                        <ul className="list-disc ml-5 mt-1 text-sm">
-                          <li>Concentration in accounting</li>
-                          <li>Dean's List</li>
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-lg font-medium text-draft-green border-b border-draft-green pb-1">Skills</h2>
-                      
-                      <div className="grid grid-cols-2 gap-4 mt-3">
-                        <div>
-                          <p className="text-sm">Financial payments</p>
-                          <div className="flex mt-1">
-                            {Array(5).fill(0).map((_, i) => (
-                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm">Payroll</p>
-                          <div className="flex mt-1">
-                            {Array(5).fill(0).map((_, i) => (
-                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm">IT skills</p>
-                          <div className="flex mt-1">
-                            {Array(5).fill(0).map((_, i) => (
-                              <div key={i} className="w-5 h-2 bg-draft-green mr-1"></div>
-                            ))}
-                          </div>
-                        </div>
+              
+              <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
+                {resumeId && user?.id ? (
+                  <PDFViewer 
+                    resumeId={resumeId}
+                    userId={user.id}
+                    height="100%"
+                  />
+                ) : (
+                  <div className="p-6 h-full">
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <h1 className="text-2xl font-bold text-draft-green">Enhanced Resume Preview</h1>
+                        <p className="text-draft-green/70">Resume preview not available</p>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
