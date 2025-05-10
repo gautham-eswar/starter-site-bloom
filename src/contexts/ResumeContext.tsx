@@ -74,7 +74,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const uploadResume = async (file: File) => {
     
-    console.log(`Uploading resume ${file.name} from user ID: ${user.id}`)
+    console.log(`Uploading ${file.name} from user ID: ${user.id}`)
     setPipelineState(UPLOADING)
     setResumeFilename(file.name)
   
@@ -107,7 +107,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setPipelineState(UPLOADED)
     setResumeId(data["resume_id"])
     setParsedSelectedResume(data["resume_id"])
-    console.log(`Resume ${file.filename} uploaded successfully! Resume ID: ${data["resume_id"]}`)
+    console.log(`${file.filename} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
   }
 
   const enhanceResume = async () => {
@@ -148,7 +148,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     if (pipelineState == UPLOADING){
       setEnhancementPending(true)
-      console.log(`Waiting for resume ${resumeFilename} to finish uploading before starting optimization job`)
+      console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`)
       return
     } 
 
