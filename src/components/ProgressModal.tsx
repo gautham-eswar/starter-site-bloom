@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent,DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { CircleCheck, Rocket, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useResumeContext } from '@/contexts/ResumeContext';
 import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -23,26 +22,14 @@ const NOT_UPLOADED = 0,
   RENDERED = 6;
 
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
-
-  
   const {
-      pipelineState,
-      resumeFilename,
-      resumeId,
-      jobDescription,
-      jobId,
-      enhancementPending,
-      enhancedResumeId,
-      enhancementAnalysis,
-      uploadResume,
-      setJobDescription,
-      enhanceResume,
-      renderEnhancedResume,
-    } = usePipelineContext();
+    pipelineState,
+    resumeId,
+    jobId,
+    enhancedResumeId
+  } = usePipelineContext();
   const navigate = useNavigate();
   
-  // const [isComplete, setIsComplete] = useState(false);
-  // const [optimizationStatus, setOptimizationStatus] = useState<OptimizationStatus | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   
@@ -58,104 +45,47 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     if (resumeId && jobId) {
       navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
     }
-    setIsOptimizing(false);
   };
 
-  if (currentStep == 0 && pipelineState >= UPLOADED){
-    setCurrentStep(1)
-    setProgress(0)
-  } else if (currentStep == 1 && pipelineState >= ENHANCED){
-    setCurrentStep(2)
-    setProgress(0)
-  } else if (currentStep == 2 && pipelineState >= RENDERED){
-    setCurrentStep(3)
-  }
+  // Update current step based on pipeline state
+  useEffect(() => {
+    if (pipelineState >= UPLOADED && currentStep === 0) {
+      setCurrentStep(1);
+      setProgress(0);
+    } else if (pipelineState >= ENHANCED && currentStep === 1) {
+      setCurrentStep(2);
+      setProgress(0);
+    } else if (pipelineState >= RENDERED && currentStep === 2) {
+      setCurrentStep(3);
+    }
+  }, [pipelineState, currentStep]);
+
+  // Auto-navigate when enhancement is complete
+  useEffect(() => {
+    if (pipelineState >= ENHANCED && resumeId && jobId) {
+      console.log("Enhancement complete, navigating to comparison page");
+      setTimeout(() => {
+        onOpenChange(false);
+        navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
+      }, 1000);
+    }
+  }, [pipelineState, resumeId, jobId, navigate, onOpenChange]);
   
   const isComplete = (pipelineState >= RENDERED);
 
-  useEffect( ()=>{
-    let interval = setInterval( function () {
+  // Progress animation
+  useEffect(() => {
+    let interval = setInterval(function () {
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
-    }, 2000)
+    }, 2000);
     
-    return () =>clearInterval(interval)
-  }, [isOpen, pipelineState, currentStep])
+    return () => clearInterval(interval);
+  }, [isOpen, pipelineState, currentStep]);
   
-  
-
-  // // Poll for optimization status
-  // useEffect(() => {
-  //   if (!isOpen || !jobId || !isOptimizing) return;
-
-  //   let interval: NodeJS.Timeout;
-  //   const checkStatus = async () => {
-  //     try {
-  //       const status = await checkOptimizationStatus(jobId);
-  //       setOptimizationStatus(status);
-        
-  //       // Update current step based on status
-  //       if (status.status === 'pending') {
-  //         setCurrentStep(0);
-  //       } else if (status.status === 'processing') {
-  //         setCurrentStep(1);
-  //       } else if (status.status === 'completed') {
-  //         setCurrentStep(2);
-  //         setIsComplete(true);
-  //         clearInterval(interval);
-  //         toast({
-  //           title: "Optimization complete",
-  //           description: "Your resume has been optimized successfully!",
-  //         });
-  //       } else if (status.status === 'error') {
-  //         clearInterval(interval);
-  //         toast({
-  //           title: "Optimization failed",
-  //           description: status.message || "There was an error optimizing your resume",
-  //           variant: "destructive",
-  //         });
-  //         onOpenChange(false);
-  //         setIsOptimizing(false);
-  //       }
-        
-  //       // Update progress if available
-  //       if (status.progress !== undefined) {
-  //         setProgress(status.progress);
-  //       } else {
-  //         // Simulate progress if not provided by API
-  //         setProgress(prev => (prev >= 100) ? 0 : prev + 5);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error checking optimization status:", error);
-  //     }
-  //   };
-    
-  //   // Initial check
-  //   checkStatus();
-    
-  //   // Set up polling interval
-  //   interval = setInterval(checkStatus, 2000);
-    
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [isOpen, jobId, isOptimizing, onOpenChange, setIsOptimizing]);
-
-  // Reset state when modal closes
-  // useEffect(() => {
-  //   if (!isOpen) {
-  //     if (!isComplete) {
-  //       setCurrentStep(0);
-  //       setProgress(0);
-  //     }
-  //   }
-  // }, [isOpen, isComplete]);
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       // Only allow closing if complete or error
       onOpenChange(open);
-      if (isComplete) {
-      }
     }}>
       <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
         <DialogTitle className="DialogTitle" style={{display:"none"}}></DialogTitle>

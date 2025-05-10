@@ -13,6 +13,7 @@ const handleApiError = (error: any) => {
     description: errorMessage,
     variant: "destructive",
   });
+  return { error: errorMessage };
 };
 
 // Helper function for making API requests
@@ -27,15 +28,32 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       };
     }
     
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(errorData.message || `Request failed with status ${response.status}`);
+    // Add timeout management
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    if (!options.signal) {
+      options.signal = controller.signal;
     }
     
-    return await response.json();
+    const response = await fetch(url, options);
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `Request failed with status ${response.status}`;
+      console.error(errorMessage);
+      return { error: errorMessage };
+    }
+    
+    const data = await response.json();
+    return data;
   } catch (error) {
-    handleApiError(error);
+    if (error.name === 'AbortError') {
+      console.error('Request timed out');
+      return { error: 'Request timed out. Please try again.' };
+    }
+    return handleApiError(error);
   }
 }
 

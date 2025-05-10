@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -20,16 +19,16 @@ type PipelineContextType = {
   pipelineState: PipelineState;
   resumeFilename: string | null;
   resumeId: string | null;
-  jobDescription: string | null;
+  jobDescription: string;
   jobId: string | null;
-  enhancedResumeId: str | null;
+  enhancedResumeId: string | null;
   enhancementAnalysis: Object | null;
-  enhancementPending: true | false;
+  enhancementPending: boolean;
   
-  uploadResume: (file: File) => void;
+  uploadResume: (file: File) => Promise<void>;
   setJobDescription: (jd: string) => void;
-  enhanceResume: (jd: string) => void;
-  renderEnhancedResume: () => void;
+  enhanceResume: (jd: string) => Promise<void>;
+  renderEnhancedResume: () => Promise<void>;
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
@@ -43,13 +42,12 @@ export const usePipelineContext = () => {
 };
 
 export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-
   const [pipelineState, setPipelineState] = useState<PipelineState>(NOT_UPLOADED);
   
   // Data for UPLOADING stage
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
-  const [enhancementPending, setEnhancementPending] = useState(false)
+  const [enhancementPending, setEnhancementPending] = useState(false);
 
   // Data for UPLOADED stage
   const [resumeId, setResumeId] = useState<string | null>(null);
@@ -64,64 +62,78 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [enhancedResumeId, setEnhancedResumeId] = useState<string | null>(null);
   
   // Data for RENDERING Stage
-
   // Data for RENDERED Stage
   const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
-  const [enhancedResumeFileId, setEnhancedResumeFileId] = useState<File | null>(null);
   
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
 
-  const uploadResume = async (file: File) => {
+  const uploadResume = async (file: File): Promise<void> => {
+    if (!user?.id) {
+      toast({
+        title: "Not Authenticated",
+        description: "Please sign in or signup to continue",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    console.log(`Uploading ${file.name} from user ID: ${user.id}`)
-    setPipelineState(UPLOADING)
-    setResumeFilename(file.name)
+    console.log(`Uploading ${file.name} from user ID: ${user.id}`);
+    setPipelineState(UPLOADING);
+    setResumeFilename(file.name);
   
     const formData = new FormData();
     formData.append("file", file);
-    if (user.id) {
-        formData.append('user_id', user.id);
-    }
+    formData.append('user_id', user.id);
     
-    const{data, error} = await apiRequest("/upload", {
-      method: "POST",
-      headers: {}, // Let browser set content-type for FormData
-      body: formData,
-    });
+    try {
+      const response = await apiRequest("/upload", {
+        method: "POST",
+        headers: {}, // Let browser set content-type for FormData
+        body: formData,
+      });
 
-    // Ignore older uploads
-    if (file.filename != resumeFilename)
-      return
+      if (!response || !response.data || !response.data.resume_id) {
+        console.error("Invalid response format from API:", response);
+        setPipelineState(NOT_UPLOADED);
+        toast({
+          title: "Upload failed",
+          description: "Received invalid response from server",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    if (error) {
-      setUploadState(NOT_UPLOADED);
-      console.error(`Upload ${file.name} from user ID: ${user.id} failed. Error message: ${error}`)
+      console.log(`${file.name} uploaded successfully! \nResume ID: ${response.data.resume_id}`);
+      setPipelineState(UPLOADED);
+      setResumeId(response.data.resume_id);
+      setParsedSelectedResume(response.data.parsed_resume);
+      
+      if (enhancementPending) {
+        setEnhancementPending(false);
+        enhanceResume(jobDescription);
+      }
+    } catch (error) {
+      console.error(`Upload ${file.name} failed. Error:`, error);
+      setPipelineState(NOT_UPLOADED);
       toast({
         title: "Upload failed",
         description: "There was an error uploading your resume. Please try again.",
         variant: "destructive"
       });
     }
+  };
 
-    setPipelineState(UPLOADED)
-    setResumeId(data["resume_id"])
-    setParsedSelectedResume(data["resume_id"])
-    console.log(`${file.name} uploaded successfully! \nResume ID: ${data["resume_id"]}`)
-  }
-
-  const enhanceResume = async (jd:string) => {
-
-    if (!user.id){
+  const enhanceResume = async (jd: string): Promise<void> => {
+    if (!user?.id) {
       toast({
         title: "Not Authenticated",
-        description: "Please sign in or singup to continue",
+        description: "Please sign in or signup to continue",
         variant: "destructive"
       });
       return;
     }
-    if (!jobDescription.trim()){
+    
+    if (!jd.trim()) {
       toast({
         title: "No job description to enhance from",
         description: "Please type or paste a job listing and try again",
@@ -129,7 +141,8 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return;
     }
-    if (pipelineState == NOT_UPLOADED){
+    
+    if (pipelineState === NOT_UPLOADED) {
       toast({
         title: "No resume selected",
         description: "Please select or upload a resume and try again",
@@ -138,7 +151,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    if (pipelineState == ENHANCING){
+    if (pipelineState === ENHANCING) {
       toast({
         title: "Already enhancing a resume",
         description: "Please wait for the current optimization job to finish before starting a new one",
@@ -147,57 +160,71 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    setJobDescription(jd)
+    setJobDescription(jd);
     
-    if (pipelineState == UPLOADING){
-      setEnhancementPending(true)
-      console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`)
-      return
+    if (pipelineState === UPLOADING) {
+      setEnhancementPending(true);
+      console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`);
+      return;
     } 
 
-    console.log(`Initializing enhancement for resume with ID: ${resumeId}`)
-    setPipelineState(ENHANCING)
-
-    const currentResumeId = resumeId;
-    const currentJobDescription = jobDescription; 
+    console.log(`Initializing enhancement for resume with ID: ${resumeId}`);
+    setPipelineState(ENHANCING);
       
     const formData = new FormData();
-    formData.append("resume_id", resumeId)
-    formData.append("user_id", user.id)
-    formData.append("job_description", jd)
-    const {data, error} =  await apiRequest("/optimize", {
-      method: "POST",
-      headers: {}, // Let browser set content-type for FormData
-      body: formData,
-    });
+    formData.append("resume_id", resumeId!);
+    formData.append("user_id", user.id);
+    formData.append("job_description", jd);
+    
+    try {
+      const response = await apiRequest("/optimize", {
+        method: "POST",
+        headers: {}, // Let browser set content-type for FormData
+        body: formData,
+      });
+      
+      if (!response || !response.data) {
+        console.error("Invalid response format from API:", response);
+        setPipelineState(UPLOADED);
+        toast({
+          title: "Enhancement failed",
+          description: "Received invalid response from server",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    if (error) {
-      setUploadState(UPLOADED);
-      console.error(`Enhancement of resume with ID: ${currentResumeId} failed. Error message: ${error}`)
+      console.log(`Resume with ID ${resumeId} Enhanced successfully! \nJob Id: ${response.data.job_id}\nEnhanced Resume Id: ${response.data.enhanced_resume_id}`);
+      setPipelineState(ENHANCED);
+      setJobId(response.data.job_id);
+      setEnhancementAnalysis(response.data.analysis);
+      setEnhancedResumeId(response.data.enhanced_resume_id);
+      
+      // Set to RENDERED state to automatically trigger navigation in ProgressModal
+      setTimeout(() => setPipelineState(RENDERED), 500);
+      
+    } catch (error) {
+      console.error(`Enhancement of resume with ID: ${resumeId} failed. Error:`, error);
+      setPipelineState(UPLOADED);
       toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
+        title: "Enhancement failed",
+        description: "There was an error enhancing your resume. Please try again.",
         variant: "destructive"
       });
     }
-
-    console.log(`Resume with ID ${currentResumeId} Ehnanced successfully! \nJob Id: ${data["job_id"]}\nEnhanced Resume Id: ${data["enhanced_resume_id"]}`)
-    setPipelineState(ENHANCED)
-    setJobId(data["job_id"])
-    setEnhancementAnalysis(data["analysis"])
-    setEnhancedResumeId(data["enhanced_resume_id"]) 
-  }
+  };
   
-  const renderEnhancedResume = async () => {
-    return
-  }
+  const renderEnhancedResume = async (): Promise<void> => {
+    // This can be implemented in the future if needed
+    return;
+  };
 
-  useEffect(()=>{
-    if (pipelineState == UPLOADED && enhancementPending){
-      setEnhancementPending(false)
-      enhanceResume(jobDescription)
+  useEffect(() => {
+    if (pipelineState === UPLOADED && enhancementPending) {
+      setEnhancementPending(false);
+      enhanceResume(jobDescription);
     }
-  }, [pipelineState])
+  }, [pipelineState, enhancementPending]);
 
   return (
     <PipelineContext.Provider
@@ -209,6 +236,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         jobId,
         enhancedResumeId,
         enhancementAnalysis,
+        enhancementPending,
         
         uploadResume,
         setJobDescription,
@@ -220,10 +248,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     </PipelineContext.Provider>
   );
 };
-
-
-
-
 
 type ResumeContextType = {
   resumeId: string | null;
