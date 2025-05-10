@@ -111,7 +111,7 @@ const HeroSection: React.FC = () => {
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={uploadState == UPLOADING}>
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploading}>
                   {isUploading ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {resumeFilename && <p className="text-sm text-draft-green mt-2">
