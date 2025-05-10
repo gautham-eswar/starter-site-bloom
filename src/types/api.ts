@@ -12,6 +12,15 @@ export interface OptimizationResponse {
   message: string;
 }
 
+export interface Modification {
+  section: string;
+  original: string;
+  improved: string;
+  type: "Major" | "Minor";
+  company?: string;
+  position?: string;
+}
+
 export interface OptimizationResult {
   resume_id: string;
   job_id: string;
@@ -20,12 +29,7 @@ export interface OptimizationResult {
   keywords_extracted?: any[];
   match_details?: any;
   matches?: number;
-  modifications: {
-    section: string;
-    original: string;
-    improved: string;
-    type: "Major" | "Minor";
-  }[];
+  modifications: Modification[];
   analysis_data: {
     old_score: number;
     improved_score: number;

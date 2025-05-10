@@ -1,17 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Loader } from 'lucide-react';
+import { Download, Loader, ChevronDown } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { getOptimizationResults } from '@/services/api';
-import { OptimizationResult } from '@/types/api';
+import { Modification, OptimizationResult } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
 import { downloadPdf, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { 
+  Accordion, 
+  AccordionItem, 
+  AccordionTrigger, 
+  AccordionContent 
+} from '@/components/ui/accordion';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+
+// Helper interface for grouped modifications
+interface GroupedModifications {
+  [key: string]: {
+    company: string;
+    position: string;
+    modifications: Modification[];
+  }
+}
 
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -28,6 +49,7 @@ const ComparisonPage: React.FC = () => {
   } = useResumeContext();
 
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -185,7 +207,7 @@ const ComparisonPage: React.FC = () => {
     );
   }
 
-  // Prepare the data for the comparison table
+  // Prepare the data for the comparison
   const improvementData = optimizationResult?.modifications || [];
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
@@ -195,16 +217,39 @@ const ComparisonPage: React.FC = () => {
     total_keywords: 0
   };
 
+  // Group modifications by company and position
+  const groupedImprovements: GroupedModifications = {};
+  
+  improvementData.forEach((mod) => {
+    // Handle both possible data structures
+    const company = mod.company || mod.section || 'General';
+    const position = mod.position || '';
+    
+    // Create a unique key for each company+position combination
+    const key = `${company}${position ? ` - ${position}` : ''}`;
+    
+    if (!groupedImprovements[key]) {
+      groupedImprovements[key] = {
+        company,
+        position,
+        modifications: []
+      };
+    }
+    
+    groupedImprovements[key].modifications.push(mod);
+  });
+
   return (
     <div className="min-h-screen bg-draft-bg">
       <Header />
       
-      <main className="px-8 py-6 md:px-12 lg:px-20">
+      <main className="px-4 py-6 md:px-12 lg:px-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
           {/* Left side - Improvements */}
           <div className="space-y-8">
-            <h2 className="text-2xl font-serif text-draft-green">Improvements</h2>
+            <h2 className="text-2xl font-serif text-draft-green">Resume Improvements</h2>
             
+            {/* Score Summary */}
             <div className="grid grid-cols-3 gap-4">
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Old Score</p>
@@ -228,41 +273,53 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-white overflow-hidden">
-              <Table>
-                <TableHeader className="bg-[#f1f1eb]">
-                  <TableRow>
-                    <TableHead className="text-draft-green">Section</TableHead>
-                    <TableHead className="text-draft-green">Original</TableHead>
-                    <TableHead className="text-draft-green w-[40%]">Improved</TableHead>
-                    <TableHead className="text-draft-green">Type</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {improvementData.length > 0 ? (
-                    improvementData.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{row.section}</TableCell>
-                        <TableCell>{row.original}</TableCell>
-                        <TableCell className="text-draft-green">{row.improved}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            row.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
-                          }`}>
-                            {row.type}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        No improvements found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            {/* Improvements by Company */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-serif text-draft-green">Detailed Improvements</h3>
+              
+              {Object.keys(groupedImprovements).length > 0 ? (
+                <Accordion type="multiple" className="w-full bg-white rounded-md overflow-hidden">
+                  {Object.entries(groupedImprovements).map(([key, group], index) => (
+                    <AccordionItem value={`item-${index}`} key={index} className="border-b">
+                      <AccordionTrigger className="px-4 py-2 hover:bg-gray-50">
+                        <div className="text-left">
+                          <h4 className="font-medium text-draft-green">{group.company}</h4>
+                          {group.position && <p className="text-sm text-gray-600">{group.position}</p>}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 py-2">
+                        <div className="space-y-4">
+                          {group.modifications.map((mod, idx) => (
+                            <Card key={idx} className="border-0 shadow-sm overflow-hidden">
+                              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                                <div className="bg-[#F1F0FB] p-4 rounded-l">
+                                  <p className="text-sm font-medium text-gray-600 mb-2">ORIGINAL</p>
+                                  <p>{mod.original}</p>
+                                </div>
+                                <div className="bg-[#F2FCE2] p-4 rounded-r">
+                                  <p className="text-sm font-medium text-draft-green mb-2">ENHANCED</p>
+                                  <p>{mod.improved}</p>
+                                </div>
+                              </div>
+                              <div className="bg-white px-4 py-2 border-t">
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  mod.type === 'Major' ? 'bg-draft-coral bg-opacity-20 text-draft-coral' : 'bg-draft-mint bg-opacity-20 text-draft-green'
+                                }`}>
+                                  {mod.type} Change
+                                </span>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="bg-white p-8 text-center rounded-lg">
+                  <p className="text-gray-500">No improvements found</p>
+                </div>
+              )}
             </div>
           </div>
           
