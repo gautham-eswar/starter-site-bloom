@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader } from 'lucide-react';
@@ -69,6 +70,7 @@ const ComparisonPage: React.FC = () => {
         // Fetch results
         setIsLoading(true);
         const results = await getOptimizationResults(resumeId, jobId);
+        console.log("Optimization results:", results);
         setOptimizationResult(results);
       } catch (error) {
         console.error("Error fetching optimization results:", error);
@@ -185,6 +187,13 @@ const ComparisonPage: React.FC = () => {
 
   // Prepare the data for the comparison table
   const improvementData = optimizationResult?.modifications || [];
+  const analysisData = optimizationResult?.analysis_data || {
+    old_score: 0,
+    improved_score: 0,
+    match_percentage: 0,
+    keyword_matches: 0,
+    total_keywords: 0
+  };
 
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -200,21 +209,21 @@ const ComparisonPage: React.FC = () => {
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Old Score</p>
                 <p className="text-4xl font-bold text-draft-green">
-                  {optimizationResult?.analysis_data.old_score || 0}/100
+                  {analysisData.old_score}/100
                 </p>
               </div>
               
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Improved Score</p>
                 <p className="text-4xl font-bold text-draft-green">
-                  {optimizationResult?.analysis_data.improved_score || 0}/100
+                  {analysisData.improved_score}/100
                 </p>
               </div>
               
               <div className="border border-draft-green bg-white rounded-lg p-4 flex flex-col items-center justify-center">
                 <p className="text-draft-green mb-2">Match Rate</p>
                 <p className="text-4xl font-bold text-draft-green">
-                  {optimizationResult?.analysis_data.match_percentage || 0}%
+                  {analysisData.match_percentage}%
                 </p>
               </div>
             </div>
