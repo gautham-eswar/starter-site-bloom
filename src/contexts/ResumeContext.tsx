@@ -73,7 +73,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   } = useAuth();
 
   const uploadResume = async (file: File) => {
-    
+    console.log(file)
     console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
     setPipelineState(UPLOADING)
     setResumeFilename(file.filename)
