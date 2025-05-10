@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiRequest } from '@/services/api';
@@ -72,8 +72,42 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     user
   } = useAuth();
 
-  const renderEnhancedResume = async () => {
-    return
+  const uploadResume = async (file: File) => {
+    
+    console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
+    setPipelineState(UPLOADING)
+    setResumeFilename(file.filename)
+  
+    const formData = new FormData();
+    formData.append("file", file);
+    if (user.id) {
+        formData.append('user_id', user.id);
+    }
+    
+    const{data, error} = await apiRequest("/upload", {
+      method: "POST",
+      headers: {}, // Let browser set content-type for FormData
+      body: formData,
+    });
+
+    // Ignore older uploads
+    if (file.filename != resumeFilename)
+      return
+
+    if (error) {
+      setUploadState(NOT_UPLOADED);
+      console.error(`Upload ${file.filename} from user ID: ${user.id} failed. Error message: ${error}`)
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive"
+      });
+    }
+
+    setPipelineState(UPLOADED)
+    setResumeId(data["resume_id"])
+    setParsedSelectedResume(data["resume_id"])
+    console.log(`Resume ${file.filename} uploaded successfully! Resume ID: ${data["resume_id"]}`)
   }
 
   const enhanceResume = async () => {
@@ -152,49 +186,17 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     setEnhancementAnalysis(data["analysis"])
     setEnhancedResumeId(data["enhanced_resume_id"]) 
   }
-
-  const uploadResume = async (file: File) => {
-    
-    console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
-    setPipelineState(UPLOADING)
-    setResumeFilename(file.filename)
   
-    const formData = new FormData();
-    formData.append("file", file);
-    if (user.id) {
-        formData.append('user_id', user.id);
-    }
-    
-    const{data, error} = await apiRequest("/upload", {
-      method: "POST",
-      headers: {}, // Let browser set content-type for FormData
-      body: formData,
-    });
-
-    // Ignore older uploads
-    if (file.filename != resumeFilename)
-      return
-
-    if (error) {
-      setUploadState(NOT_UPLOADED);
-      console.error(`Upload ${file.filename} from user ID: ${user.id} failed. Error message: ${error}`)
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
-        variant: "destructive"
-      });
-    }
-
-    setPipelineState(UPLOADED)
-    setResumeId(data["resume_id"])
-    setParsedSelectedResume(data["resume_id"])
-    console.log(`Resume ${file.filename} uploaded successfully! Resume ID: ${data["resume_id"]}`)
-
-    console.log("Enhancement pending: " + enhancementPending)
-    if (enhancementPending){
-      await enhanceResume(jobDescription)
-    }
+  const renderEnhancedResume = async () => {
+    return
   }
+
+  useEffect(()=>{
+    if (pipelineState == UPLOADED && enhancementPending){
+      setEnhancementPending(false)
+      enhanceResume()
+    }
+  }, [pipelineState])
 
   return (
     <PipelineContext.Provider
