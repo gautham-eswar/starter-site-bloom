@@ -154,12 +154,12 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const uploadResume = async (file: File) => {
     
-    console.log(`Uploading resume ${file.filename} from user ID: ${userId}`)
+    console.log(`Uploading resume ${file.filename} from user ID: ${user.id}`)
     setPipelineState(UPLOADING)
   
     const formData = new FormData();
     formData.append("file", file);
-    if (userId) {
+    if (user.id) {
         formData.append('user_id', user.id);
     }
     
