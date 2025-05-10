@@ -24,6 +24,7 @@ type PipelineContextType = {
   jobId: string | null;
   enhancedResumeId: str | null;
   enhancementAnalysis: Object | null;
+  enhancementPending: true | false;
   
   uploadResume: (file: File) => void;
   setJobDescription: (jd: string) => void;

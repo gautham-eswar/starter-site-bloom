@@ -31,6 +31,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
       resumeId,
       jobDescription,
       jobId,
+      enhancementPending,
       enhancedResumeId,
       enhancementAnalysis,
       uploadResume,
@@ -76,7 +77,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     const t = setTimeout(2000, ()=>{
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     })
-  }, [progress])
+  }, [pipelineState, enhancementPending])
   
 
   // // Poll for optimization status
