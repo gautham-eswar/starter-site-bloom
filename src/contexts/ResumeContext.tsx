@@ -161,7 +161,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     const formData = new FormData();
     formData.append("resume_id", resumeId)
     formData.append("user_id", user.id)
-    formData.append("job_description", jd)
+    formData.append("job_description", jobDescription)
     const {data, error} =  await apiRequest("/optimize", {
       method: "POST",
       headers: {}, // Let browser set content-type for FormData
