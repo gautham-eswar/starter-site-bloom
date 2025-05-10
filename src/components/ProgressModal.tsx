@@ -75,7 +75,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
 
   useEffect( ()=>{
     console.log("hmmm")
-    let interval = setInterval( () => {
+    let interval = setInterval( function () {
       console.log("Is this running?")
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     }, 2000)
