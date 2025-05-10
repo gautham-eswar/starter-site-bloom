@@ -20,7 +20,7 @@ type PipelineContextType = {
   resumeFilename: string | null;
   resumeId: string | null;
   jobDescription: string | null;
-  jobId: string | null:
+  jobId: string | null;
   enhancedResumeId: str | null;
   enhancementAnalysis: Object | null;
   
