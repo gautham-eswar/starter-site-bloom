@@ -74,6 +74,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   const isComplete = (pipelineState >= RENDERED);
 
   useEffect( ()=>{
+    console.log("Is this even running??")
     const t = setInterval(2000, ()=>{
       setProgress(prev => (prev >= 100) ? 0 : prev + 5);
     })
