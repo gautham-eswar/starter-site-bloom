@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -393,12 +394,12 @@ const ComparisonPage: React.FC = () => {
                             <div key={idx} className="border border-draft-green/10 rounded-lg overflow-hidden shadow-sm">
                               <div className={`grid ${isMobile ? 'grid-cols-1 gap-0' : 'grid-cols-2 gap-0'}`}>
                                 <div className="bg-[#F1F0FB] p-5 border-b md:border-b-0 md:border-r border-draft-green/10">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green/70 mb-3 tracking-wider">Original</h4>
+                                  <h4 className="uppercase text-xs font-semibold text-draft-green/70 mb-3 tracking-wider">Original Bullet Point</h4>
                                   <p className="font-serif text-draft-text leading-relaxed">{mod.original}</p>
                                 </div>
                                 
                                 <div className="bg-[#F2FCE2] p-5">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green mb-3 tracking-wider">Enhanced</h4>
+                                  <h4 className="uppercase text-xs font-semibold text-draft-green mb-3 tracking-wider">Enhanced Bullet Point</h4>
                                   <p className="font-serif text-draft-green leading-relaxed">{mod.improved}</p>
                                 </div>
                               </div>
