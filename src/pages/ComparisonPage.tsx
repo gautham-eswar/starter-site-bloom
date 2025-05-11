@@ -261,7 +261,8 @@ const ComparisonPage: React.FC = () => {
     );
   }
 
-  // Extract modifications data
+  // Extract modifications data from the optimizationResult
+  // Check for both standard API response structure and the enhancementAnalysis format
   const improvementData = optimizationResult?.modifications || [];
   console.log("Improvements data:", improvementData);
   
@@ -275,9 +276,14 @@ const ComparisonPage: React.FC = () => {
   };
   
   // Group modifications by company and position
+  // Handle both standard modifications and bullet-specific modifications
   const groupedImprovements: GroupedModifications = {};
   
   improvementData.forEach((mod) => {
+    // Check if this is from the API format (bullet_idx, enhanced_bullet exist)
+    const originalText = mod.original || mod.original_bullet || '';
+    const improvedText = mod.improved || mod.enhanced_bullet || '';
+    
     // Create a unique key for each company+position combination
     const company = mod.company || mod.section || 'General';
     const position = mod.position || '';
@@ -291,7 +297,17 @@ const ComparisonPage: React.FC = () => {
       };
     }
     
-    groupedImprovements[key].modifications.push(mod);
+    // Create a normalized modification object
+    const normalizedMod: Modification = {
+      section: mod.section || '',
+      original: originalText,
+      improved: improvedText,
+      type: mod.type || 'Minor',
+      company,
+      position
+    };
+    
+    groupedImprovements[key].modifications.push(normalizedMod);
   });
 
   return (

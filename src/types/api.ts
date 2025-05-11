@@ -1,4 +1,3 @@
-
 export interface ResumeUploadResponse {
   resume_id: string;
   parsed_data?: any;
@@ -19,6 +18,11 @@ export interface Modification {
   type: "Major" | "Minor";
   company?: string;
   position?: string;
+  bullet_idx?: number;
+  experience_idx?: number;
+  keywords_added?: string[];
+  original_bullet?: string;
+  enhanced_bullet?: string;
 }
 
 export interface OptimizationResult {
