@@ -231,7 +231,7 @@ const ComparisonPage: React.FC = () => {
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
             <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
-            <p className="text-draft-green">Loading optimization results...</p>
+            <p className="font-serif text-draft-green">Loading optimization results...</p>
           </div>
         </div>
       </div>
@@ -246,7 +246,7 @@ const ComparisonPage: React.FC = () => {
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
             <h2 className="text-2xl font-serif text-draft-green mb-4">No Results Found</h2>
-            <p className="text-draft-text mb-6">
+            <p className="font-serif text-draft-text mb-6">
               We couldn't find optimization results for this resume. Please try optimizing your resume again.
             </p>
             <Button 
@@ -314,175 +314,151 @@ const ComparisonPage: React.FC = () => {
     <div className="min-h-screen bg-draft-bg">
       <Header />
       
-      <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
-        <h1 className="text-3xl font-serif text-draft-green mb-8 text-center">Resume Enhancement Results</h1>
+      <main className="px-6 py-12 md:px-12 lg:px-24 max-w-6xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-serif text-draft-green mb-10 text-center">Resume Enhancements</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left side - Score Summary and Improvements */}
-          <div className="space-y-10">
-            {/* Score Summary Cards */}
-            <div>
-              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Scorecard</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Original Score</p>
-                  <p className="text-4xl font-bold text-draft-green">
-                    {analysisData.old_score}/100
-                  </p>
-                </div>
-                
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Enhanced Score</p>
-                  <p className="text-4xl font-bold text-draft-green">
-                    {analysisData.improved_score}/100
-                  </p>
-                </div>
-                
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Job Match</p>
-                  <p className="text-4xl font-bold text-draft-green">
-                    {analysisData.match_percentage}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Keyword Summary */}
-            <div className="bg-white border border-draft-green/10 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-draft-green">Keyword Optimization</h3>
-                <div className="text-sm text-draft-green/80">
-                  <span className="font-medium">{analysisData.keyword_matches}</span> of {analysisData.total_keywords} keywords
-                </div>
-              </div>
-              <div className="bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-draft-green h-full rounded-full"
-                  style={{ width: `${analysisData.total_keywords > 0 ? (analysisData.keyword_matches / analysisData.total_keywords) * 100 : 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Improvements by Company */}
-            <div>
-              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
+        <div className="space-y-12">
+          {/* Score Overview */}
+          <section className="mb-12">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-draft-green/10 p-8 shadow-sm">
+              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Performance</h2>
               
-              {Object.keys(groupedImprovements).length > 0 ? (
-                <Accordion 
-                  type="multiple" 
-                  defaultValue={Object.keys(groupedImprovements).map((_, i) => `item-${i}`)} 
-                  className="space-y-4"
-                >
-                  {Object.entries(groupedImprovements).map(([key, group], index) => (
-                    <AccordionItem 
-                      value={`item-${index}`} 
-                      key={index} 
-                      className="border border-draft-green/10 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:shadow-md"
-                    >
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-draft-green/5 data-[state=open]:bg-draft-green/5">
-                        <div className="text-left">
-                          <h3 className="font-medium text-draft-green text-lg">{group.company}</h3>
-                          {group.position && (
-                            <p className="text-sm text-draft-green/70">{group.position}</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-[#F7F4ED] rounded-xl p-6 flex flex-col items-center text-center transition-all hover:shadow-md">
+                  <p className="text-sm font-serif text-draft-green/70 mb-2">Original Score</p>
+                  <p className="text-4xl font-serif font-medium text-draft-green">{analysisData.old_score}</p>
+                </div>
+                
+                <div className="bg-[#F7F4ED] rounded-xl p-6 flex flex-col items-center text-center transition-all hover:shadow-md">
+                  <p className="text-sm font-serif text-draft-green/70 mb-2">Improved Score</p>
+                  <p className="text-4xl font-serif font-medium text-draft-green">{analysisData.improved_score}</p>
+                </div>
+                
+                <div className="bg-[#F2FCE2] rounded-xl p-6 flex flex-col items-center text-center transition-all hover:shadow-md">
+                  <p className="text-sm font-serif text-draft-green/70 mb-2">Job Match</p>
+                  <p className="text-4xl font-serif font-medium text-draft-green">{analysisData.match_percentage}%</p>
+                </div>
+              </div>
+              
+              {/* Keyword Progress Bar */}
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-serif text-draft-green/80">Keyword Optimization</p>
+                  <p className="text-sm font-serif text-draft-green/80">
+                    <span className="font-medium">{analysisData.keyword_matches}</span> of {analysisData.total_keywords} keywords matched
+                  </p>
+                </div>
+                <div className="h-2 bg-[#F7F4ED] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-draft-green rounded-full transition-all duration-1000"
+                    style={{ 
+                      width: `${analysisData.total_keywords > 0 ? 
+                        (analysisData.keyword_matches / analysisData.total_keywords) * 100 : 0}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          {/* Download Buttons */}
+          <section className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+            <Button 
+              className="bg-draft-green hover:bg-draft-green/90 text-white px-6 py-2 h-auto font-serif"
+              onClick={() => handleDownload('pdf')}
+              disabled={isDownloading}
+            >
+              {isDownloading && downloadFormat === 'pdf' ? (
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Download as PDF
+            </Button>
+            <Button 
+              className="bg-white border border-draft-green/20 text-draft-green hover:bg-draft-green/5 px-6 py-2 h-auto font-serif"
+              onClick={() => handleDownload('docx')}
+              disabled={isDownloading}
+            >
+              {isDownloading && downloadFormat === 'docx' ? (
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Download as DOCX
+            </Button>
+          </section>
+          
+          {/* Resume Preview */}
+          {resumeId && user?.id && (
+            <section className="mb-16">
+              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Preview</h2>
+              <div className="bg-white rounded-2xl border border-draft-green/10 overflow-hidden shadow-md h-[500px]">
+                <PDFViewer 
+                  resumeId={resumeId}
+                  userId={user.id}
+                  height="100%"
+                />
+              </div>
+            </section>
+          )}
+          
+          {/* Enhancements */}
+          <section>
+            <h2 className="text-2xl font-serif text-draft-green mb-6">Experience Enhancements</h2>
+            
+            {Object.keys(groupedImprovements).length > 0 ? (
+              <div className="space-y-8">
+                {Object.entries(groupedImprovements).map(([key, group], index) => (
+                  <div 
+                    key={index} 
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl border border-draft-green/10 overflow-hidden shadow-sm transition-all hover:shadow-md"
+                  >
+                    <div className="p-6 border-b border-draft-green/5">
+                      <h3 className="font-serif text-xl text-draft-green">{group.company}</h3>
+                      {group.position && (
+                        <p className="font-serif text-draft-green/70 mt-1">{group.position}</p>
+                      )}
+                    </div>
+                    
+                    <div className="p-6 space-y-8">
+                      {group.modifications.map((mod, idx) => (
+                        <div key={idx} className="bg-[#FDFBF5] rounded-xl overflow-hidden">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+                            <div className="space-y-3">
+                              <p className="font-serif text-xs uppercase tracking-wider text-draft-green/60">Original</p>
+                              <p className="font-serif text-draft-text leading-relaxed">{mod.original}</p>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <p className="font-serif text-xs uppercase tracking-wider text-draft-green">Enhanced</p>
+                              <p className="font-serif text-draft-green leading-relaxed">{mod.improved}</p>
+                            </div>
+                          </div>
+                          
+                          {mod.type && (
+                            <div className="px-6 py-3 border-t border-draft-green/5 bg-white/50">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-serif ${
+                                mod.type === 'Major' 
+                                  ? 'bg-draft-coral/10 text-draft-coral' 
+                                  : 'bg-draft-mint/20 text-draft-green'
+                              }`}>
+                                {mod.type} Enhancement
+                              </span>
+                            </div>
                           )}
                         </div>
-                      </AccordionTrigger>
-                      
-                      <AccordionContent className="px-6 pb-6 pt-2">
-                        <div className="space-y-6">
-                          {group.modifications.map((mod, idx) => (
-                            <div key={idx} className="border border-draft-green/10 rounded-lg overflow-hidden shadow-sm">
-                              <div className={`grid ${isMobile ? 'grid-cols-1 gap-0' : 'grid-cols-2 gap-0'}`}>
-                                <div className="bg-[#F1F0FB] p-5 border-b md:border-b-0 md:border-r border-draft-green/10">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green/70 mb-3 tracking-wider">Original Bullet Point</h4>
-                                  <p className="font-serif text-draft-text leading-relaxed">{mod.original}</p>
-                                </div>
-                                
-                                <div className="bg-[#F2FCE2] p-5">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green mb-3 tracking-wider">Enhanced Bullet Point</h4>
-                                  <p className="font-serif text-draft-green leading-relaxed">{mod.improved}</p>
-                                </div>
-                              </div>
-                              
-                              {mod.type && (
-                                <div className="bg-white px-5 py-3 border-t border-draft-green/10">
-                                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                    mod.type === 'Major' 
-                                      ? 'bg-draft-coral bg-opacity-10 text-draft-coral' 
-                                      : 'bg-draft-mint bg-opacity-10 text-draft-green'
-                                  }`}>
-                                    {mod.type} Enhancement
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : (
-                <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
-                  <p className="text-draft-green/70">No enhancements found</p>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Right side - Resume Preview */}
-          <div>
-            <div className="sticky top-24 space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
-                <div className="flex gap-3">
-                  <Button 
-                    className="bg-draft-green hover:bg-draft-green/90 text-white"
-                    onClick={() => handleDownload('pdf')}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading && downloadFormat === 'pdf' ? (
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
-                    PDF
-                  </Button>
-                  <Button 
-                    className="bg-draft-green hover:bg-draft-green/90 text-white"
-                    onClick={() => handleDownload('docx')}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading && downloadFormat === 'docx' ? (
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
-                    DOCX
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
-                {resumeId && user?.id ? (
-                  <PDFViewer 
-                    resumeId={resumeId}
-                    userId={user.id}
-                    height="100%"
-                  />
-                ) : (
-                  <div className="p-6 h-full">
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-draft-green">Enhanced Resume Preview</h1>
-                        <p className="text-draft-green/70">Resume preview not available</p>
-                      </div>
+                      ))}
                     </div>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
-          </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-draft-green/10 p-12 text-center">
+                <p className="font-serif text-draft-green/70">No enhancements found for this resume</p>
+              </div>
+            )}
+          </section>
         </div>
       </main>
     </div>
