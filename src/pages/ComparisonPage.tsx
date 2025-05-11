@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
-import { usePipelineContext } from '@/contexts/ResumeContext'; 
+import { usePipelineContext } from '@/contexts/ResumeContext';
 import { getOptimizationResults } from '@/services/api';
 import { Modification, OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
@@ -13,23 +12,9 @@ import PDFViewer from '@/components/PDFViewer';
 import { downloadPdf, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  Accordion, 
-  AccordionItem, 
-  AccordionTrigger, 
-  AccordionContent 
-} from '@/components/ui/accordion';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Helper interface for grouped modifications
 interface GroupedModifications {
@@ -37,17 +22,16 @@ interface GroupedModifications {
     company: string;
     position: string;
     modifications: Modification[];
-  }
+  };
 }
-
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const resumeIdParam = searchParams.get('resumeId');
   const jobIdParam = searchParams.get('jobId');
 
   // Import from both contexts
-  const { 
-    resumeId: contextResumeId, 
+  const {
+    resumeId: contextResumeId,
     setResumeId,
     jobId: contextJobId,
     setJobId,
@@ -59,12 +43,12 @@ const ComparisonPage: React.FC = () => {
   const {
     resumeId: pipelineResumeId,
     jobId: pipelineJobId,
-    enhancementAnalysis,
+    enhancementAnalysis
   } = usePipelineContext();
-
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const isMobile = useIsMobile();
-  
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
@@ -82,7 +66,6 @@ const ComparisonPage: React.FC = () => {
         setPdfExists(exists);
       }
     };
-    
     checkPdf();
   }, [resumeId, user?.id]);
 
@@ -93,7 +76,6 @@ const ComparisonPage: React.FC = () => {
         setIsLoading(false);
         return;
       }
-
       try {
         // Update context with URL params if they exist
         if (resumeIdParam && resumeIdParam !== contextResumeId) {
@@ -106,7 +88,7 @@ const ComparisonPage: React.FC = () => {
         // Check if we already have enhancement data from PipelineContext
         if (enhancementAnalysis) {
           console.log("Using data from PipelineContext:", enhancementAnalysis);
-          
+
           // Convert enhancementAnalysis to match OptimizationResult structure
           const pipelineData: OptimizationResult = {
             resume_id: resumeId || '',
@@ -126,7 +108,7 @@ const ComparisonPage: React.FC = () => {
           setIsLoading(false);
           return;
         }
-        
+
         // Fetch results from API if not available in PipelineContext
         setIsLoading(true);
         const results = await getOptimizationResults(resumeId, jobId);
@@ -134,11 +116,10 @@ const ComparisonPage: React.FC = () => {
         setOptimizationResult(results);
       } catch (error) {
         console.error("Error fetching optimization results:", error);
-        
+
         // If API call fails but we have enhancementAnalysis, use that
         if (enhancementAnalysis) {
           console.log("API call failed, using PipelineContext data instead");
-          
           const fallbackData: OptimizationResult = {
             resume_id: resumeId || '',
             job_id: jobId || '',
@@ -158,14 +139,13 @@ const ComparisonPage: React.FC = () => {
           toast({
             title: "Error fetching results",
             description: "There was an error fetching your optimization results.",
-            variant: "destructive",
+            variant: "destructive"
           });
         }
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchResults();
   }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, setOptimizationResult, enhancementAnalysis]);
 
@@ -175,14 +155,12 @@ const ComparisonPage: React.FC = () => {
       toast({
         title: "Download failed",
         description: "Resume ID is missing.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsDownloading(true);
     setDownloadFormat(format);
-
     try {
       if (format === 'pdf' && pdfExists && user?.id) {
         // Download from Supabase storage if PDF exists there
@@ -198,10 +176,10 @@ const ComparisonPage: React.FC = () => {
       } else {
         // Fall back to the API if PDF doesn't exist in storage or format is not PDF
         const response = await getOptimizationResults(resumeId, jobId);
-        
+
         // Create a blob from the response
         const blob = await response.blob();
-        
+
         // Create a link element to trigger the download
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -212,17 +190,16 @@ const ComparisonPage: React.FC = () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(downloadUrl);
       }
-      
       toast({
         title: "Download successful",
-        description: `Your optimized resume has been downloaded as ${format.toUpperCase()}`,
+        description: `Your optimized resume has been downloaded as ${format.toUpperCase()}`
       });
     } catch (error) {
       console.error("Download error:", error);
       toast({
         title: "Download failed",
         description: "There was an error downloading your resume. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsDownloading(false);
@@ -231,8 +208,7 @@ const ComparisonPage: React.FC = () => {
 
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-draft-bg">
+    return <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
@@ -240,14 +216,12 @@ const ComparisonPage: React.FC = () => {
             <p className="text-draft-green font-serif">Loading optimization results...</p>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Show error if no results found
   if (!optimizationResult && !isLoading) {
-    return (
-      <div className="min-h-screen bg-draft-bg">
+    return <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
@@ -255,23 +229,19 @@ const ComparisonPage: React.FC = () => {
             <p className="text-draft-text mb-6 font-serif">
               We couldn't find optimization results for this resume. Please try optimizing your resume again.
             </p>
-            <Button 
-              onClick={() => window.location.href = '/'}
-              className="bg-draft-green hover:bg-draft-green/90 text-white"
-            >
+            <Button onClick={() => window.location.href = '/'} className="bg-draft-green hover:bg-draft-green/90 text-white">
               Back to Home
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Extract modifications data from the optimizationResult
   // Check for both standard API response structure and the enhancementAnalysis format
   const improvementData = optimizationResult?.modifications || [];
   console.log("Improvements data:", improvementData);
-  
+
   // Extract analysis data
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
@@ -280,21 +250,19 @@ const ComparisonPage: React.FC = () => {
     keyword_matches: 0,
     total_keywords: 0
   };
-  
+
   // Group modifications by company and position
   // Handle both standard modifications and bullet-specific modifications
   const groupedImprovements: GroupedModifications = {};
-  
-  improvementData.forEach((mod) => {
+  improvementData.forEach(mod => {
     // Check if this is from the API format (bullet_idx, enhanced_bullet exist)
     const originalText = mod.original || mod.original_bullet || '';
     const improvedText = mod.improved || mod.enhanced_bullet || '';
-    
+
     // Create a unique key for each company+position combination
     const company = mod.company || mod.section || 'General';
     const position = mod.position || '';
     const key = `${company}${position ? ` - ${position}` : ''}`;
-    
     if (!groupedImprovements[key]) {
       groupedImprovements[key] = {
         company,
@@ -302,7 +270,7 @@ const ComparisonPage: React.FC = () => {
         modifications: []
       };
     }
-    
+
     // Create a normalized modification object
     const normalizedMod: Modification = {
       section: mod.section || '',
@@ -312,12 +280,9 @@ const ComparisonPage: React.FC = () => {
       company,
       position
     };
-    
     groupedImprovements[key].modifications.push(normalizedMod);
   });
-
-  return (
-    <div className="min-h-screen bg-draft-bg">
+  return <div className="min-h-screen bg-draft-bg">
       <Header />
       
       <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
@@ -354,47 +319,25 @@ const ComparisonPage: React.FC = () => {
             </div>
             
             {/* Keyword Summary */}
-            <div className="bg-white border border-draft-green/10 rounded-xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-serif text-draft-green">Keyword Optimization</h3>
-                <div className="text-sm text-draft-green/80 font-serif">
-                  <span className="font-medium">{analysisData.keyword_matches}</span> of {analysisData.total_keywords} keywords
-                </div>
-              </div>
-              <div className="bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-draft-green h-full rounded-full"
-                  style={{ width: `${analysisData.total_keywords > 0 ? (analysisData.keyword_matches / analysisData.total_keywords) * 100 : 0}%` }}
-                ></div>
-              </div>
-            </div>
+            
             
             {/* Improvements by Company - Redesigned to be more flowing and modern */}
             <div>
               <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
               
-              {Object.keys(groupedImprovements).length > 0 ? (
-                <div className="space-y-6">
-                  {Object.entries(groupedImprovements).map(([key, group], index) => (
-                    <Collapsible 
-                      key={index}
-                      defaultOpen={index === 0}
-                      className="bg-white rounded-xl overflow-hidden shadow-sm border border-draft-green/10 transition-all hover:shadow-md"
-                    >
+              {Object.keys(groupedImprovements).length > 0 ? <div className="space-y-6">
+                  {Object.entries(groupedImprovements).map(([key, group], index) => <Collapsible key={index} defaultOpen={index === 0} className="bg-white rounded-xl overflow-hidden shadow-sm border border-draft-green/10 transition-all hover:shadow-md">
                       <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F2FCE2]/50 transition-colors">
                         <div>
                           <h3 className="text-xl text-draft-green font-serif">{group.company}</h3>
-                          {group.position && (
-                            <p className="text-draft-green/70 mt-1 font-serif italic">{group.position}</p>
-                          )}
+                          {group.position && <p className="text-draft-green/70 mt-1 font-serif italic">{group.position}</p>}
                         </div>
                         <ChevronDown className="h-5 w-5 text-draft-green/70 transition-transform duration-200 ui-open:rotate-180" />
                       </CollapsibleTrigger>
                       
                       <CollapsibleContent className="px-5 pb-5">
                         <div className="space-y-7 pt-2">
-                          {group.modifications.map((mod, idx) => (
-                            <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
+                          {group.modifications.map((mod, idx) => <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
                               <div className="border-l-4 border-draft-green/40 pl-4 mb-6">
                                 <p className="text-sm text-draft-green/70 uppercase tracking-wider mb-2 font-serif">Original</p>
                                 <p className="font-serif text-draft-text/90 leading-relaxed pl-2">{mod.original}</p>
@@ -404,30 +347,19 @@ const ComparisonPage: React.FC = () => {
                                 <p className="text-sm text-draft-green uppercase tracking-wider mb-2 font-serif">Enhanced</p>
                                 <p className="font-serif text-draft-green leading-relaxed pl-2">{mod.improved}</p>
                                 
-                                {mod.type && (
-                                  <div className="mt-4 flex justify-end">
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                      mod.type === 'Major' 
-                                        ? 'bg-draft-coral bg-opacity-15 text-draft-coral' 
-                                        : 'bg-draft-mint bg-opacity-15 text-draft-green'
-                                    } font-serif`}>
+                                {mod.type && <div className="mt-4 flex justify-end">
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${mod.type === 'Major' ? 'bg-draft-coral bg-opacity-15 text-draft-coral' : 'bg-draft-mint bg-opacity-15 text-draft-green'} font-serif`}>
                                       {mod.type} Enhancement
                                     </span>
-                                  </div>
-                                )}
+                                  </div>}
                               </div>
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
                       </CollapsibleContent>
-                    </Collapsible>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
+                    </Collapsible>)}
+                </div> : <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
                   <p className="text-draft-green/70 font-serif">No enhancements found</p>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
           
@@ -437,57 +369,31 @@ const ComparisonPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
                 <div className="flex gap-3">
-                  <Button 
-                    className="bg-draft-green hover:bg-draft-green/90 text-white"
-                    onClick={() => handleDownload('pdf')}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading && downloadFormat === 'pdf' ? (
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
+                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('pdf')} disabled={isDownloading}>
+                    {isDownloading && downloadFormat === 'pdf' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     PDF
                   </Button>
-                  <Button 
-                    className="bg-draft-green hover:bg-draft-green/90 text-white"
-                    onClick={() => handleDownload('docx')}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading && downloadFormat === 'docx' ? (
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
+                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('docx')} disabled={isDownloading}>
+                    {isDownloading && downloadFormat === 'docx' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     DOCX
                   </Button>
                 </div>
               </div>
               
               <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
-                {resumeId && user?.id ? (
-                  <PDFViewer 
-                    resumeId={resumeId}
-                    userId={user.id}
-                    height="100%"
-                  />
-                ) : (
-                  <div className="p-6 h-full">
+                {resumeId && user?.id ? <PDFViewer resumeId={resumeId} userId={user.id} height="100%" /> : <div className="p-6 h-full">
                     <div className="space-y-6">
                       <div className="text-center">
                         <h1 className="text-2xl font-bold text-draft-green font-serif">Enhanced Resume Preview</h1>
                         <p className="text-draft-green/70 font-serif">Resume preview not available</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default ComparisonPage;
