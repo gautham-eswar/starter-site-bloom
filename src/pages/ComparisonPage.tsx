@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
-import { usePipelineContext } from '@/contexts/ResumeContext'; // Also import usePipelineContext
+import { usePipelineContext } from '@/contexts/ResumeContext'; 
 import { getOptimizationResults } from '@/services/api';
 import { Modification, OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
@@ -26,11 +24,6 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent
-} from '@/components/ui/collapsible';
 
 // Helper interface for grouped modifications
 interface GroupedModifications {
@@ -108,22 +101,19 @@ const ComparisonPage: React.FC = () => {
         if (enhancementAnalysis) {
           console.log("Using data from PipelineContext:", enhancementAnalysis);
           
-          // Safely cast enhancementAnalysis to the typed interface
-          const typedAnalysis = enhancementAnalysis as unknown as EnhancementAnalysis;
-          
           // Convert enhancementAnalysis to match OptimizationResult structure
           const pipelineData: OptimizationResult = {
             resume_id: resumeId || '',
             job_id: jobId || '',
             status: 'completed',
             created_at: new Date().toISOString(),
-            modifications: typedAnalysis.modifications_summary || [],
+            modifications: enhancementAnalysis.modifications_summary || [],
             analysis_data: {
-              old_score: typedAnalysis.old_score || 0,
-              improved_score: typedAnalysis.improved_score || 0,
-              match_percentage: typedAnalysis.match_percentage || 0,
-              keyword_matches: typedAnalysis.keyword_matches || 0,
-              total_keywords: typedAnalysis.total_keywords || 0
+              old_score: enhancementAnalysis.old_score || 0,
+              improved_score: enhancementAnalysis.improved_score || 0,
+              match_percentage: enhancementAnalysis.match_percentage || 0,
+              keyword_matches: enhancementAnalysis.keyword_matches || 0,
+              total_keywords: enhancementAnalysis.total_keywords || 0
             }
           };
           setOptimizationResult(pipelineData);
@@ -143,21 +133,18 @@ const ComparisonPage: React.FC = () => {
         if (enhancementAnalysis) {
           console.log("API call failed, using PipelineContext data instead");
           
-          // Safely cast enhancementAnalysis to the typed interface
-          const typedAnalysis = enhancementAnalysis as unknown as EnhancementAnalysis;
-          
           const fallbackData: OptimizationResult = {
             resume_id: resumeId || '',
             job_id: jobId || '',
             status: 'completed',
             created_at: new Date().toISOString(),
-            modifications: typedAnalysis.modifications_summary || [],
+            modifications: enhancementAnalysis.modifications_summary || [],
             analysis_data: {
-              old_score: typedAnalysis.old_score || 0,
-              improved_score: typedAnalysis.improved_score || 0,
-              match_percentage: typedAnalysis.match_percentage || 0,
-              keyword_matches: typedAnalysis.keyword_matches || 0,
-              total_keywords: typedAnalysis.total_keywords || 0
+              old_score: enhancementAnalysis.old_score || 0,
+              improved_score: enhancementAnalysis.improved_score || 0,
+              match_percentage: enhancementAnalysis.match_percentage || 0,
+              keyword_matches: enhancementAnalysis.keyword_matches || 0,
+              total_keywords: enhancementAnalysis.total_keywords || 0
             }
           };
           setOptimizationResult(fallbackData);
@@ -274,8 +261,11 @@ const ComparisonPage: React.FC = () => {
     );
   }
 
-  // Prepare the data for the comparison
+  // Extract modifications data
   const improvementData = optimizationResult?.modifications || [];
+  console.log("Improvements data:", improvementData);
+  
+  // Extract analysis data
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
     improved_score: 0,
@@ -284,19 +274,13 @@ const ComparisonPage: React.FC = () => {
     total_keywords: 0
   };
   
-  // Log data for debugging
-  console.log("Analysis data:", analysisData);
-  console.log("Improvements data:", improvementData);
-
   // Group modifications by company and position
   const groupedImprovements: GroupedModifications = {};
   
   improvementData.forEach((mod) => {
-    // Handle both possible data structures
+    // Create a unique key for each company+position combination
     const company = mod.company || mod.section || 'General';
     const position = mod.position || '';
-    
-    // Create a unique key for each company+position combination
     const key = `${company}${position ? ` - ${position}` : ''}`;
     
     if (!groupedImprovements[key]) {
