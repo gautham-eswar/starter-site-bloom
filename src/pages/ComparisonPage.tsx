@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -24,6 +25,11 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
 
 // Helper interface for grouped modifications
 interface GroupedModifications {
@@ -231,7 +237,7 @@ const ComparisonPage: React.FC = () => {
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
             <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
-            <p className="text-draft-green">Loading optimization results...</p>
+            <p className="text-draft-green font-serif">Loading optimization results...</p>
           </div>
         </div>
       </div>
@@ -246,7 +252,7 @@ const ComparisonPage: React.FC = () => {
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
             <h2 className="text-2xl font-serif text-draft-green mb-4">No Results Found</h2>
-            <p className="text-draft-text mb-6">
+            <p className="text-draft-text mb-6 font-serif">
               We couldn't find optimization results for this resume. Please try optimizing your resume again.
             </p>
             <Button 
@@ -325,22 +331,22 @@ const ComparisonPage: React.FC = () => {
               <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Scorecard</h2>
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Original Score</p>
-                  <p className="text-4xl font-bold text-draft-green">
+                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Original Score</p>
+                  <p className="text-4xl font-bold text-draft-green font-serif">
                     {analysisData.old_score}/100
                   </p>
                 </div>
                 
                 <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Enhanced Score</p>
-                  <p className="text-4xl font-bold text-draft-green">
+                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Enhanced Score</p>
+                  <p className="text-4xl font-bold text-draft-green font-serif">
                     {analysisData.improved_score}/100
                   </p>
                 </div>
                 
                 <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium">Job Match</p>
-                  <p className="text-4xl font-bold text-draft-green">
+                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Job Match</p>
+                  <p className="text-4xl font-bold text-draft-green font-serif">
                     {analysisData.match_percentage}%
                   </p>
                 </div>
@@ -350,8 +356,8 @@ const ComparisonPage: React.FC = () => {
             {/* Keyword Summary */}
             <div className="bg-white border border-draft-green/10 rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-draft-green">Keyword Optimization</h3>
-                <div className="text-sm text-draft-green/80">
+                <h3 className="text-lg font-serif text-draft-green">Keyword Optimization</h3>
+                <div className="text-sm text-draft-green/80 font-serif">
                   <span className="font-medium">{analysisData.keyword_matches}</span> of {analysisData.total_keywords} keywords
                 </div>
               </div>
@@ -363,68 +369,63 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Improvements by Company */}
+            {/* Improvements by Company - Redesigned to be more flowing and modern */}
             <div>
               <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
               
               {Object.keys(groupedImprovements).length > 0 ? (
-                <Accordion 
-                  type="multiple" 
-                  defaultValue={Object.keys(groupedImprovements).map((_, i) => `item-${i}`)} 
-                  className="space-y-4"
-                >
+                <div className="space-y-6">
                   {Object.entries(groupedImprovements).map(([key, group], index) => (
-                    <AccordionItem 
-                      value={`item-${index}`} 
-                      key={index} 
-                      className="border border-draft-green/10 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:shadow-md"
+                    <Collapsible 
+                      key={index}
+                      defaultOpen={index === 0}
+                      className="bg-white rounded-xl overflow-hidden shadow-sm border border-draft-green/10 transition-all hover:shadow-md"
                     >
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-draft-green/5 data-[state=open]:bg-draft-green/5">
-                        <div className="text-left">
-                          <h3 className="font-medium text-draft-green text-lg">{group.company}</h3>
+                      <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F2FCE2]/50 transition-colors">
+                        <div>
+                          <h3 className="text-xl text-draft-green font-serif">{group.company}</h3>
                           {group.position && (
-                            <p className="text-sm text-draft-green/70">{group.position}</p>
+                            <p className="text-draft-green/70 mt-1 font-serif italic">{group.position}</p>
                           )}
                         </div>
-                      </AccordionTrigger>
+                        <ChevronDown className="h-5 w-5 text-draft-green/70 transition-transform duration-200 ui-open:rotate-180" />
+                      </CollapsibleTrigger>
                       
-                      <AccordionContent className="px-6 pb-6 pt-2">
-                        <div className="space-y-6">
+                      <CollapsibleContent className="px-5 pb-5">
+                        <div className="space-y-7 pt-2">
                           {group.modifications.map((mod, idx) => (
-                            <div key={idx} className="border border-draft-green/10 rounded-lg overflow-hidden shadow-sm">
-                              <div className={`grid ${isMobile ? 'grid-cols-1 gap-0' : 'grid-cols-2 gap-0'}`}>
-                                <div className="bg-[#F1F0FB] p-5 border-b md:border-b-0 md:border-r border-draft-green/10">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green/70 mb-3 tracking-wider">Original Bullet Point</h4>
-                                  <p className="font-serif text-draft-text leading-relaxed">{mod.original}</p>
-                                </div>
-                                
-                                <div className="bg-[#F2FCE2] p-5">
-                                  <h4 className="uppercase text-xs font-semibold text-draft-green mb-3 tracking-wider">Enhanced Bullet Point</h4>
-                                  <p className="font-serif text-draft-green leading-relaxed">{mod.improved}</p>
-                                </div>
+                            <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
+                              <div className="border-l-4 border-draft-green/40 pl-4 mb-6">
+                                <p className="text-sm text-draft-green/70 uppercase tracking-wider mb-2 font-serif">Original</p>
+                                <p className="font-serif text-draft-text/90 leading-relaxed pl-2">{mod.original}</p>
                               </div>
                               
-                              {mod.type && (
-                                <div className="bg-white px-5 py-3 border-t border-draft-green/10">
-                                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                    mod.type === 'Major' 
-                                      ? 'bg-draft-coral bg-opacity-10 text-draft-coral' 
-                                      : 'bg-draft-mint bg-opacity-10 text-draft-green'
-                                  }`}>
-                                    {mod.type} Enhancement
-                                  </span>
-                                </div>
-                              )}
+                              <div className="bg-[#F2FCE2]/50 p-5 rounded-xl border border-draft-green/10">
+                                <p className="text-sm text-draft-green uppercase tracking-wider mb-2 font-serif">Enhanced</p>
+                                <p className="font-serif text-draft-green leading-relaxed pl-2">{mod.improved}</p>
+                                
+                                {mod.type && (
+                                  <div className="mt-4 flex justify-end">
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                                      mod.type === 'Major' 
+                                        ? 'bg-draft-coral bg-opacity-15 text-draft-coral' 
+                                        : 'bg-draft-mint bg-opacity-15 text-draft-green'
+                                    } font-serif`}>
+                                      {mod.type} Enhancement
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                      </CollapsibleContent>
+                    </Collapsible>
                   ))}
-                </Accordion>
+                </div>
               ) : (
                 <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
-                  <p className="text-draft-green/70">No enhancements found</p>
+                  <p className="text-draft-green/70 font-serif">No enhancements found</p>
                 </div>
               )}
             </div>
@@ -474,8 +475,8 @@ const ComparisonPage: React.FC = () => {
                   <div className="p-6 h-full">
                     <div className="space-y-6">
                       <div className="text-center">
-                        <h1 className="text-2xl font-bold text-draft-green">Enhanced Resume Preview</h1>
-                        <p className="text-draft-green/70">Resume preview not available</p>
+                        <h1 className="text-2xl font-bold text-draft-green font-serif">Enhanced Resume Preview</h1>
+                        <p className="text-draft-green/70 font-serif">Resume preview not available</p>
                       </div>
                     </div>
                   </div>
