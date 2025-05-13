@@ -9,7 +9,7 @@ import { Modification, OptimizationResult, EnhancementAnalysis } from '@/types/a
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
-import { downloadPdf, checkPdfExists } from '@/services/pdfStorage';
+import { getPdfUrl, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -53,17 +53,27 @@ const ComparisonPage: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
   const [pdfExists, setPdfExists] = useState<boolean | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   // Use URL params if available, otherwise use context
   const resumeId = resumeIdParam || contextResumeId || pipelineResumeId;
   const jobId = jobIdParam || contextJobId || pipelineJobId;
 
-  // Check if PDF exists
+  // Check if PDF exists and get URL
   useEffect(() => {
     const checkPdf = async () => {
       if (resumeId && user?.id) {
-        const exists = await checkPdfExists(resumeId, user.id);
-        setPdfExists(exists);
+        try {
+          const exists = await checkPdfExists(resumeId, user.id);
+          setPdfExists(exists);
+          
+          if (exists) {
+            const url = await getPdfUrl(resumeId, user.id);
+            setPdfUrl(url);
+          }
+        } catch (err) {
+          console.error('Error checking PDF:', err);
+        }
       }
     };
     checkPdf();
@@ -151,48 +161,31 @@ const ComparisonPage: React.FC = () => {
 
   // Handle download
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
-    if (!resumeId) {
+    if (!resumeId || !user?.id) {
       toast({
         title: "Download failed",
-        description: "Resume ID is missing.",
+        description: "Resume ID or user ID is missing.",
         variant: "destructive"
       });
       return;
     }
+    
     setIsDownloading(true);
     setDownloadFormat(format);
+    
     try {
-      if (format === 'pdf' && pdfExists && user?.id) {
-        // Download from Supabase storage if PDF exists there
-        const blob = await downloadPdf(resumeId, user.id);
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `optimized_resume.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(downloadUrl);
-      } else {
-        // Fall back to the API if PDF doesn't exist in storage or format is not PDF
-        const response = await getOptimizationResults(resumeId, jobId);
-
-        // Create a blob from the response
-        const blob = await response.blob();
-
-        // Create a link element to trigger the download
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `optimized_resume.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(downloadUrl);
+      // Get a signed URL that will open directly
+      const url = await getPdfUrl(resumeId, user.id);
+      if (!url) {
+        throw new Error('Could not generate download URL');
       }
+      
+      // Open the PDF in a new tab
+      window.open(url, '_blank');
+      
       toast({
         title: "Download successful",
-        description: `Your optimized resume has been downloaded as ${format.toUpperCase()}`
+        description: `Your optimized resume has been opened in a new tab`
       });
     } catch (error) {
       console.error("Download error:", error);
@@ -381,14 +374,23 @@ const ComparisonPage: React.FC = () => {
               </div>
               
               <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
-                {resumeId && user?.id ? <PDFViewer resumeId={resumeId} userId={user.id} height="100%" /> : <div className="p-6 h-full">
+                {resumeId && user?.id ? (
+                  <PDFViewer 
+                    resumeId={resumeId} 
+                    userId={user.id} 
+                    height="100%" 
+                    directUrl={pdfUrl} 
+                  />
+                ) : (
+                  <div className="p-6 h-full">
                     <div className="space-y-6">
                       <div className="text-center">
                         <h1 className="text-2xl font-bold text-draft-green font-serif">Enhanced Resume Preview</h1>
                         <p className="text-draft-green/70 font-serif">Resume preview not available</p>
                       </div>
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>
             </div>
           </div>

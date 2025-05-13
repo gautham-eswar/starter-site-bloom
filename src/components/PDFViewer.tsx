@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -8,7 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
+import { RESUME_BUCKET } from '@/services/supabaseSetup';
 
 // Configure the PDF.js worker source to use a local worker
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -62,30 +61,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
   }), []);
   
-  // Function to get the direct Supabase storage URL
-  const getSupabaseStorageUrl = (resumeId: string, fileName: string) => {
-    if (!resumeId) return null;
-    
-    const bucketName = 'resumes';
-    const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
-    
-    addLog(`Getting public URL from bucket: ${bucketName}, path: ${storagePath}`);
-    
-    // Create a public URL for the file
-    const { data } = supabase
-      .storage
-      .from(bucketName)
-      .getPublicUrl(storagePath);
-      
-    if (data?.publicUrl) {
-      addLog(`Successfully got publicUrl: ${data.publicUrl}`);
-    } else {
-      addLog(`Failed to get publicUrl`);
-    }
-    
-    return data?.publicUrl || null;
-  };
-  
   useEffect(() => {
     const loadPdf = async () => {
       setError(null);
@@ -109,75 +84,37 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           return;
         }
         
-        // First try to access directly from Supabase storage
-        // For testing, we're using a hardcoded filename
-        const fileName = "ABHIRAJ SINGH_Resume - Supply Chain.pdf";
-        addLog(`Trying to get Supabase storage URL for resumeId: ${resumeId}, fileName: ${fileName}`);
-        const storageUrl = getSupabaseStorageUrl(resumeId, fileName);
-        
-        if (storageUrl) {
-          addLog(`Found URL in Supabase storage: ${storageUrl}`);
-          setPdfUrl(storageUrl);
-          setPdfExists(true);
+        if (!userId) {
+          addLog("No userId available");
+          setError('User ID is missing');
           setLoading(false);
           return;
-        } else {
-          addLog("Failed to get URL from Supabase storage");
         }
         
-        // If not found in storage directly, try our existing methods
-        if (userId) {
-          addLog(`Checking if PDF exists for resumeId: ${resumeId}, userId: ${userId}`);
-          // First try to see if the PDF exists in our storage
-          try {
-            const exists = await checkPdfExists(resumeId, userId);
-            addLog(`PDF exists check returned: ${exists}`);
-            setPdfExists(exists);
-            
-            if (exists) {
-              addLog("PDF exists, getting URL");
-              // If it exists in storage, get the URL
-              const url = await getPdfUrl(resumeId, userId);
-              addLog(`Got PDF URL: ${url}`);
-              setPdfUrl(url);
-              setLoading(false);
-              return;
-            } else {
-              addLog("PDF doesn't exist in storage");
-            }
-          } catch (storageError) {
-            addLog(`Storage check failed: ${storageError instanceof Error ? storageError.message : String(storageError)}`);
-            console.warn('Storage check failed, trying API instead:', storageError);
-          }
-        } else {
-          addLog("No userId available");
-        }
+        // Check if the PDF exists and get signed URL
+        addLog(`Checking if PDF exists for resumeId: ${resumeId}, userId: ${userId}`);
         
-        // If not in storage, try to fetch it from the API
         try {
-          addLog(`Fetching PDF from API for resume ID: ${resumeId}`);
-          const response = await fetch(`https://latest-try-psti.onrender.com/api/download/${resumeId}/pdf`);
+          const exists = await checkPdfExists(resumeId, userId);
+          addLog(`PDF exists check returned: ${exists}`);
+          setPdfExists(exists);
           
-          addLog(`API response status: ${response.status}`);
-          if (!response.ok) {
-            throw new Error(`API returned status ${response.status}`);
+          if (exists) {
+            addLog("PDF exists, getting URL");
+            const url = await getPdfUrl(resumeId, userId);
+            addLog(`Got PDF URL: ${url}`);
+            setPdfUrl(url);
+          } else {
+            addLog("PDF doesn't exist in storage");
+            setError('PDF not found in storage');
           }
-          
-          // Create a blob URL from the response
-          const blob = await response.blob();
-          addLog(`Got blob from API, size: ${blob.size} bytes`);
-          const url = URL.createObjectURL(blob);
-          addLog(`Created object URL: ${url}`);
-          setPdfUrl(url);
-          setPdfExists(true);
-          setLoading(false);
-        } catch (apiError) {
-          addLog(`API fetch failed: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
-          console.error('API fetch failed:', apiError);
-          setError('Failed to fetch PDF from API');
-          setPdfExists(false);
-          setLoading(false);
+        } catch (storageError) {
+          addLog(`Storage check failed: ${storageError instanceof Error ? storageError.message : String(storageError)}`);
+          console.error('Storage check failed:', storageError);
+          setError('Error accessing storage');
         }
+        
+        setLoading(false);
       } catch (error) {
         addLog(`Error in loadPdf: ${error instanceof Error ? error.message : String(error)}`);
         console.error('Error loading PDF:', error);

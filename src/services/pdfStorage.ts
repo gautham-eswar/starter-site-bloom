@@ -72,10 +72,10 @@ export async function getPdfUrl(resumeId: string, userId: string): Promise<strin
     
     const path = generateResumePath(userId, resumeId);
     
-    // Create a signed URL for the file
+    // Create a signed URL for the file with exactly 1 hour expiration
     const { data, error } = await supabase.storage
       .from(RESUME_BUCKET)
-      .createSignedUrl(path, 60 * 60); // 1 hour expiration
+      .createSignedUrl(path, 3600);
     
     if (error || !data?.signedUrl) {
       throw new Error(`Failed to get PDF URL: ${error?.message || 'No URL returned'}`);
@@ -97,12 +97,11 @@ export async function getPdfUrl(resumeId: string, userId: string): Promise<strin
 }
 
 /**
- * Downloads a PDF as a blob
+ * Downloads a PDF by opening the signed URL in a new tab
  * @param resumeId Resume ID
  * @param userId User ID
- * @returns Promise resolving to the PDF blob
  */
-export async function downloadPdf(resumeId: string, userId: string): Promise<Blob> {
+export async function downloadPdf(resumeId: string, userId: string): Promise<void> {
   try {
     const exists = await checkPdfExists(resumeId, userId);
     if (!exists) {
@@ -110,13 +109,9 @@ export async function downloadPdf(resumeId: string, userId: string): Promise<Blo
     }
     
     const url = await getPdfUrl(resumeId, userId);
-    const response = await fetch(url);
     
-    if (!response.ok) {
-      throw new Error(`Failed to download PDF: ${response.statusText}`);
-    }
-    
-    return await response.blob();
+    // Open URL in new tab
+    window.open(url, '_blank');
   } catch (error) {
     console.error('Error in downloadPdf:', error);
     toast({

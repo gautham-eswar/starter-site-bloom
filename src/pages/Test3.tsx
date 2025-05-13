@@ -7,13 +7,14 @@ import { ArrowLeft, Download, FileText, Loader } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DirectPDFViewer } from '@/components/DirectPDFViewer';
 import { toast } from '@/hooks/use-toast';
+import { RESUME_BUCKET } from '@/services/supabaseSetup';
 
 const Test3: React.FC = () => {
   const navigate = useNavigate();
   
-  // Configuration
+  // Configuration - updated to use the resume-pdfs bucket
   const folderPath = "41600801-46c5-4d56-a248-f8c3585cc486/f92b9a89-7189-4796-b009-bb700e9f8266";
-  const bucketName = "resumes";
+  const bucketName = RESUME_BUCKET; // Using the standardized bucket name
   
   // State
   const [files, setFiles] = useState<any[]>([]);
@@ -66,14 +67,16 @@ const Test3: React.FC = () => {
     try {
       const filePath = `${folderPath}/${fileName}`;
       
-      // Get public URL
-      const { data: publicData } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+      // Create a signed URL with 1 hour expiration
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, 3600);
       
-      if (publicData?.publicUrl) {
-        setPdfUrl(publicData.publicUrl);
-      } else {
-        throw new Error("Failed to get public URL");
+      if (error || !data?.signedUrl) {
+        throw new Error(`Failed to get signed URL: ${error?.message || 'No URL returned'}`);
       }
+      
+      setPdfUrl(data.signedUrl);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -102,39 +105,12 @@ const Test3: React.FC = () => {
     }
   };
 
-  // Download the current PDF
+  // Download the current PDF directly in a new tab
   const downloadPdf = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !pdfUrl) return;
     
-    try {
-      const filePath = `${folderPath}/${selectedFile}`;
-      
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .download(filePath);
-        
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        const url = URL.createObjectURL(data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = selectedFile;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      toast({
-        title: "Download Failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
+    // Simply open the signed URL in a new tab
+    window.open(pdfUrl, '_blank');
   };
 
   // Load files on component mount
@@ -192,13 +168,13 @@ const Test3: React.FC = () => {
               </div>
             )}
             
-            {selectedFile && (
+            {selectedFile && pdfUrl && (
               <Button 
                 className="mt-4 w-full" 
                 variant="outline"
                 onClick={downloadPdf}
               >
-                <Download className="h-4 w-4 mr-2" /> Download PDF
+                <Download className="h-4 w-4 mr-2" /> Open PDF in New Tab
               </Button>
             )}
           </div>

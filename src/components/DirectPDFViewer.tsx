@@ -20,6 +20,7 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
       setError(null);
       
       try {
+        // For signed URLs, we need to make sure we use a GET request to avoid CORS issues
         const response = await fetch(url, { method: 'HEAD' });
         
         if (!response.ok) {
@@ -47,14 +48,9 @@ export const DirectPDFViewer: React.FC<DirectPDFViewerProps> = ({ url }) => {
     }
   }, [url]);
 
-  // Download the PDF
+  // Download the PDF - opens in a new tab for Supabase signed URLs
   const downloadPdf = () => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = url.substring(url.lastIndexOf('/') + 1);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.open(url, '_blank');
   };
 
   return (

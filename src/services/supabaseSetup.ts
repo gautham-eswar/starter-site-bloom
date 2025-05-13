@@ -42,6 +42,7 @@ export async function setupStorage(): Promise<boolean> {
 
 /**
  * Generates the storage path for a resume PDF
+ * Following the exact structure: resume-pdfs/{userId}/{resumeId}/enhanced_resume_{resumeId}.pdf
  * @param userId User ID
  * @param resumeId Resume ID
  * @param format File format (pdf or docx)
