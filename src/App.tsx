@@ -12,6 +12,7 @@ import Pricing from "./pages/Pricing";
 import Technology from "./pages/Technology"; // Add Technology page
 import FAQ from "./pages/FAQ"; // Add FAQ page
 import Test2 from "./pages/Test2"; // Add new Test2 page
+import Test3 from "./pages/Test3"; // Add new Test3 page
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { useAuth } from "./components/auth/AuthProvider";
@@ -47,6 +48,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             } />
             <Route path="/test2" element={<Test2 />} />
+            <Route path="/test3" element={<Test3 />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
