@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, FileText, Loader } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Loader, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DirectPDFViewer } from '@/components/DirectPDFViewer';
 import { toast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ const Test3: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingFile, setLoadingFile] = useState<boolean>(false);
+  const [customLink, setCustomLink] = useState<string>('');
 
   // Fetch list of files in the folder
   const fetchFiles = async () => {
@@ -105,6 +107,42 @@ const Test3: React.FC = () => {
     }
   };
 
+  // Handle custom link submission
+  const handleCustomLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customLink.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingFile(true);
+    setPdfUrl(null);
+    setSelectedFile(null);
+    
+    try {
+      // Check if the link is valid
+      const url = new URL(customLink);
+      setPdfUrl(customLink);
+      toast({
+        title: "Success",
+        description: "Custom PDF link loaded",
+        variant: "default"
+      });
+    } catch (err) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid URL",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingFile(false);
+    }
+  };
+
   // Download the current PDF directly in a new tab
   const downloadPdf = async () => {
     if (!selectedFile || !pdfUrl) return;
@@ -131,6 +169,24 @@ const Test3: React.FC = () => {
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
+        </div>
+
+        {/* Custom Link Input Form */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
+            <LinkIcon className="h-5 w-5 text-blue-600" />
+            Paste Supabase PDF Link
+          </h2>
+          <form onSubmit={handleCustomLinkSubmit} className="flex flex-col sm:flex-row gap-2">
+            <Input
+              type="url"
+              placeholder="Paste Supabase PDF link here"
+              value={customLink}
+              onChange={(e) => setCustomLink(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="submit">Load PDF</Button>
+          </form>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -186,11 +242,11 @@ const Test3: React.FC = () => {
                 <Loader className="h-12 w-12 text-blue-500 animate-spin mb-4" />
                 <p className="text-gray-600">Loading PDF...</p>
               </div>
-            ) : !selectedFile || !pdfUrl ? (
+            ) : !pdfUrl ? (
               <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                 <FileText className="h-16 w-16 text-gray-300 mb-4" />
                 <p className="text-gray-500">
-                  Select a PDF file from the list to view it
+                  Select a PDF file from the list or paste a Supabase link
                 </p>
               </div>
             ) : (
