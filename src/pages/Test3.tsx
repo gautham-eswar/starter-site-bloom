@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, FileText, Loader, Link as LinkIcon, FileDown } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Loader, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DirectPDFViewer } from '@/components/DirectPDFViewer';
 import { toast } from '@/hooks/use-toast';
@@ -23,12 +24,6 @@ const Test3: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingFile, setLoadingFile] = useState<boolean>(false);
   const [customLink, setCustomLink] = useState<string>('');
-  
-  // New state for API-based PDF functionality
-  const [resumeId, setResumeId] = useState<string>('');
-  const [apiPdfUrl, setApiPdfUrl] = useState<string | null>(null);
-  const [apiPdfLoading, setApiPdfLoading] = useState<boolean>(false);
-  const [apiPdfError, setApiPdfError] = useState<string | null>(null);
 
   // Fetch list of files in the folder
   const fetchFiles = async () => {
@@ -156,51 +151,6 @@ const Test3: React.FC = () => {
     window.open(pdfUrl, '_blank');
   };
 
-  // New function to download PDF from API
-  const handleApiDownloadPdf = async () => {
-    if (!resumeId.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid Resume ID",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setApiPdfError(null);
-    setApiPdfLoading(true);
-    setApiPdfUrl(null);
-    
-    try {
-      const res = await fetch(`/api/download/${resumeId}/pdf`);
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to generate PDF");
-      }
-      
-      // On success, backend provides a signed URL for the PDF
-      setApiPdfUrl(data.signedUrl);
-      
-      toast({
-        title: "Success",
-        description: "PDF loaded successfully",
-        variant: "default"
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setApiPdfError(errorMessage);
-      
-      toast({
-        title: "Error",
-        description: `Failed to load PDF: ${errorMessage}`,
-        variant: "destructive"
-      });
-    } finally {
-      setApiPdfLoading(false);
-    }
-  };
-  
   // Load files on component mount
   useEffect(() => {
     fetchFiles();
@@ -219,79 +169,6 @@ const Test3: React.FC = () => {
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-        </div>
-
-        {/* API-based PDF Download Section */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <h2 className="text-lg font-medium mb-3 flex items-center gap-2">
-            <FileDown className="h-5 w-5 text-blue-600" />
-            API PDF Download
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              type="text"
-              placeholder="Enter Resume ID"
-              value={resumeId}
-              onChange={(e) => setResumeId(e.target.value)}
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleApiDownloadPdf} 
-              disabled={apiPdfLoading}
-            >
-              {apiPdfLoading ? (
-                <>
-                  <Loader className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Load PDF"
-              )}
-            </Button>
-          </div>
-          
-          {apiPdfError && (
-            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {apiPdfError}
-              <Button 
-                variant="link" 
-                className="text-red-700 p-0 h-auto text-sm ml-2" 
-                onClick={handleApiDownloadPdf}
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-          
-          {apiPdfUrl && (
-            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-              <h3 className="font-medium text-sm text-gray-700 mb-2">PDF Preview Available</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => {
-                    setPdfUrl(apiPdfUrl);
-                    setSelectedFile(null);
-                    toast({
-                      title: "PDF Loaded",
-                      description: "The PDF from the API is now displayed in the viewer",
-                      variant: "default"
-                    });
-                  }}
-                >
-                  View in PDF Viewer
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => window.open(apiPdfUrl, '_blank')}
-                >
-                  Open in New Tab
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Custom Link Input Form */}
