@@ -112,3 +112,97 @@ export async function getResumeUrl(
     return null;
   }
 }
+
+/**
+ * Verifies if a resume JSON exists in the database
+ * @param resumeId Resume ID to check
+ * @returns Promise resolving to the resume data if found, null otherwise
+ */
+export async function verifyResumeJsonExists(resumeId: string): Promise<{ id: string; user_id: string; name: string | null } | null> {
+  try {
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('id, user_id, data->name')
+      .eq('id', resumeId)
+      .single();
+    
+    if (error || !data) {
+      console.error('Error verifying resume JSON:', error);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      name: data.name
+    };
+  } catch (error) {
+    console.error('Error verifying resume JSON:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets PDF metadata from storage
+ * @param userId User ID
+ * @param resumeId Resume ID
+ * @returns Promise resolving to metadata object or null
+ */
+export async function getPdfMetadata(userId: string, resumeId: string): Promise<{size: number, lastModified: string} | null> {
+  try {
+    const path = generateResumePath(userId, resumeId);
+    
+    const { data, error } = await supabase.storage
+      .from(RESUME_BUCKET)
+      .list(path.split('/').slice(0, -1).join('/'), {
+        limit: 1,
+        search: path.split('/').pop() || ''
+      });
+    
+    if (error || !data || data.length === 0) {
+      return null;
+    }
+    
+    const fileData = data[0];
+    
+    return {
+      size: fileData.metadata?.size || 0,
+      lastModified: fileData.metadata?.lastModified || new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error getting PDF metadata:', error);
+    return null;
+  }
+}
+
+/**
+ * Upload a PDF from a Blob or File to storage
+ * @param blob Blob or File to upload
+ * @param userId User ID
+ * @param resumeId Resume ID
+ * @returns Promise resolving to the URL of the uploaded file or null on error
+ */
+export async function uploadPdf(blob: Blob | File, userId: string, resumeId: string): Promise<string | null> {
+  try {
+    const path = generateResumePath(userId, resumeId);
+    
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from(RESUME_BUCKET)
+      .upload(path, blob, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+    
+    if (uploadError) {
+      console.error('Error uploading PDF:', uploadError);
+      return null;
+    }
+    
+    // Get the signed URL
+    return await getResumeUrl(userId, resumeId);
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+    return null;
+  }
+}
