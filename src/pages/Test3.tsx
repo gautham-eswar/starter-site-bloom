@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -13,8 +12,7 @@ import {
   getResumeUrl, 
   checkResumeExists, 
   verifyResumeJsonExists,
-  getPdfMetadata,
-  uploadPdf
+  getPdfMetadata
 } from '@/services/supabaseSetup';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
@@ -250,9 +248,9 @@ const Test3: React.FC = () => {
       }
       
       // Check if PDF exists
-      const pdfExists = await checkResumeExists(resumeData.user_id, resumeId);
+      const pdfExistsResult = await checkResumeExists(resumeData.user_id, resumeId); // Renamed to avoid conflict
       
-      if (!pdfExists) {
+      if (!pdfExistsResult) { // Use renamed variable
         throw new Error("PDF file not found");
       }
       
