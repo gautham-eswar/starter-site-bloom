@@ -86,7 +86,7 @@ export async function uploadResume(file: File, userId: string) {
   formData.append('user_id', userId);
   
   console.log(`Starting resume upload for user ID: ${userId} to ${API_BASE_URL}/api/upload`);
-  return await apiRequest("/api/upload", { // Ensure endpoint starts with / if API_BASE_URL does not end with /
+  return await apiRequest("/api/upload", { // Fixed: Added /api prefix
     method: "POST",
     // headers: {}, // Content-Type for FormData is set by the browser
     body: formData,
@@ -100,7 +100,7 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   formData.append("resume_id", resumeId);
   formData.append("user_id", userId);
   formData.append("job_description", jobDescription);
-  return await apiRequest("/api/optimize", { // Ensure endpoint starts with /
+  return await apiRequest("/api/optimize", { // Fixed: Added /api prefix
     method: "POST",
     // headers: {}, // Content-Type for FormData is set by the browser
     body: formData,
@@ -117,7 +117,7 @@ export async function downloadResume(resumeId: string, format: string = "pdf") {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
     
-    const downloadUrl = `${API_BASE_URL}/api/download/${resumeId}/${format}`;
+    const downloadUrl = `${API_BASE_URL}/api/download/${resumeId}/${format}`; // Fixed: Added /api prefix
     console.log(`Attempting to download resume from: ${downloadUrl}`);
 
     // If we have userId and format is PDF, check if it exists in our Supabase storage first
