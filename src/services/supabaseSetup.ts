@@ -119,24 +119,43 @@ export async function getResumeUrl(
  */
 export async function verifyResumeJsonExists(resumeId: string): Promise<{ id: string; user_id: string; name: string | null } | null> {
   try {
-    const { data, error } = await supabase
+    const { data: resumeRow, error } = await supabase
       .from('resumes')
-      .select('id, user_id, data->name')
+      .select('id, user_id, data') // Changed from 'data->name'
       .eq('id', resumeId)
       .single();
     
-    if (error || !data) {
-      console.error('Error verifying resume JSON:', error);
+    if (error || !resumeRow) {
+      // It's possible the resume simply doesn't exist, which isn't always an error to log loudly.
+      // console.error('Error verifying resume JSON or resume not found:', error); 
       return null;
     }
     
+    // resumeRow.data is the JSONB field. It is of type `Json | null`.
+    const jsonData = resumeRow.data;
+    let nameValue: string | null = null;
+
+    // Check if jsonData is a non-null object and has a 'name' property
+    if (jsonData && typeof jsonData === 'object' && !Array.isArray(jsonData) && jsonData !== null) {
+      if (Object.prototype.hasOwnProperty.call(jsonData, 'name')) {
+        const parsedName = jsonData.name; // Access the 'name' property
+        if (typeof parsedName === 'string') {
+          nameValue = parsedName;
+        } else if (parsedName === null) {
+          // Explicitly allow null if the 'name' property is null
+          nameValue = null;
+        }
+        // If jsonData.name is undefined or some other type, nameValue remains null as initialized.
+      }
+    }
+    
     return {
-      id: data.id,
-      user_id: data.user_id,
-      name: data.name
+      id: resumeRow.id,
+      user_id: resumeRow.user_id,
+      name: nameValue, // Use the extracted and type-checked name
     };
   } catch (error) {
-    console.error('Error verifying resume JSON:', error);
+    console.error('Exception in verifyResumeJsonExists:', error);
     return null;
   }
 }
