@@ -177,6 +177,13 @@ export async function getPdfMetadata(userId: string, resumeId: string): Promise<
 }
 
 /**
+ * Define a more specific error type for storage uploads, extending Error
+ */
+interface SupabaseStorageUploadError extends Error {
+  status?: number; // HTTP status code, if available from the error
+}
+
+/**
  * Upload a PDF from a Blob or File to storage
  * @param blob Blob or File to upload
  * @param userId User ID
@@ -190,7 +197,7 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     // Explicitly type the expected result of the upload operation
     const uploadResult: { 
       data: { path: string } | null; 
-      error: Error | null; // Changed StorageError to Error
+      error: SupabaseStorageUploadError | null; // Use the more specific error interface
     } = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
@@ -224,10 +231,9 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
   } catch (error) {
     console.error('Error in uploadPdf function (outer catch):', error);
     let errorMessage = 'An unexpected error occurred during upload.';
-    if (error instanceof Error) { // StorageError is an instance of Error
+    if (error instanceof Error) { 
       errorMessage = error.message;
     } else if (typeof error === 'object' && error !== null && 'message' in error) {
-      // Fallback for non-Error objects with a message property
       errorMessage = String((error as { message: unknown }).message);
     }
     toast({
