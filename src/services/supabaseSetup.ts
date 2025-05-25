@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { StorageError } from '@supabase/supabase-js'; // Import StorageError
 
 /**
  * Storage bucket name for resume PDFs
@@ -191,7 +190,7 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     // Explicitly type the expected result of the upload operation
     const uploadResult: { 
       data: { path: string } | null; 
-      error: StorageError | null; // Use StorageError from Supabase
+      error: Error | null; // Changed StorageError to Error
     } = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
