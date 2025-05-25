@@ -1,7 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { StorageError } from '@supabase/supabase-js';
 
 /**
  * Storage bucket name for resume PDFs
@@ -188,7 +186,7 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     const path = generateResumePath(userId, resumeId);
     
     // Upload the file
-    const { error: uploadError }: { data: { path: string } | null; error: StorageError | null } = 
+    const { error: uploadError }: { data: { path: string } | null; error: any | null } = 
       await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
@@ -198,10 +196,9 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     
     if (uploadError) {
       console.error('Error uploading PDF:', uploadError);
-      // It might be useful to toast here as well, similar to setupStorage
       toast({
         title: 'PDF Upload Failed',
-        description: uploadError.message || 'Could not upload the PDF file.',
+        description: uploadError.message || 'Could not upload the PDF file.', // Supabase errors usually have a message property
         variant: 'destructive',
       });
       return null;
