@@ -92,7 +92,8 @@ const ComparisonPage: React.FC = () => {
   useEffect(() => {
     setIsLoading(true);
     console.log("ComparisonPage: useEffect for processing results triggered.", {
-      activeOriginalResumeId, activeEnhancedResumeId, activeJobId, enhancementAnalysis, optimizationResult
+      activeOriginalResumeId, activeEnhancedResumeId, activeJobId, enhancementAnalysis, optimizationResult,
+      pipelineOriginalResumeId, pipelineEnhancedResumeId, pipelineJobId
     });
 
     if (!activeEnhancedResumeId || !activeOriginalResumeId || !activeJobId) {
@@ -126,13 +127,14 @@ const ComparisonPage: React.FC = () => {
     }
     
     if (enhancementAnalysis && 
-        enhancementAnalysis.job_id === activeJobId && 
-        enhancementAnalysis.enhanced_resume_id === activeEnhancedResumeId &&
-        enhancementAnalysis.original_resume_id === activeOriginalResumeId) {
+        pipelineJobId === activeJobId && 
+        pipelineEnhancedResumeId === activeEnhancedResumeId &&
+        pipelineOriginalResumeId === activeOriginalResumeId) {
       console.log("Using enhancementAnalysis from PipelineContext to build OptimizationResult:", enhancementAnalysis);
+      console.log("Pipeline context IDs:", { pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId });
       const pipelineData: OptimizationResult = {
-        resume_id: enhancementAnalysis.enhanced_resume_id, // This is the ID of the enhanced resume
-        job_id: enhancementAnalysis.job_id,
+        resume_id: pipelineEnhancedResumeId, // This is the ID of the enhanced resume
+        job_id: pipelineJobId,
         status: 'completed', // Assuming completed if we have analysis
         created_at: new Date().toISOString(), // Placeholder, actual creation time is on backend
         modifications: enhancementAnalysis.modifications_summary || [],
@@ -160,7 +162,8 @@ const ComparisonPage: React.FC = () => {
     activeOriginalResumeId, activeEnhancedResumeId, activeJobId, 
     enhancementAnalysis, optimizationResult, 
     setContextEnhancedResumeId, setContextJobId, setOptimizationResult,
-    contextResumeId, contextJobId // Dependencies for context updates
+    contextResumeId, contextJobId, // Dependencies for context updates
+    pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId // Dependencies for pipeline context data
   ]);
 
   // Handle download for the ENHANCED resume
@@ -186,7 +189,7 @@ const ComparisonPage: React.FC = () => {
           // Placeholder for DOCX download logic if it differs
           // Example: const docxDownloadUrl = `${API_BASE_URL}/api/download/${activeEnhancedResumeId}/docx`;
           // window.open(docxDownloadUrl, '_blank'); 
-          toast({ title: "DOCX Download", description: "DOCX download functionality to be implemented via API.", variant: "info" });
+          toast({ title: "DOCX Download", description: "DOCX download functionality to be implemented via API.", variant: "default" });
           setIsDownloading(false); // Reset early if not fully implemented
           return; 
       }
@@ -407,3 +410,4 @@ const ComparisonPage: React.FC = () => {
     </div>;
 };
 export default ComparisonPage;
+
