@@ -3,20 +3,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ComparisonPage from "./pages/ComparisonPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
-import Technology from "./pages/Technology"; // Add Technology page
-import FAQ from "./pages/FAQ"; // Add FAQ page
-import Test2 from "./pages/Test2"; // Add new Test2 page
-import Test3 from "./pages/Test3"; // Add new Test3 page
+import Technology from "./pages/Technology";
+import FAQ from "./pages/FAQ";
+import Test2 from "./pages/Test2";
+import Test3 from "./pages/Test3";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
-import { AuthProvider } from "./components/auth/AuthProvider";
-import { useAuth } from "./components/auth/AuthProvider";
-import { PipelineProvider, ResumeProvider } from "./contexts/ResumeContext";
+import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
+import { PipelineProvider, ResumeProvider, usePipelineContext } from "./contexts/ResumeContext";
+import React, { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -33,29 +33,42 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // App Routes component that uses AuthProvider
 const AppRoutes = () => {
+  // This component can now safely use contexts provided above it.
+  const { performApiHealthCheck } = usePipelineContext(); 
+
+  useEffect(() => {
+    console.log("[AppRoutes useEffect] Effect triggered. Checking performApiHealthCheck...");
+    if (typeof performApiHealthCheck === 'function') {
+      console.log("[AppRoutes useEffect] performApiHealthCheck is a function. Calling it...");
+      performApiHealthCheck()
+        .then(() => {
+          console.log("[AppRoutes useEffect] performApiHealthCheck call completed or its promise resolved.");
+        })
+        .catch(error => {
+          console.error("[AppRoutes useEffect] Error caught from performApiHealthCheck promise:", error);
+        });
+    } else {
+      console.error("[AppRoutes useEffect] performApiHealthCheck is not a function or is undefined. This might indicate an issue with PipelineContext.");
+    }
+  }, [performApiHealthCheck]);
+
   return (
-    <AuthProvider>
-      <PipelineProvider>
-        <ResumeProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/technology" element={<Technology />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/comparison" element={
-              <ProtectedRoute>
-                <ComparisonPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/test2" element={<Test2 />} />
-            <Route path="/test3" element={<Test3 />} />
-            <Route path="/auth" element={<Auth />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ResumeProvider>
-      </PipelineProvider>
-    </AuthProvider>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/technology" element={<Technology />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/comparison" element={
+        <ProtectedRoute>
+          <ComparisonPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/test2" element={<Test2 />} />
+      <Route path="/test3" element={<Test3 />} />
+      <Route path="/auth" element={<Auth />} />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
@@ -64,7 +77,13 @@ const App = () => (
     <ThemeProvider>
       <TooltipProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <AuthProvider> {/* Moved AuthProvider up */}
+            <PipelineProvider> {/* Moved PipelineProvider up */}
+              <ResumeProvider> {/* Moved ResumeProvider up */}
+                <AppRoutes />
+              </ResumeProvider>
+            </PipelineProvider>
+          </AuthProvider>
         </BrowserRouter>
         <Toaster />
         <Sonner />
