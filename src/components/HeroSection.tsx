@@ -61,15 +61,27 @@ const HeroSection: React.FC = () => {
     
     setIsWriteExpanded(true);
     await uploadResume(file)
-    
   };
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
   const handleMakeItBetter = async () => {
-    if (jobDescription.trim())
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description empty",
+        description: "Please provide a job description to tailor your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const enhancementProcessStarted = await enhanceResume(jobDescription);
+    
+    if (enhancementProcessStarted) {
+      // Only open the modal if enhanceResume indicates the process has started (or is pending)
       setIsProgressModalOpen(true);
-    await enhanceResume(jobDescription);
+    }
+    // If enhancementProcessStarted is false, enhanceResume has already shown a toast for the pre-check failure.
   };
 
   const isUploading = pipelineState == UPLOADING;

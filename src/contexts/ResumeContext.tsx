@@ -27,7 +27,7 @@ type PipelineContextType = {
   
   uploadResume: (file: File) => Promise<void>;
   setJobDescription: (jd: string) => void;
-  enhanceResume: (jd: string) => Promise<void>;
+  enhanceResume: (jd: string) => Promise<boolean>;
   renderEnhancedResume: () => Promise<void>;
 }
 
@@ -86,7 +86,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     formData.append('user_id', user.id);
     
     try {
-      const response = await apiRequest("/api/upload", { // Changed to /api/upload
+      const response = await apiRequest("/api/upload", {
         method: "POST",
         headers: {}, // Let browser set content-type for FormData
         body: formData,
@@ -123,14 +123,14 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  const enhanceResume = async (jd: string): Promise<void> => {
+  const enhanceResume = async (jd: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
         title: "Not Authenticated",
         description: "Please sign in or signup to continue",
         variant: "destructive"
       });
-      return;
+      return false;
     }
     
     if (!jd.trim()) {
@@ -139,7 +139,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         description: "Please type or paste a job listing and try again",
         variant: "destructive"
       });
-      return;
+      return false;
     }
     
     if (pipelineState === NOT_UPLOADED) {
@@ -148,7 +148,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         description: "Please select or upload a resume and try again",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     if (pipelineState === ENHANCING) {
@@ -157,7 +157,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         description: "Please wait for the current optimization job to finish before starting a new one",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     setJobDescription(jd);
@@ -165,17 +165,17 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (pipelineState === UPLOADING) {
       setEnhancementPending(true);
       console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`);
-      return;
+      return true;
     } 
 
-    if (!resumeId) { // Added check for resumeId
+    if (!resumeId) {
       toast({
         title: "Resume ID missing",
         description: "Cannot enhance without a resume ID. Please upload a resume first.",
         variant: "destructive"
       });
-      setPipelineState(UPLOADED); // Or NOT_UPLOADED, depending on desired state
-      return;
+      setPipelineState(UPLOADED); 
+      return false;
     }
 
     console.log(`Initializing enhancement for resume with ID: ${resumeId}`);
@@ -187,7 +187,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     formData.append("job_description", jd);
     
     try {
-      const response = await apiRequest("/api/optimize", { // Changed to /api/optimize
+      const response = await apiRequest("/api/optimize", {
         method: "POST",
         headers: {}, // Let browser set content-type for FormData
         body: formData,
@@ -201,7 +201,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
           description: response?.error || "Received invalid response from server",
           variant: "destructive"
         });
-        return;
+        return false;
       }
 
       console.log(`Resume with ID ${resumeId} Enhanced successfully! \nJob Id: ${response.data.job_id}\nEnhanced Resume Id: ${response.data.enhanced_resume_id}`);
@@ -210,8 +210,8 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       setEnhancementAnalysis(response.data.analysis);
       setEnhancedResumeId(response.data.enhanced_resume_id);
       
-      // Set to RENDERED state to automatically trigger navigation in ProgressModal
       setTimeout(() => setPipelineState(RENDERED), 500);
+      return true;
       
     } catch (error) {
       console.error(`Enhancement of resume with ID: ${resumeId} failed. Error:`, error);
@@ -221,20 +221,20 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         description: "There was an error enhancing your resume. Please try again.",
         variant: "destructive"
       });
+      return false;
     }
   };
   
   const renderEnhancedResume = async (): Promise<void> => {
-    // This can be implemented in the future if needed
     return;
   };
 
   useEffect(() => {
-    if (pipelineState === UPLOADED && enhancementPending && resumeId && jobDescription) { // Added resumeId and jobDescription check
+    if (pipelineState === UPLOADED && enhancementPending && resumeId && jobDescription) {
       setEnhancementPending(false);
       enhanceResume(jobDescription);
     }
-  }, [pipelineState, enhancementPending, resumeId, jobDescription]); // Added resumeId and jobDescription to dependency array
+  }, [pipelineState, enhancementPending, resumeId, jobDescription]);
 
   return (
     <PipelineContext.Provider
