@@ -1,6 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import type { StorageError } from '@supabase/supabase-js'; // Import StorageError
+// Removed: import type { StorageError } from '@supabase/supabase-js';
 
 /**
  * Storage bucket name for resume PDFs
@@ -187,7 +188,8 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     const path = generateResumePath(userId, resumeId);
     
     // Upload the file
-    const { data: uploadResponseData, error: uploadError }: { data: { path: string } | null; error: StorageError | null } = 
+    // Changed: Removed explicit type annotation, letting TypeScript infer types.
+    const { data: uploadResponseData, error: uploadError } = 
       await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
@@ -219,3 +221,4 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     return null;
   }
 }
+
