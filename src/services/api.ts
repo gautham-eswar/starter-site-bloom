@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage"; // Assuming pdfStorage.ts is still relevant
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +7,6 @@ const API_BASE_URL = "https://draft-zero.onrender.com"; // Updated API Base URL
 // Helper function to handle API errors
 const handleApiError = (error: any) => {
   console.error("API Error:", error);
-  // The backend error format is { "error": "ErrorType", "message": "Detailed error message", ... }
-  // error?.response?.data?.message should map to errorData.message from apiRequest
   const errorMessage = error?.response?.data?.message || error.message || "Something went wrong";
   toast({
     title: "Error",
@@ -30,51 +27,33 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
         "Content-Type": "application/json",
       };
     } else if (options.body instanceof FormData) {
-      // For FormData, Content-Type is set by the browser, so we ensure it's not explicitly set to application/json
       if (options.headers && (options.headers as Record<string, string>)['Content-Type'] === 'application/json') {
         delete (options.headers as Record<string, string>)['Content-Type'];
       }
     }
     
-    // Add timeout management
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
-    if (!options.signal) {
-      options.signal = controller.signal;
-    }
+    // Removed timeout management logic (AbortController, setTimeout, clearTimeout)
+    // The options.signal can still be passed in if needed for external cancellation.
     
     const response = await fetch(url, options);
-    clearTimeout(timeoutId);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      // Backend error: { "error": "ErrorType", "message": "Detailed error message", ... }
-      // errorData.message will capture the detailed error message
       const errorMessage = errorData.message || `Request failed with status ${response.status}`;
       console.error(`API request to ${url} failed with status ${response.status}: ${errorMessage}`, errorData);
-      toast({ // Added toast here for immediate feedback on API errors
+      toast({
         title: `API Error: ${response.status}`,
         description: errorMessage,
         variant: "destructive",
       });
-      return { error: errorMessage, data: errorData }; // Return errorData as well
+      return { error: errorMessage, data: errorData };
     }
     
     const data = await response.json();
-    return data; // Backend response: { data: { ... } } or { message: "...", ... } for success
+    return data;
   } catch (error: any) {
-    if (error.name === 'AbortError') {
-      console.error('Request timed out');
-      toast({
-        title: "Error",
-        description: "Request timed out. Please try again.",
-        variant: "destructive",
-      });
-      return { error: 'Request timed out. Please try again.' };
-    }
-    // For other errors (network, etc.), use handleApiError
-    return handleApiError(error);
+    console.error("API Request Exception:", error); // Added more generic log for any catch here
+    return handleApiError(error); // Generic error handling for all caught exceptions
   }
 }
 
