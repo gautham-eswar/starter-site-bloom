@@ -1,7 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-// Removed: import type { StorageError } from '@supabase/supabase-js';
 
 /**
  * Storage bucket name for resume PDFs
@@ -188,14 +186,15 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     const path = generateResumePath(userId, resumeId);
     
     // Upload the file
-    // Changed: Removed explicit type annotation, letting TypeScript infer types.
-    const { data: uploadResponseData, error: uploadError } = 
-      await supabase.storage
+    const uploadResult = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
           cacheControl: '3600',
           upsert: true, // Creates the file if it does not exist, or replaces it if it does.
         });
+
+    // Destructure after awaiting and assigning to an intermediate variable
+    const { data: uploadResponseData, error: uploadError } = uploadResult;
     
     if (uploadError) {
       console.error('Error uploading PDF:', uploadError);
@@ -208,7 +207,6 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     }
     
     // Successfully uploaded, now get the URL
-    // uploadResponseData // { path: 'public/resume-pdfs/userId/resumeId/enhanced_resume_resumeId.pdf' }
     console.log('Successfully uploaded PDF, path:', uploadResponseData?.path);
     return await getResumeUrl(userId, resumeId, 'pdf'); // Specify format for getResumeUrl
   } catch (error) {
@@ -221,4 +219,3 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     return null;
   }
 }
-
