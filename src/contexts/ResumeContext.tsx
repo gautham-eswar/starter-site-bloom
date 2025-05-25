@@ -86,7 +86,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     formData.append('user_id', user.id);
     
     try {
-      const response = await apiRequest("/upload", {
+      const response = await apiRequest("/api/upload", { // Changed to /api/upload
         method: "POST",
         headers: {}, // Let browser set content-type for FormData
         body: formData,
@@ -97,7 +97,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         setPipelineState(NOT_UPLOADED);
         toast({
           title: "Upload failed",
-          description: "Received invalid response from server",
+          description: response?.error || "Received invalid response from server",
           variant: "destructive"
         });
         return;
@@ -168,6 +168,16 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     } 
 
+    if (!resumeId) { // Added check for resumeId
+      toast({
+        title: "Resume ID missing",
+        description: "Cannot enhance without a resume ID. Please upload a resume first.",
+        variant: "destructive"
+      });
+      setPipelineState(UPLOADED); // Or NOT_UPLOADED, depending on desired state
+      return;
+    }
+
     console.log(`Initializing enhancement for resume with ID: ${resumeId}`);
     setPipelineState(ENHANCING);
       
@@ -177,7 +187,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     formData.append("job_description", jd);
     
     try {
-      const response = await apiRequest("/optimize", {
+      const response = await apiRequest("/api/optimize", { // Changed to /api/optimize
         method: "POST",
         headers: {}, // Let browser set content-type for FormData
         body: formData,
@@ -188,7 +198,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         setPipelineState(UPLOADED);
         toast({
           title: "Enhancement failed",
-          description: "Received invalid response from server",
+          description: response?.error || "Received invalid response from server",
           variant: "destructive"
         });
         return;
@@ -220,11 +230,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   useEffect(() => {
-    if (pipelineState === UPLOADED && enhancementPending) {
+    if (pipelineState === UPLOADED && enhancementPending && resumeId && jobDescription) { // Added resumeId and jobDescription check
       setEnhancementPending(false);
       enhanceResume(jobDescription);
     }
-  }, [pipelineState, enhancementPending]);
+  }, [pipelineState, enhancementPending, resumeId, jobDescription]); // Added resumeId and jobDescription to dependency array
 
   return (
     <PipelineContext.Provider
