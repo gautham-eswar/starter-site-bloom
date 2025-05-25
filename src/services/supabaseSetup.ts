@@ -1,20 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { StorageError } from '@supabase/supabase-js'; // Import StorageError
 
 /**
  * Storage bucket name for resume PDFs
  */
 export const RESUME_BUCKET = 'resume-pdfs';
 
-// Define a type for the Supabase storage error if not directly importable.
-// This should align with the actual structure of errors from supabase.storage.
-interface CustomStorageError {
-  message: string;
-  name?: string; // e.g., 'StorageApiError', 'StorageUnknownError'
-  status?: number; // HTTP status code, e.g., 400, 404, 500
-  statusCode?: string; // Sometimes status is a string
-  // cause?: any; // Newer Error objects might have a cause
-}
+// Removed CustomStorageError interface
 
 /**
  * Sets up the necessary Supabase storage buckets and policies
@@ -198,7 +191,7 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     // Explicitly type the expected result of the upload operation
     const uploadResult: { 
       data: { path: string } | null; 
-      error: CustomStorageError | null; 
+      error: StorageError | null; // Use StorageError from Supabase
     } = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
@@ -206,20 +199,18 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
           upsert: true, // Creates the file if it does not exist, or replaces it if it does.
         });
 
-    const { data: uploadResponseData, error: uploadError } = uploadResult;
-    
-    if (uploadError) {
-      console.error('Error uploading PDF:', uploadError);
+    // Access properties directly instead of destructuring
+    if (uploadResult.error) {
+      console.error('Error uploading PDF:', uploadResult.error);
       toast({
         title: 'PDF Upload Failed',
-        description: uploadError.message || 'Could not upload the PDF file.',
+        description: uploadResult.error.message || 'Could not upload the PDF file.',
         variant: 'destructive',
       });
       return null;
     }
     
-    // Successfully uploaded, but ensure path exists in response data
-    if (!uploadResponseData || !uploadResponseData.path) {
+    if (!uploadResult.data || !uploadResult.data.path) {
       console.error('Error uploading PDF: No path returned in data despite successful upload status.');
       toast({
         title: 'PDF Upload Failed',
@@ -229,16 +220,16 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
       return null;
     }
     
-    console.log('Successfully uploaded PDF, path:', uploadResponseData.path);
+    console.log('Successfully uploaded PDF, path:', uploadResult.data.path);
     return await getResumeUrl(userId, resumeId, 'pdf'); // Specify format for getResumeUrl
   } catch (error) {
     console.error('Error in uploadPdf function (outer catch):', error);
-    // Enhanced error message extraction
     let errorMessage = 'An unexpected error occurred during upload.';
-    if (error instanceof Error) {
+    if (error instanceof Error) { // StorageError is an instance of Error
       errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as CustomStorageError).message === 'string') {
-      errorMessage = (error as CustomStorageError).message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error) {
+      // Fallback for non-Error objects with a message property
+      errorMessage = String((error as { message: unknown }).message);
     }
     toast({
       title: 'PDF Upload Failed',
