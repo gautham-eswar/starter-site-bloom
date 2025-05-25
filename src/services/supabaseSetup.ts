@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { StorageError } from '@supabase/supabase-js'; // Import StorageError
 
 /**
  * Storage bucket name for resume PDFs
@@ -186,28 +187,30 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
     const path = generateResumePath(userId, resumeId);
     
     // Upload the file
-    const { error: uploadError }: { data: { path: string } | null; error: any | null } = 
+    const { data: uploadResponseData, error: uploadError }: { data: { path: string } | null; error: StorageError | null } = 
       await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
           cacheControl: '3600',
-          upsert: true,
+          upsert: true, // Creates the file if it does not exist, or replaces it if it does.
         });
     
     if (uploadError) {
       console.error('Error uploading PDF:', uploadError);
       toast({
         title: 'PDF Upload Failed',
-        description: uploadError.message || 'Could not upload the PDF file.', // Supabase errors usually have a message property
+        description: uploadError.message || 'Could not upload the PDF file.',
         variant: 'destructive',
       });
       return null;
     }
     
-    // Get the signed URL
-    return await getResumeUrl(userId, resumeId);
+    // Successfully uploaded, now get the URL
+    // uploadResponseData // { path: 'public/resume-pdfs/userId/resumeId/enhanced_resume_resumeId.pdf' }
+    console.log('Successfully uploaded PDF, path:', uploadResponseData?.path);
+    return await getResumeUrl(userId, resumeId, 'pdf'); // Specify format for getResumeUrl
   } catch (error) {
-    console.error('Error uploading PDF:', error);
+    console.error('Error in uploadPdf function (outer catch):', error);
     toast({
       title: 'PDF Upload Failed',
       description: error instanceof Error ? error.message : 'An unexpected error occurred during upload.',

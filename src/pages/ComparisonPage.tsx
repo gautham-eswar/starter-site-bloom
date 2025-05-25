@@ -4,8 +4,7 @@ import { Download, Loader, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { usePipelineContext } from '@/contexts/ResumeContext';
-import { getOptimizationResults } from '@/services/api';
-import { Modification, OptimizationResult, EnhancementAnalysis } from '@/types/api';
+import { OptimizationResult, EnhancementAnalysis, Modification } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
@@ -79,85 +78,67 @@ const ComparisonPage: React.FC = () => {
     checkPdf();
   }, [resumeId, user?.id]);
 
-  // Fetch optimization results
+  // Fetch optimization results (now relies on context)
   useEffect(() => {
-    const fetchResults = async () => {
+    const processResults = () => {
+      setIsLoading(true);
+
       if (!resumeId || !jobId) {
+        toast({
+          title: "Missing Information",
+          description: "Resume ID or Job ID is missing. Cannot display results.",
+          variant: "destructive",
+        });
+        setOptimizationResult(null);
         setIsLoading(false);
         return;
       }
-      try {
-        // Update context with URL params if they exist
-        if (resumeIdParam && resumeIdParam !== contextResumeId) {
-          setResumeId(resumeIdParam);
-        }
-        if (jobIdParam && jobIdParam !== contextJobId) {
-          setJobId(jobIdParam);
-        }
 
-        // Check if we already have enhancement data from PipelineContext
-        if (enhancementAnalysis) {
-          console.log("Using data from PipelineContext:", enhancementAnalysis);
-
-          // Convert enhancementAnalysis to match OptimizationResult structure
-          const pipelineData: OptimizationResult = {
-            resume_id: resumeId || '',
-            job_id: jobId || '',
-            status: 'completed',
-            created_at: new Date().toISOString(),
-            modifications: enhancementAnalysis.modifications_summary || [],
-            analysis_data: {
-              old_score: enhancementAnalysis.old_score || 0,
-              improved_score: enhancementAnalysis.improved_score || 0,
-              match_percentage: enhancementAnalysis.match_percentage || 0,
-              keyword_matches: enhancementAnalysis.keyword_matches || 0,
-              total_keywords: enhancementAnalysis.total_keywords || 0
-            }
-          };
-          setOptimizationResult(pipelineData);
-          setIsLoading(false);
-          return;
-        }
-
-        // Fetch results from API if not available in PipelineContext
-        setIsLoading(true);
-        const results = await getOptimizationResults(resumeId, jobId);
-        console.log("Optimization results:", results);
-        setOptimizationResult(results);
-      } catch (error) {
-        console.error("Error fetching optimization results:", error);
-
-        // If API call fails but we have enhancementAnalysis, use that
-        if (enhancementAnalysis) {
-          console.log("API call failed, using PipelineContext data instead");
-          const fallbackData: OptimizationResult = {
-            resume_id: resumeId || '',
-            job_id: jobId || '',
-            status: 'completed',
-            created_at: new Date().toISOString(),
-            modifications: enhancementAnalysis.modifications_summary || [],
-            analysis_data: {
-              old_score: enhancementAnalysis.old_score || 0,
-              improved_score: enhancementAnalysis.improved_score || 0,
-              match_percentage: enhancementAnalysis.match_percentage || 0,
-              keyword_matches: enhancementAnalysis.keyword_matches || 0,
-              total_keywords: enhancementAnalysis.total_keywords || 0
-            }
-          };
-          setOptimizationResult(fallbackData);
-        } else {
-          toast({
-            title: "Error fetching results",
-            description: "There was an error fetching your optimization results.",
-            variant: "destructive"
-          });
-        }
-      } finally {
-        setIsLoading(false);
+      // Update context with URL params if they exist
+      if (resumeIdParam && resumeIdParam !== contextResumeId) {
+        setResumeId(resumeIdParam);
       }
+      if (jobIdParam && jobIdParam !== contextJobId) {
+        setJobId(jobIdParam);
+      }
+
+      // If optimizationResult is already in ResumeContext, use it
+      if (optimizationResult) {
+        console.log("Using optimizationResult from ResumeContext:", optimizationResult);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If not in ResumeContext, try enhancementAnalysis from PipelineContext
+      if (enhancementAnalysis) {
+        console.log("Using enhancementAnalysis from PipelineContext as fallback:", enhancementAnalysis);
+        const pipelineData: OptimizationResult = {
+          resume_id: resumeId || '',
+          job_id: jobId || '',
+          status: 'completed',
+          created_at: new Date().toISOString(),
+          modifications: enhancementAnalysis.modifications_summary || [],
+          analysis_data: {
+            old_score: enhancementAnalysis.old_score || 0,
+            improved_score: enhancementAnalysis.improved_score || 0,
+            match_percentage: enhancementAnalysis.match_percentage || 0,
+            keyword_matches: enhancementAnalysis.keyword_matches || 0,
+            total_keywords: enhancementAnalysis.total_keywords || 0
+          }
+        };
+        setOptimizationResult(pipelineData); // Populate ResumeContext
+        setIsLoading(false);
+        return;
+      }
+      
+      // If no data in either context, set loading to false.
+      // The UI will show "No Results Found" if optimizationResult remains null.
+      console.log("No optimization results found in context for ComparisonPage.");
+      setIsLoading(false);
     };
-    fetchResults();
-  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, setOptimizationResult, enhancementAnalysis]);
+
+    processResults();
+  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, optimizationResult, setOptimizationResult, enhancementAnalysis]);
 
   // Handle download
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
