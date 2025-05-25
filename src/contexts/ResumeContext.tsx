@@ -205,10 +205,18 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
 
       console.log(`Resume with ID ${resumeId} Enhanced successfully! \nJob Id: ${response.data.job_id}\nEnhanced Resume Id: ${response.data.enhanced_resume_id}`);
+      // Log received API data
+      console.log('[ResumeContext] Received from API - Job ID:', response.data.job_id, 'Enhanced Resume ID:', response.data.enhanced_resume_id);
+      
       setPipelineState(ENHANCED);
       setJobId(response.data.job_id);
       setEnhancementAnalysis(response.data.analysis);
       setEnhancedResumeId(response.data.enhanced_resume_id);
+
+      // Log values being set to context state
+      console.log('[ResumeContext] Attempting to set Context state - Job ID:', response.data.job_id, 'Enhanced Resume ID:', response.data.enhanced_resume_id);
+      // Log context state (acknowledging potential async issues with useState)
+      console.log('[ResumeContext] Context state after setting - Job ID:', jobId, 'Enhanced Resume ID:', enhancedResumeId);
       
       setTimeout(() => setPipelineState(RENDERED), 500);
       return true;

@@ -82,6 +82,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
   useEffect(() => {
     // Navigate as soon as enhancement is done and IDs are available
     if (pipelineState >= ENHANCED && resumeId && enhancedResumeId && jobId && isOpen) {
+      console.log('[ProgressModal] Auto-navigation check: All IDs present. resumeId:', resumeId, 'enhancedResumeId:', enhancedResumeId, 'jobId:', jobId);
       console.log("[ProgressModal] Enhancement process ENHANCED or further, attempting auto-navigation.");
       // Adding a slight delay to ensure UI updates and then navigate
       const timer = setTimeout(() => {
