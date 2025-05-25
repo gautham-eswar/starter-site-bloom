@@ -1,12 +1,13 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react'; // Added useEffect
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Terminal } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
 import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -32,6 +33,8 @@ const HeroSection: React.FC = () => {
       setJobDescription,
       enhanceResume,
       renderEnhancedResume,
+      isApiHealthy, // Consuming API health state
+      apiHealthError, // Consuming API health error
     } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +62,7 @@ const HeroSection: React.FC = () => {
       return;
     }
     
-    setIsWriteExpanded(true);
+    // setIsWriteExpanded(true); // Removed: Will be handled by useEffect
     await uploadResume(file)
   };
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -86,8 +89,17 @@ const HeroSection: React.FC = () => {
 
   const isUploading = pipelineState == UPLOADING;
   const isNotStarted = pipelineState == NOT_UPLOADED;
+  const isUploadedState = pipelineState === UPLOADED; // Added for clarity
   const isEnhancing = pipelineState == ENHANCING;
-  
+  const isApiDown = isApiHealthy === false;
+  const isApiCheckPending = isApiHealthy === null;
+  const disableInteractions = isApiDown || isApiCheckPending;
+
+  useEffect(() => {
+    if (pipelineState === UPLOADED && !isWriteExpanded) {
+      setIsWriteExpanded(true);
+    }
+  }, [pipelineState, isWriteExpanded]);
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -100,7 +112,24 @@ const HeroSection: React.FC = () => {
             <p className="mt-6 text-lg md:text-xl text-draft-text dark:text-gray-200 opacity-90">
               Tailor your resume to match a job description in minutes
             </p>
-            
+            {isApiDown && apiHealthError && (
+              <Alert variant="destructive" className="mt-6">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Server Connection Issue</AlertTitle>
+                <AlertDescription>
+                  {apiHealthError}
+                </AlertDescription>
+              </Alert>
+            )}
+            {isApiCheckPending && (
+              <Alert variant="default" className="mt-6 bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700">
+                <Terminal className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                <AlertTitle className="text-blue-800 dark:text-blue-200">Connecting</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-300">
+                  Attempting to connect to the server...
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
         
@@ -121,7 +150,7 @@ const HeroSection: React.FC = () => {
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploading}>
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploading || disableInteractions}>
                   {isUploading ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {resumeFilename && <p className="text-sm text-draft-green mt-2">
@@ -152,23 +181,29 @@ const HeroSection: React.FC = () => {
               <div className="mt-4 h-[200px] relative flex flex-col">
                 {isWriteExpanded ? (
                   <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
-                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
+                    <Textarea 
+                      placeholder="Add description" 
+                      className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" 
+                      value={jobDescription} 
+                      onChange={handleJobDescriptionChange} 
+                      disabled={!isUploadedState || disableInteractions} // Updated disabled condition
+                    />
                     <div className="p-2">
-                      <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
+                      <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent" disabled={!isUploadedState || disableInteractions}>
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-start">
-                    <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1">
+                    <Button variant="ghost" onClick={toggleWriteExpanded} className="pl-0 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" disabled={!isUploadedState || disableInteractions}>
                       Write <ArrowRight size={16} />
                     </Button>
                     
                     {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isEnhancing || !isUploadedState || disableInteractions} // Updated disabled condition
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -178,11 +213,11 @@ const HeroSection: React.FC = () => {
                 )}
                 
                 {/* Make it better button - only shown when textarea is expanded */}
-                {isWriteExpanded && (
+                {isWriteExpanded && isUploadedState && ( // Ensure button only shown when expanded AND resume is uploaded
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isEnhancing || !isUploadedState || disableInteractions} // Updated disabled condition
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >

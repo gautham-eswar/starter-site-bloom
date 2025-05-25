@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiRequest } from '@/services/api';
+import { apiRequest, checkApiHealth } from '@/services/api'; // Import checkApiHealth
 import { toast } from '@/hooks/use-toast';
 
 const NOT_UPLOADED = 0,
@@ -24,11 +24,14 @@ type PipelineContextType = {
   enhancedResumeId: string | null;
   enhancementAnalysis: EnhancementAnalysis | null;
   enhancementPending: boolean;
+  isApiHealthy: boolean | null; // New state for API health
+  apiHealthError: string | null; // New state for API health error message
   
   uploadResume: (file: File) => Promise<void>;
   setJobDescription: (jd: string) => void;
   enhanceResume: (jd: string) => Promise<boolean>;
   renderEnhancedResume: () => Promise<void>;
+  performApiHealthCheck: () => Promise<void>; // New function for health check
 }
 
 const PipelineContext = createContext<PipelineContextType | undefined>(undefined);
@@ -65,7 +68,32 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Data for RENDERED Stage
   const [enhancedResumeFile, setEnhancedResumeFile] = useState<File | null>(null);
   
+  // API Health State
+  const [isApiHealthy, setIsApiHealthy] = useState<boolean | null>(null);
+  const [apiHealthError, setApiHealthError] = useState<string | null>(null);
+  
   const { user } = useAuth();
+
+  const performApiHealthCheck = async () => {
+    console.log("Performing API health check from context...");
+    const response = await checkApiHealth();
+    if (response && (response.data?.overall_status === "healthy" || response.data?.status === "healthy")) {
+      setIsApiHealthy(true);
+      setApiHealthError(null);
+      console.log("API is healthy:", response.data);
+    } else {
+      setIsApiHealthy(false);
+      const errorMessage = response?.error || response?.data?.message || "Failed to connect to the server. Please try again later.";
+      setApiHealthError(errorMessage);
+      console.error("API health check failed:", response);
+      toast({
+        title: "Server Connection Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 900000, // Long duration, though might be overridden by global config
+      });
+    }
+  };
 
   const uploadResume = async (file: File): Promise<void> => {
     if (!user?.id) {
@@ -247,11 +275,14 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         enhancedResumeId,
         enhancementAnalysis,
         enhancementPending,
+        isApiHealthy,
+        apiHealthError,
         
         uploadResume,
         setJobDescription,
         enhanceResume,
         renderEnhancedResume,
+        performApiHealthCheck,
       }}
     >
       {children}

@@ -162,3 +162,15 @@ export async function downloadResume(resumeId: string, format: string = "pdf") {
     throw error; // Re-throw to be caught by calling function if necessary
   }
 }
+
+// Check API Health
+export async function checkApiHealth() {
+  console.log("Checking API health...");
+  const response = await apiRequest("/api/health", { method: "GET" }); // Ensure GET is specified, though it's default for apiRequest if no body
+  if (response && response.error) {
+    console.error("API Health Check Failed:", response.error);
+  } else {
+    console.log("API Health Status:", response);
+  }
+  return response; // Directly return the response (success data or error object)
+}
