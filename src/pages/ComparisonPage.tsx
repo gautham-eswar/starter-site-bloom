@@ -48,52 +48,62 @@ const ComparisonPage: React.FC = () => {
 
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Main page loading state
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null); // URL for the PDF viewer
 
   // Determine the IDs to use, prioritizing URL params
   const activeEnhancedResumeId = enhancedResumeIdParam || pipelineEnhancedResumeId || contextResumeId;
   const activeOriginalResumeId = originalResumeIdParam || pipelineOriginalResumeId;
   const activeJobId = jobIdParam || pipelineJobId || contextJobId;
 
+  console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'activeEnhancedResumeId:', activeEnhancedResumeId);
+
   // Check if PDF exists and get URL for the ENHANCED resume
   useEffect(() => {
     const checkAndFetchPdf = async () => {
       if (activeEnhancedResumeId && user?.id) {
-        console.log(`Checking PDF for enhancedResumeId: ${activeEnhancedResumeId}, user: ${user.id}`);
+        console.log(`[ComparisonPage] PDF Effect: Starting PDF check for enhancedResumeId: ${activeEnhancedResumeId}, user: ${user.id}`);
         try {
-          const exists = await checkPdfExists(activeEnhancedResumeId, user.id);
-          if (exists) {
-            const url = await getPdfUrl(activeEnhancedResumeId, user.id);
-            setPdfUrl(url);
-            console.log(`PDF URL for enhanced resume (${activeEnhancedResumeId}) set: ${url}`);
-          } else {
-            setPdfUrl(null);
-            console.warn(`PDF for enhanced resume (${activeEnhancedResumeId}) not found in storage.`);
-            // Optionally, toast here or rely on PDFViewer's internal handling
-          }
+          // We can be optimistic here. If getPdfUrl fails, it will throw.
+          // const exists = await checkPdfExists(activeEnhancedResumeId, user.id);
+          // console.log(`[ComparisonPage] PDF Effect: PDF exists? ${exists} for ${activeEnhancedResumeId}`);
+          // if (exists) {
+          const url = await getPdfUrl(activeEnhancedResumeId, user.id);
+          setPdfUrl(url);
+          console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${activeEnhancedResumeId}: ${url}`);
+          // } else {
+          //   setPdfUrl(null);
+          //   console.warn(`[ComparisonPage] PDF Effect: PDF for ${activeEnhancedResumeId} not found by checkPdfExists.`);
+          //   toast({ title: "PDF Not Found", description: "The enhanced PDF could not be located in storage.", variant: "warning" });
+          // }
         } catch (err) {
-          console.error('Error checking/fetching PDF for enhanced resume:', err);
+          console.error('[ComparisonPage] PDF Effect: Error getting PDF URL:', err);
           setPdfUrl(null);
+          toast({
+            title: "PDF Load Error",
+            description: `Failed to retrieve PDF URL. ${err instanceof Error ? err.message : 'Unknown error'}`,
+            variant: "destructive"
+          });
         }
       } else {
-        setPdfUrl(null); // Reset if IDs are missing
-        if (!activeEnhancedResumeId) console.warn("activeEnhancedResumeId is missing for PDF check.");
-        if (!user?.id) console.warn("user.id is missing for PDF check.");
+        setPdfUrl(null); 
+        if (!activeEnhancedResumeId) console.warn("[ComparisonPage] PDF Effect: activeEnhancedResumeId is missing for PDF check.");
+        if (!user?.id) console.warn("[ComparisonPage] PDF Effect: user.id is missing for PDF check.");
       }
     };
     checkAndFetchPdf();
-  }, [activeEnhancedResumeId, user?.id]);
+  }, [activeEnhancedResumeId, user?.id]); // Removed toast from dependencies as it's stable
 
   // Fetch/process optimization results
   useEffect(() => {
-    setIsLoading(true);
-    console.log("ComparisonPage: useEffect for processing results triggered.", {
-      activeOriginalResumeId, activeEnhancedResumeId, activeJobId, enhancementAnalysis, optimizationResult,
-      pipelineOriginalResumeId, pipelineEnhancedResumeId, pipelineJobId
-    });
+    console.log("[ComparisonPage] Optimization Effect: Triggered. Initial state - isLoading:", isLoading);
+    setIsLoading(true); // Explicitly set loading true at the beginning of this effect
+    console.log("[ComparisonPage] Optimization Effect: Set isLoading to true. Active IDs - Original:", activeOriginalResumeId, "Enhanced:", activeEnhancedResumeId, "Job:", activeJobId);
+    console.log("[ComparisonPage] Optimization Effect: Context states - enhancementAnalysis:", enhancementAnalysis, "optimizationResult:", optimizationResult);
+    console.log("[ComparisonPage] Optimization Effect: Pipeline context IDs - Original:", pipelineOriginalResumeId, "Enhanced:", pipelineEnhancedResumeId, "Job:", pipelineJobId);
+
 
     if (!activeEnhancedResumeId || !activeOriginalResumeId || !activeJobId) {
       toast({
@@ -102,25 +112,23 @@ const ComparisonPage: React.FC = () => {
         variant: "destructive",
       });
       setOptimizationResult(null);
+      console.log("[ComparisonPage] Optimization Effect: Missing IDs. Setting isLoading to false.");
       setIsLoading(false);
-      console.error("Missing IDs for displaying results:", { activeOriginalResumeId, activeEnhancedResumeId, activeJobId });
       return;
     }
 
     // Update ResumeContext with the active enhanced ID and job ID
     if (activeEnhancedResumeId && activeEnhancedResumeId !== contextResumeId) {
+      console.log("[ComparisonPage] Optimization Effect: Updating contextEnhancedResumeId to", activeEnhancedResumeId);
       setContextEnhancedResumeId(activeEnhancedResumeId);
     }
     if (activeJobId && activeJobId !== contextJobId) {
+      console.log("[ComparisonPage] Optimization Effect: Updating contextJobId to", activeJobId);
       setContextJobId(activeJobId);
     }
-
-    // Priority: 1. optimizationResult from ResumeContext (if matches current IDs)
-    //           2. enhancementAnalysis from PipelineContext (if matches current IDs)
-    //           3. Fallback: No results
     
     if (optimizationResult && optimizationResult.resume_id === activeEnhancedResumeId && optimizationResult.job_id === activeJobId) {
-      console.log("Using optimizationResult from ResumeContext:", optimizationResult);
+      console.log("[ComparisonPage] Optimization Effect: Using optimizationResult from ResumeContext. Setting isLoading to false.", optimizationResult);
       setIsLoading(false);
       return;
     }
@@ -129,13 +137,12 @@ const ComparisonPage: React.FC = () => {
         pipelineJobId === activeJobId && 
         pipelineEnhancedResumeId === activeEnhancedResumeId &&
         pipelineOriginalResumeId === activeOriginalResumeId) {
-      console.log("Using enhancementAnalysis from PipelineContext to build OptimizationResult:", enhancementAnalysis);
-      console.log("Pipeline context IDs:", { pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId });
+      console.log("[ComparisonPage] Optimization Effect: Using enhancementAnalysis from PipelineContext. Setting isLoading to false.", enhancementAnalysis);
       const pipelineData: OptimizationResult = {
-        resume_id: pipelineEnhancedResumeId, // This is the ID of the enhanced resume
+        resume_id: pipelineEnhancedResumeId,
         job_id: pipelineJobId,
-        status: 'completed', // Assuming completed if we have analysis
-        created_at: new Date().toISOString(), // Placeholder, actual creation time is on backend
+        status: 'completed', 
+        created_at: new Date().toISOString(),
         modifications: enhancementAnalysis.modifications_summary || [],
         analysis_data: {
           old_score: enhancementAnalysis.old_score || 0,
@@ -143,7 +150,6 @@ const ComparisonPage: React.FC = () => {
           match_percentage: enhancementAnalysis.match_percentage || 0,
           keyword_matches: enhancementAnalysis.keyword_matches || 0,
           total_keywords: enhancementAnalysis.total_keywords || 0,
-          // Add any other fields from EnhancementAnalysis that map to OptimizationResult.analysis_data
         }
       };
       setOptimizationResult(pipelineData);
@@ -151,19 +157,17 @@ const ComparisonPage: React.FC = () => {
       return;
     }
     
-    console.log("No suitable optimization results found in context for ComparisonPage. Active IDs:", { activeOriginalResumeId, activeEnhancedResumeId, activeJobId });
-    // If we reach here, no data is available or doesn't match.
-    // A fetch might be needed if data isn't passed via context, but current design relies on context.
-    setOptimizationResult(null); // Ensure it's cleared if no valid data
+    console.log("[ComparisonPage] Optimization Effect: No suitable optimization results found in context. Setting isLoading to false.");
+    setOptimizationResult(null);
     setIsLoading(false);
 
   }, [
     activeOriginalResumeId, activeEnhancedResumeId, activeJobId, 
     enhancementAnalysis, optimizationResult, 
     setContextEnhancedResumeId, setContextJobId, setOptimizationResult,
-    contextResumeId, contextJobId, // Dependencies for context updates
-    pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId // Dependencies for pipeline context data
-  ]);
+    contextResumeId, contextJobId,
+    pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId
+  ]); // Removed toast from dependencies
 
   // Handle download for the ENHANCED resume
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
@@ -177,26 +181,22 @@ const ComparisonPage: React.FC = () => {
     }
     
     setIsDownloading(true);
-    setDownloadFormat(format); // Keep track of which format is downloading
+    setDownloadFormat(format); 
+    console.log(`[ComparisonPage] Download: Initiated for ${format}, enhanced ID: ${activeEnhancedResumeId}`);
     
     try {
-      // TODO: The backend /api/download needs to handle 'docx' format if supported.
-      // For now, assuming getPdfUrl gives a URL for PDF.
-      // If DOCX download uses a different mechanism, this needs adjustment.
-      // The current getPdfUrl is specific to PDFs in Supabase storage.
       if (format === 'docx') {
-          // Placeholder for DOCX download logic if it differs
-          // Example: const docxDownloadUrl = `${API_BASE_URL}/api/download/${activeEnhancedResumeId}/docx`;
-          // window.open(docxDownloadUrl, '_blank'); 
+          console.log("[ComparisonPage] Download: DOCX format selected (to be implemented via API).");
           toast({ title: "DOCX Download", description: "DOCX download functionality to be implemented via API.", variant: "default" });
-          setIsDownloading(false); // Reset early if not fully implemented
+          setIsDownloading(false); 
           return; 
       }
 
-      const url = await getPdfUrl(activeEnhancedResumeId, user.id); // Fetches PDF for enhanced resume
+      const url = await getPdfUrl(activeEnhancedResumeId, user.id); 
       if (!url) {
         throw new Error('Could not generate download URL for the enhanced resume.');
       }
+      console.log(`[ComparisonPage] Download: PDF URL for download: ${url}`);
       
       window.open(url, '_blank');
       
@@ -205,7 +205,7 @@ const ComparisonPage: React.FC = () => {
         description: `Your optimized resume (${format.toUpperCase()}) has been opened in a new tab.`
       });
     } catch (error) {
-      console.error("Download error for enhanced resume:", error);
+      console.error("[ComparisonPage] Download: Error for enhanced resume:", error);
       toast({
         title: "Download failed",
         description: error instanceof Error ? error.message : "There was an error downloading your resume. Please try again.",
@@ -213,11 +213,14 @@ const ComparisonPage: React.FC = () => {
       });
     } finally {
       setIsDownloading(false);
+      console.log("[ComparisonPage] Download: Finished.");
     }
   };
 
-  // Show loading state
+  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl);
+
   if (isLoading) {
+    console.log('[ComparisonPage] Rendering: Main loading state.');
     return <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
@@ -230,6 +233,7 @@ const ComparisonPage: React.FC = () => {
   }
 
   if (!optimizationResult && !isLoading) {
+    console.log('[ComparisonPage] Rendering: No optimization result found and not loading.');
     return <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="px-8 py-10 md:px-12 lg:px-20">
@@ -245,9 +249,11 @@ const ComparisonPage: React.FC = () => {
         </div>
       </div>;
   }
-
+  
+  console.log('[ComparisonPage] Rendering: Main content with results.');
+  // ... keep existing code (improvementData, analysisData, groupedImprovements processing)
   const improvementData = optimizationResult?.modifications || [];
-  console.log("Improvements data:", improvementData);
+  console.log("[ComparisonPage] Data for rendering: Improvements data:", improvementData);
 
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
@@ -256,6 +262,8 @@ const ComparisonPage: React.FC = () => {
     keyword_matches: 0,
     total_keywords: 0
   };
+  console.log("[ComparisonPage] Data for rendering: Analysis data:", analysisData);
+
 
   const groupedImprovements: GroupedModifications = {};
   improvementData.forEach(mod => {
@@ -281,6 +289,7 @@ const ComparisonPage: React.FC = () => {
     };
     groupedImprovements[key].modifications.push(normalizedMod);
   });
+  console.log("[ComparisonPage] Data for rendering: Grouped improvements:", groupedImprovements);
   
   return <div className="min-h-screen bg-draft-bg">
       <Header />
@@ -318,10 +327,7 @@ const ComparisonPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Keyword Summary */}
-            
-            
-            {/* Improvements by Company - Redesigned to be more flowing and modern */}
+            {/* Improvements by Company */}
             <div>
               <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
               
@@ -366,6 +372,7 @@ const ComparisonPage: React.FC = () => {
           {/* Right side - Resume Preview */}
           <div>
             <div className="sticky top-24 space-y-6">
+              {/* Resume preview header and download buttons */}
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
                 <div className="flex gap-3">
@@ -390,9 +397,10 @@ const ComparisonPage: React.FC = () => {
                       <p className="text-draft-green/70 font-serif">
                         {(!activeEnhancedResumeId || !user?.id) 
                           ? "Preview unavailable: Missing resume information." 
-                          : "Loading preview or PDF not found..."}
+                          : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
                       </p>
-                      {!pdfUrl && activeEnhancedResumeId && user?.id && <p className="text-sm text-draft-coral mt-2">If this persists, the enhanced PDF might not be available in storage.</p>}
+                      {!pdfUrl && activeEnhancedResumeId && user?.id && !isLoading && <p className="text-sm text-draft-coral mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>}
+                      {isLoading && <Loader className="h-6 w-6 animate-spin text-draft-green mt-4" />}
                     </div>
                   </div>
                 )}
