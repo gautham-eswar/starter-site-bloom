@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
@@ -24,9 +23,9 @@ const NOT_UPLOADED = 0,
 const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) => {
   const {
     pipelineState,
-    resumeId,
+    resumeId, // This is the original resume ID
     jobId,
-    enhancedResumeId
+    enhancedResumeId // This is the ID of the enhanced resume
   } = usePipelineContext();
   const navigate = useNavigate();
   
@@ -40,11 +39,23 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
     { name: 'Applying template', icon: <CircleCheck className="text-draft-mint" /> }
   ];
 
-  const handleDoneClick = () => {
-    onOpenChange(false);
-    if (resumeId && jobId) {
-      navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
+  const handleNavigateToComparison = () => {
+    if (resumeId && enhancedResumeId && jobId) {
+      console.log(`Navigating with originalResumeId: ${resumeId}, enhancedResumeId: ${enhancedResumeId}, jobId: ${jobId}`);
+      navigate(`/comparison?originalResumeId=${resumeId}&enhancedResumeId=${enhancedResumeId}&jobId=${jobId}`);
+      onOpenChange(false);
+    } else {
+      console.error("Navigation error: Missing IDs for comparison page.", { resumeId, enhancedResumeId, jobId });
+      toast({
+        title: "Navigation Error",
+        description: "Could not navigate to results. Required information is missing.",
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleDoneClick = () => {
+    handleNavigateToComparison();
   };
 
   // Update current step based on pipeline state
@@ -56,35 +67,53 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
       setCurrentStep(2);
       setProgress(0);
     } else if (pipelineState >= RENDERED && currentStep === 2) {
-      setCurrentStep(3);
+      setCurrentStep(3); // Indicates completion of all steps for UI
     }
   }, [pipelineState, currentStep]);
 
-  // Auto-navigate when enhancement is complete
+  // Auto-navigate when enhancement is complete and all data is available
   useEffect(() => {
-    if (pipelineState >= ENHANCED && resumeId && jobId) {
-      console.log("Enhancement complete, navigating to comparison page");
-      setTimeout(() => {
-        onOpenChange(false);
-        navigate(`/comparison?resumeId=${resumeId}&jobId=${jobId}`);
-      }, 1000);
+    if (pipelineState >= RENDERED && resumeId && enhancedResumeId && jobId && isOpen) { // Check isOpen to prevent navigation if modal was closed
+      console.log("Enhancement process RENDERED, attempting auto-navigation.");
+      // Adding a slight delay to ensure UI updates and then navigate
+      const timer = setTimeout(() => {
+        if (isOpen) { // Double check isOpen before navigating
+            handleNavigateToComparison();
+        }
+      }, 1000); 
+      return () => clearTimeout(timer);
     }
-  }, [pipelineState, resumeId, jobId, navigate, onOpenChange]);
+  }, [pipelineState, resumeId, enhancedResumeId, jobId, navigate, onOpenChange, isOpen]);
   
   const isComplete = (pipelineState >= RENDERED);
 
   // Progress animation
   useEffect(() => {
-    let interval = setInterval(function () {
-      setProgress(prev => (prev >= 100) ? 0 : prev + 5);
-    }, 2000);
+    let interval: NodeJS.Timeout | undefined;
+    if (isOpen && !isComplete) {
+        interval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 100) {
+                    // If a step is visually "complete" but the actual process (like ENHANCED state) isn't hit yet,
+                    // this could reset progress. We might want to hold at 100 or rely on currentStep.
+                    // For now, let's keep it simple and let it cycle if a step takes longer.
+                    return prev >= 95 && (currentStep === 0 && pipelineState < UPLOADED || currentStep === 1 && pipelineState < ENHANCED || currentStep === 2 && pipelineState < RENDERED) ? prev : prev + 5 > 100 ? 100 : prev + 5;
+                }
+                return prev + 5;
+            });
+        }, 200); // Reduced interval for faster visual progress
+    } else if (isComplete) {
+        setProgress(100); // Ensure progress is 100% when complete
+    }
     
-    return () => clearInterval(interval);
-  }, [isOpen, pipelineState, currentStep]);
+    return () => {
+        if (interval) clearInterval(interval);
+    };
+  }, [isOpen, pipelineState, currentStep, isComplete]);
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      // Only allow closing if complete or error
+      // Only allow closing if complete or error, or if user explicitly closes
       onOpenChange(open);
     }}>
       <DialogContent className="bg-draft-bg border-draft-green sm:max-w-md">
@@ -96,9 +125,16 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
           
           <div className="space-y-8">
             {steps.map((step, index) => {
-              const isActive = currentStep === index;
-              const isCompleted = currentStep > index;
+              const isActive = currentStep === index && !isComplete; // Active means current and not all steps done
+              const isCompleted = currentStep > index || (currentStep === index && isComplete && index === steps.length -1) || (isComplete && index < steps.length -1) ;
               
+              let stepProgress = 0;
+              if (isCompleted) {
+                stepProgress = 100;
+              } else if (isActive) {
+                stepProgress = progress;
+              }
+
               return (
                 <div 
                   key={index} 
@@ -109,10 +145,10 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-draft-green">{step.name}</p>
-                    {isActive && (
+                    {(isActive || isCompleted) && ( // Show progress bar if active or completed
                       <div className="mt-2">
                         <Progress 
-                          value={progress} 
+                          value={stepProgress} 
                           className="h-2 bg-[#f1f1eb] bg-opacity-70"
                         />
                       </div>
@@ -130,6 +166,7 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ isOpen, onOpenChange }) =
                   {currentStep === 0 && "Preparing to make magic..."}
                   {currentStep === 1 && "Finding the perfect words..."}
                   {currentStep === 2 && "Adding that special touch..."}
+                  {currentStep === 3 && "Finalizing enhancements..."} 
                 </p>
               )}
               

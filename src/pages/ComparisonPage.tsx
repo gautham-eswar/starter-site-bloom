@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -6,7 +7,7 @@ import { useResumeContext } from '@/contexts/ResumeContext';
 import { usePipelineContext } from '@/contexts/ResumeContext';
 import { OptimizationResult, EnhancementAnalysis, Modification } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import PDFViewer from '@/components/PDFViewer';
 import { getPdfUrl, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -25,154 +26,187 @@ interface GroupedModifications {
 }
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const resumeIdParam = searchParams.get('resumeId');
+  const navigate = useNavigate();
+  const originalResumeIdParam = searchParams.get('originalResumeId');
+  const enhancedResumeIdParam = searchParams.get('enhancedResumeId');
   const jobIdParam = searchParams.get('jobId');
 
-  // Import from both contexts
   const {
-    resumeId: contextResumeId,
-    setResumeId,
+    resumeId: contextResumeId, // In ResumeContext, resumeId should store the ENHANCED ID for this page
+    setResumeId: setContextEnhancedResumeId,
     jobId: contextJobId,
-    setJobId,
+    setJobId: setContextJobId,
     optimizationResult,
     setOptimizationResult
   } = useResumeContext();
 
-  // Get data from PipelineContext as a fallback
   const {
-    resumeId: pipelineResumeId,
+    resumeId: pipelineOriginalResumeId, // From PipelineContext, this is the original resume ID
     jobId: pipelineJobId,
-    enhancementAnalysis
+    enhancedResumeId: pipelineEnhancedResumeId, // From PipelineContext
+    enhancementAnalysis // From PipelineContext
   } = usePipelineContext();
-  const {
-    user
-  } = useAuth();
+
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
-  const [pdfExists, setPdfExists] = useState<boolean | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  // Use URL params if available, otherwise use context
-  const resumeId = resumeIdParam || contextResumeId || pipelineResumeId;
-  const jobId = jobIdParam || contextJobId || pipelineJobId;
+  // Determine the IDs to use, prioritizing URL params
+  const activeEnhancedResumeId = enhancedResumeIdParam || pipelineEnhancedResumeId || contextResumeId;
+  const activeOriginalResumeId = originalResumeIdParam || pipelineOriginalResumeId;
+  const activeJobId = jobIdParam || pipelineJobId || contextJobId;
 
-  // Check if PDF exists and get URL
+  // Check if PDF exists and get URL for the ENHANCED resume
   useEffect(() => {
-    const checkPdf = async () => {
-      if (resumeId && user?.id) {
+    const checkAndFetchPdf = async () => {
+      if (activeEnhancedResumeId && user?.id) {
+        console.log(`Checking PDF for enhancedResumeId: ${activeEnhancedResumeId}, user: ${user.id}`);
         try {
-          const exists = await checkPdfExists(resumeId, user.id);
-          setPdfExists(exists);
-          
+          const exists = await checkPdfExists(activeEnhancedResumeId, user.id);
           if (exists) {
-            const url = await getPdfUrl(resumeId, user.id);
+            const url = await getPdfUrl(activeEnhancedResumeId, user.id);
             setPdfUrl(url);
+            console.log(`PDF URL for enhanced resume (${activeEnhancedResumeId}) set: ${url}`);
+          } else {
+            setPdfUrl(null);
+            console.warn(`PDF for enhanced resume (${activeEnhancedResumeId}) not found in storage.`);
+            // Optionally, toast here or rely on PDFViewer's internal handling
           }
         } catch (err) {
-          console.error('Error checking PDF:', err);
+          console.error('Error checking/fetching PDF for enhanced resume:', err);
+          setPdfUrl(null);
         }
+      } else {
+        setPdfUrl(null); // Reset if IDs are missing
+        if (!activeEnhancedResumeId) console.warn("activeEnhancedResumeId is missing for PDF check.");
+        if (!user?.id) console.warn("user.id is missing for PDF check.");
       }
     };
-    checkPdf();
-  }, [resumeId, user?.id]);
+    checkAndFetchPdf();
+  }, [activeEnhancedResumeId, user?.id]);
 
-  // Fetch optimization results (now relies on context)
+  // Fetch/process optimization results
   useEffect(() => {
-    const processResults = () => {
-      setIsLoading(true);
+    setIsLoading(true);
+    console.log("ComparisonPage: useEffect for processing results triggered.", {
+      activeOriginalResumeId, activeEnhancedResumeId, activeJobId, enhancementAnalysis, optimizationResult
+    });
 
-      if (!resumeId || !jobId) {
-        toast({
-          title: "Missing Information",
-          description: "Resume ID or Job ID is missing. Cannot display results.",
-          variant: "destructive",
-        });
-        setOptimizationResult(null);
-        setIsLoading(false);
-        return;
-      }
-
-      // Update context with URL params if they exist
-      if (resumeIdParam && resumeIdParam !== contextResumeId) {
-        setResumeId(resumeIdParam);
-      }
-      if (jobIdParam && jobIdParam !== contextJobId) {
-        setJobId(jobIdParam);
-      }
-
-      // If optimizationResult is already in ResumeContext, use it
-      if (optimizationResult) {
-        console.log("Using optimizationResult from ResumeContext:", optimizationResult);
-        setIsLoading(false);
-        return;
-      }
-      
-      // If not in ResumeContext, try enhancementAnalysis from PipelineContext
-      if (enhancementAnalysis) {
-        console.log("Using enhancementAnalysis from PipelineContext as fallback:", enhancementAnalysis);
-        const pipelineData: OptimizationResult = {
-          resume_id: resumeId || '',
-          job_id: jobId || '',
-          status: 'completed',
-          created_at: new Date().toISOString(),
-          modifications: enhancementAnalysis.modifications_summary || [],
-          analysis_data: {
-            old_score: enhancementAnalysis.old_score || 0,
-            improved_score: enhancementAnalysis.improved_score || 0,
-            match_percentage: enhancementAnalysis.match_percentage || 0,
-            keyword_matches: enhancementAnalysis.keyword_matches || 0,
-            total_keywords: enhancementAnalysis.total_keywords || 0
-          }
-        };
-        setOptimizationResult(pipelineData); // Populate ResumeContext
-        setIsLoading(false);
-        return;
-      }
-      
-      // If no data in either context, set loading to false.
-      // The UI will show "No Results Found" if optimizationResult remains null.
-      console.log("No optimization results found in context for ComparisonPage.");
+    if (!activeEnhancedResumeId || !activeOriginalResumeId || !activeJobId) {
+      toast({
+        title: "Missing Information",
+        description: "Key identifiers (original resume, enhanced resume, or job ID) are missing. Cannot display results.",
+        variant: "destructive",
+      });
+      setOptimizationResult(null);
       setIsLoading(false);
-    };
+      console.error("Missing IDs for displaying results:", { activeOriginalResumeId, activeEnhancedResumeId, activeJobId });
+      return;
+    }
 
-    processResults();
-  }, [resumeId, jobId, resumeIdParam, jobIdParam, contextResumeId, contextJobId, setResumeId, setJobId, optimizationResult, setOptimizationResult, enhancementAnalysis]);
+    // Update ResumeContext with the active enhanced ID and job ID
+    if (activeEnhancedResumeId && activeEnhancedResumeId !== contextResumeId) {
+      setContextEnhancedResumeId(activeEnhancedResumeId);
+    }
+    if (activeJobId && activeJobId !== contextJobId) {
+      setContextJobId(activeJobId);
+    }
 
-  // Handle download
+    // Priority: 1. optimizationResult from ResumeContext (if matches current IDs)
+    //           2. enhancementAnalysis from PipelineContext (if matches current IDs)
+    //           3. Fallback: No results
+    
+    if (optimizationResult && optimizationResult.resume_id === activeEnhancedResumeId && optimizationResult.job_id === activeJobId) {
+      console.log("Using optimizationResult from ResumeContext:", optimizationResult);
+      setIsLoading(false);
+      return;
+    }
+    
+    if (enhancementAnalysis && 
+        enhancementAnalysis.job_id === activeJobId && 
+        enhancementAnalysis.enhanced_resume_id === activeEnhancedResumeId &&
+        enhancementAnalysis.original_resume_id === activeOriginalResumeId) {
+      console.log("Using enhancementAnalysis from PipelineContext to build OptimizationResult:", enhancementAnalysis);
+      const pipelineData: OptimizationResult = {
+        resume_id: enhancementAnalysis.enhanced_resume_id, // This is the ID of the enhanced resume
+        job_id: enhancementAnalysis.job_id,
+        status: 'completed', // Assuming completed if we have analysis
+        created_at: new Date().toISOString(), // Placeholder, actual creation time is on backend
+        modifications: enhancementAnalysis.modifications_summary || [],
+        analysis_data: {
+          old_score: enhancementAnalysis.old_score || 0,
+          improved_score: enhancementAnalysis.improved_score || 0,
+          match_percentage: enhancementAnalysis.match_percentage || 0,
+          keyword_matches: enhancementAnalysis.keyword_matches || 0,
+          total_keywords: enhancementAnalysis.total_keywords || 0,
+          // Add any other fields from EnhancementAnalysis that map to OptimizationResult.analysis_data
+        }
+      };
+      setOptimizationResult(pipelineData);
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log("No suitable optimization results found in context for ComparisonPage. Active IDs:", { activeOriginalResumeId, activeEnhancedResumeId, activeJobId });
+    // If we reach here, no data is available or doesn't match.
+    // A fetch might be needed if data isn't passed via context, but current design relies on context.
+    setOptimizationResult(null); // Ensure it's cleared if no valid data
+    setIsLoading(false);
+
+  }, [
+    activeOriginalResumeId, activeEnhancedResumeId, activeJobId, 
+    enhancementAnalysis, optimizationResult, 
+    setContextEnhancedResumeId, setContextJobId, setOptimizationResult,
+    contextResumeId, contextJobId // Dependencies for context updates
+  ]);
+
+  // Handle download for the ENHANCED resume
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
-    if (!resumeId || !user?.id) {
+    if (!activeEnhancedResumeId || !user?.id) {
       toast({
         title: "Download failed",
-        description: "Resume ID or user ID is missing.",
+        description: "Enhanced Resume ID or user information is missing.",
         variant: "destructive"
       });
       return;
     }
     
     setIsDownloading(true);
-    setDownloadFormat(format);
+    setDownloadFormat(format); // Keep track of which format is downloading
     
     try {
-      // Get a signed URL that will open directly
-      const url = await getPdfUrl(resumeId, user.id);
+      // TODO: The backend /api/download needs to handle 'docx' format if supported.
+      // For now, assuming getPdfUrl gives a URL for PDF.
+      // If DOCX download uses a different mechanism, this needs adjustment.
+      // The current getPdfUrl is specific to PDFs in Supabase storage.
+      if (format === 'docx') {
+          // Placeholder for DOCX download logic if it differs
+          // Example: const docxDownloadUrl = `${API_BASE_URL}/api/download/${activeEnhancedResumeId}/docx`;
+          // window.open(docxDownloadUrl, '_blank'); 
+          toast({ title: "DOCX Download", description: "DOCX download functionality to be implemented via API.", variant: "info" });
+          setIsDownloading(false); // Reset early if not fully implemented
+          return; 
+      }
+
+      const url = await getPdfUrl(activeEnhancedResumeId, user.id); // Fetches PDF for enhanced resume
       if (!url) {
-        throw new Error('Could not generate download URL');
+        throw new Error('Could not generate download URL for the enhanced resume.');
       }
       
-      // Open the PDF in a new tab
       window.open(url, '_blank');
       
       toast({
         title: "Download successful",
-        description: `Your optimized resume has been opened in a new tab`
+        description: `Your optimized resume (${format.toUpperCase()}) has been opened in a new tab.`
       });
     } catch (error) {
-      console.error("Download error:", error);
+      console.error("Download error for enhanced resume:", error);
       toast({
         title: "Download failed",
-        description: "There was an error downloading your resume. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error downloading your resume. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -193,7 +227,6 @@ const ComparisonPage: React.FC = () => {
       </div>;
   }
 
-  // Show error if no results found
   if (!optimizationResult && !isLoading) {
     return <div className="min-h-screen bg-draft-bg">
         <Header />
@@ -201,9 +234,9 @@ const ComparisonPage: React.FC = () => {
           <div className="text-center max-w-xl mx-auto">
             <h2 className="text-2xl font-serif text-draft-green mb-4">No Results Found</h2>
             <p className="text-draft-text mb-6 font-serif">
-              We couldn't find optimization results for this resume. Please try optimizing your resume again.
+              We couldn't find optimization results for this resume. This could be due to missing information or an issue during processing. Please try optimizing your resume again.
             </p>
-            <Button onClick={() => window.location.href = '/'} className="bg-draft-green hover:bg-draft-green/90 text-white">
+            <Button onClick={() => navigate('/')} className="bg-draft-green hover:bg-draft-green/90 text-white">
               Back to Home
             </Button>
           </div>
@@ -211,12 +244,9 @@ const ComparisonPage: React.FC = () => {
       </div>;
   }
 
-  // Extract modifications data from the optimizationResult
-  // Check for both standard API response structure and the enhancementAnalysis format
   const improvementData = optimizationResult?.modifications || [];
   console.log("Improvements data:", improvementData);
 
-  // Extract analysis data
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
     improved_score: 0,
@@ -225,15 +255,10 @@ const ComparisonPage: React.FC = () => {
     total_keywords: 0
   };
 
-  // Group modifications by company and position
-  // Handle both standard modifications and bullet-specific modifications
   const groupedImprovements: GroupedModifications = {};
   improvementData.forEach(mod => {
-    // Check if this is from the API format (bullet_idx, enhanced_bullet exist)
     const originalText = mod.original || mod.original_bullet || '';
     const improvedText = mod.improved || mod.enhanced_bullet || '';
-
-    // Create a unique key for each company+position combination
     const company = mod.company || mod.section || 'General';
     const position = mod.position || '';
     const key = `${company}${position ? ` - ${position}` : ''}`;
@@ -244,8 +269,6 @@ const ComparisonPage: React.FC = () => {
         modifications: []
       };
     }
-
-    // Create a normalized modification object
     const normalizedMod: Modification = {
       section: mod.section || '',
       original: originalText,
@@ -256,6 +279,7 @@ const ComparisonPage: React.FC = () => {
     };
     groupedImprovements[key].modifications.push(normalizedMod);
   });
+  
   return <div className="min-h-screen bg-draft-bg">
       <Header />
       
@@ -332,7 +356,7 @@ const ComparisonPage: React.FC = () => {
                       </CollapsibleContent>
                     </Collapsible>)}
                 </div> : <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
-                  <p className="text-draft-green/70 font-serif">No enhancements found</p>
+                  <p className="text-draft-green/70 font-serif">No enhancements found for this job.</p>
                 </div>}
             </div>
           </div>
@@ -343,11 +367,11 @@ const ComparisonPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
                 <div className="flex gap-3">
-                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('pdf')} disabled={isDownloading}>
+                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('pdf')} disabled={isDownloading && downloadFormat === 'pdf'}>
                     {isDownloading && downloadFormat === 'pdf' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     PDF
                   </Button>
-                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('docx')} disabled={isDownloading}>
+                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('docx')} disabled={isDownloading && downloadFormat === 'docx'}>
                     {isDownloading && downloadFormat === 'docx' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     DOCX
                   </Button>
@@ -355,20 +379,23 @@ const ComparisonPage: React.FC = () => {
               </div>
               
               <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
-                {resumeId && user?.id ? (
+                {activeEnhancedResumeId && user?.id ? (
                   <PDFViewer 
-                    resumeId={resumeId} 
+                    resumeId={activeEnhancedResumeId} 
                     userId={user.id} 
                     height="100%" 
-                    directUrl={pdfUrl} 
+                    directUrl={pdfUrl} // pdfUrl is already fetched using activeEnhancedResumeId
                   />
                 ) : (
-                  <div className="p-6 h-full">
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-bold text-draft-green font-serif">Enhanced Resume Preview</h1>
-                        <p className="text-draft-green/70 font-serif">Resume preview not available</p>
-                      </div>
+                  <div className="p-6 h-full flex flex-col items-center justify-center">
+                    <div className="text-center">
+                      <h1 className="text-xl font-bold text-draft-green font-serif mb-2">Enhanced Resume Preview</h1>
+                      <p className="text-draft-green/70 font-serif">
+                        {(!activeEnhancedResumeId || !user?.id) 
+                          ? "Preview unavailable: Missing resume information." 
+                          : "Loading preview or PDF not found..."}
+                      </p>
+                      {!pdfUrl && activeEnhancedResumeId && user?.id && <p className="text-sm text-draft-coral mt-2">If this persists, the enhanced PDF might not be available in storage.</p>}
                     </div>
                   </div>
                 )}
