@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -8,7 +7,7 @@ import { usePipelineContext } from '@/contexts/ResumeContext';
 import { OptimizationResult, EnhancementAnalysis, Modification } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import PDFViewer from '@/components/PDFViewer';
+import { DirectPDFViewer } from '@/components/DirectPDFViewer';
 import { getPdfUrl, checkPdfExists } from '@/services/pdfStorage';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -382,13 +381,8 @@ const ComparisonPage: React.FC = () => {
               </div>
               
               <div className="bg-white border border-draft-green/10 rounded-xl overflow-hidden h-[680px] shadow-lg">
-                {activeEnhancedResumeId && user?.id ? (
-                  <PDFViewer 
-                    resumeId={activeEnhancedResumeId} 
-                    userId={user.id} 
-                    height="100%" 
-                    directUrl={pdfUrl} // pdfUrl is already fetched using activeEnhancedResumeId
-                  />
+                {pdfUrl ? (
+                  <DirectPDFViewer url={pdfUrl} />
                 ) : (
                   <div className="p-6 h-full flex flex-col items-center justify-center">
                     <div className="text-center">
@@ -410,4 +404,3 @@ const ComparisonPage: React.FC = () => {
     </div>;
 };
 export default ComparisonPage;
-
