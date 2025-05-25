@@ -6,6 +6,16 @@ import { toast } from '@/hooks/use-toast';
  */
 export const RESUME_BUCKET = 'resume-pdfs';
 
+// Define a type for the Supabase storage error if not directly importable.
+// This should align with the actual structure of errors from supabase.storage.
+interface CustomStorageError {
+  message: string;
+  name?: string; // e.g., 'StorageApiError', 'StorageUnknownError'
+  status?: number; // HTTP status code, e.g., 400, 404, 500
+  statusCode?: string; // Sometimes status is a string
+  // cause?: any; // Newer Error objects might have a cause
+}
+
 /**
  * Sets up the necessary Supabase storage buckets and policies
  * This function checks if the required buckets exist and creates them if needed
@@ -185,15 +195,17 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
   try {
     const path = generateResumePath(userId, resumeId);
     
-    // Upload the file
-    const uploadResult = await supabase.storage
+    // Explicitly type the expected result of the upload operation
+    const uploadResult: { 
+      data: { path: string } | null; 
+      error: CustomStorageError | null; 
+    } = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
           cacheControl: '3600',
           upsert: true, // Creates the file if it does not exist, or replaces it if it does.
         });
 
-    // Destructure after awaiting and assigning to an intermediate variable
     const { data: uploadResponseData, error: uploadError } = uploadResult;
     
     if (uploadError) {
@@ -206,14 +218,31 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
       return null;
     }
     
-    // Successfully uploaded, now get the URL
-    console.log('Successfully uploaded PDF, path:', uploadResponseData?.path);
+    // Successfully uploaded, but ensure path exists in response data
+    if (!uploadResponseData || !uploadResponseData.path) {
+      console.error('Error uploading PDF: No path returned in data despite successful upload status.');
+      toast({
+        title: 'PDF Upload Failed',
+        description: 'Upload was reported as successful, but no file path was returned.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+    
+    console.log('Successfully uploaded PDF, path:', uploadResponseData.path);
     return await getResumeUrl(userId, resumeId, 'pdf'); // Specify format for getResumeUrl
   } catch (error) {
     console.error('Error in uploadPdf function (outer catch):', error);
+    // Enhanced error message extraction
+    let errorMessage = 'An unexpected error occurred during upload.';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as CustomStorageError).message === 'string') {
+      errorMessage = (error as CustomStorageError).message;
+    }
     toast({
       title: 'PDF Upload Failed',
-      description: error instanceof Error ? error.message : 'An unexpected error occurred during upload.',
+      description: errorMessage,
       variant: 'destructive',
     });
     return null;
