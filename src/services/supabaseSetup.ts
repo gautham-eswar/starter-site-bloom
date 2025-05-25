@@ -6,8 +6,6 @@ import { toast } from '@/hooks/use-toast';
  */
 export const RESUME_BUCKET = 'resume-pdfs';
 
-// Removed CustomStorageError interface
-
 /**
  * Sets up the necessary Supabase storage buckets and policies
  * This function checks if the required buckets exist and creates them if needed
@@ -177,13 +175,6 @@ export async function getPdfMetadata(userId: string, resumeId: string): Promise<
 }
 
 /**
- * Define a more specific error type for storage uploads, extending Error
- */
-interface SupabaseStorageUploadError extends Error {
-  status?: number; // HTTP status code, if available from the error
-}
-
-/**
  * Upload a PDF from a Blob or File to storage
  * @param blob Blob or File to upload
  * @param userId User ID
@@ -194,18 +185,14 @@ export async function uploadPdf(blob: Blob | File, userId: string, resumeId: str
   try {
     const path = generateResumePath(userId, resumeId);
     
-    // Explicitly type the expected result of the upload operation
-    const uploadResult: { 
-      data: { path: string } | null; 
-      error: SupabaseStorageUploadError | null; // Use the more specific error interface
-    } = await supabase.storage
+    // Let TypeScript infer the type of uploadResult
+    const uploadResult = await supabase.storage
         .from(RESUME_BUCKET)
         .upload(path, blob, {
           cacheControl: '3600',
           upsert: true, // Creates the file if it does not exist, or replaces it if it does.
         });
 
-    // Access properties directly instead of destructuring
     if (uploadResult.error) {
       console.error('Error uploading PDF:', uploadResult.error);
       toast({
