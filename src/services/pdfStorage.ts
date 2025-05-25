@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RESUME_BUCKET, generateResumePath, checkResumeExists } from './supabaseSetup';
 import { toast } from '@/hooks/use-toast';
@@ -28,8 +27,9 @@ export async function uploadPdf(file: File, resumeId: string, userId: string): P
     const { error: uploadError } = await supabase.storage
       .from(RESUME_BUCKET)
       .upload(path, file, {
-        cacheControl: '3600',
-        upsert: true,
+        cacheControl: '3600', // Keep browser cache for 1 hour
+        upsert: true, // Overwrite if file exists
+        contentType: file.type || 'application/pdf' // Set content type
       });
     
     if (uploadError) {
@@ -38,10 +38,16 @@ export async function uploadPdf(file: File, resumeId: string, userId: string): P
     }
     
     // Get the URL of the uploaded file
-    const url = await getPdfUrl(resumeId, userId);
+    // We'll get a signed URL for viewing, as public URLs might have caching/content-type issues
+    // as seen, unless metadata is perfectly set.
+    const url = await getPdfUrl(resumeId, userId); 
     if (!url) {
       throw new Error('Failed to get URL for uploaded PDF');
     }
+    
+    // Invalidate any cached URL for this PDF after upload
+    const cacheKey = `${userId}-${resumeId}-pdf`;
+    delete urlCache[cacheKey];
     
     return url;
   } catch (error) {
@@ -73,26 +79,29 @@ export async function getPdfUrl(resumeId: string, userId: string): Promise<strin
     const path = generateResumePath(userId, resumeId);
     
     // Create a signed URL for the file with exactly 1 hour expiration
-    const { data, error } = await supabase.storage
-      .from(RESUME_BUCKET)
-      .createSignedUrl(path, 3600);
-    
-    if (error || !data?.signedUrl) {
-      throw new Error(`Failed to get PDF URL: ${error?.message || 'No URL returned'}`);
+    // The getResumeUrl from supabaseSetup handles the download:false option for inline viewing
+    const signedUrl = await import('./supabaseSetup').then(module => module.getResumeUrl(userId, resumeId, 'pdf', false));
+
+    if (!signedUrl) {
+      throw new Error('Failed to get PDF URL: No URL returned from getResumeUrl');
     }
     
     // Cache the URL
     urlCache[cacheKey] = {
-      url: data.signedUrl,
+      url: signedUrl,
       expires: Date.now() + CACHE_DURATION,
     };
     
-    return data.signedUrl;
+    return signedUrl;
   } catch (error) {
     console.error('Error in getPdfUrl:', error);
-    throw error instanceof Error 
-      ? error 
-      : new Error('Failed to get PDF URL');
+    // Ensure a more specific error is thrown if it's not already an error object
+    const thrownError = error instanceof Error ? error : new Error('Failed to get PDF URL');
+    // Log the specific error message if available
+    if (thrownError.message.includes('No URL returned')) {
+         console.error('Detailed error: getResumeUrl in supabaseSetup returned null.');
+    }
+    throw thrownError;
   }
 }
 
@@ -105,20 +114,38 @@ export async function downloadPdf(resumeId: string, userId: string): Promise<voi
   try {
     const exists = await checkPdfExists(resumeId, userId);
     if (!exists) {
+      toast({
+        title: 'File Not Found',
+        description: 'The PDF file does not seem to exist in storage.',
+        variant: 'destructive',
+      });
       throw new Error('PDF not found');
     }
     
-    const url = await getPdfUrl(resumeId, userId);
+    // Get a signed URL specifically for downloading
+    const url = await import('./supabaseSetup').then(module => module.getResumeUrl(userId, resumeId, 'pdf', true));
+
+    if (!url) {
+      toast({
+        title: 'Download Failed',
+        description: 'Could not generate a download link for the PDF.',
+        variant: 'destructive',
+      });
+      throw new Error('Failed to get download URL for PDF');
+    }
     
     // Open URL in new tab
     window.open(url, '_blank');
   } catch (error) {
     console.error('Error in downloadPdf:', error);
-    toast({
-      title: 'Download Failed',
-      description: error instanceof Error ? error.message : 'Failed to download PDF',
-      variant: 'destructive',
-    });
+    if (!(error instanceof Error && error.message.includes('Failed to get download URL'))) {
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred while preparing the PDF for download.',
+        variant: 'destructive',
+      });
+    }
+    // Re-throw to allow higher-level error handling if needed
     throw error;
   }
 }
@@ -130,7 +157,9 @@ export async function downloadPdf(resumeId: string, userId: string): Promise<voi
  * @returns Promise resolving to true if the PDF exists
  */
 export async function checkPdfExists(resumeId: string, userId: string): Promise<boolean> {
-  return checkResumeExists(userId, resumeId);
+  // This function directly uses checkResumeExists from supabaseSetup
+  // which handles PDF existence checks.
+  return checkResumeExists(userId, resumeId, 'pdf');
 }
 
 /**
@@ -147,6 +176,7 @@ export async function uploadPdfFromBlob(
   resumeId: string, 
   userId: string
 ): Promise<string> {
+  // Ensure the file type is explicitly application/pdf for blobs
   const file = new File([blob], fileName, { type: 'application/pdf' });
   return uploadPdf(file, resumeId, userId);
 }
