@@ -66,27 +66,31 @@ const ProcessStep = ({
   }, [delay, number]);
 
   return <div ref={stepRef} className="flex-1 relative mx-2 opacity-0 translate-y-4 transition-all duration-400 ease-out hover:scale-103 hover:shadow-md hover:z-10">
-      {/* Number Circle with enhanced styling - fixed for dark mode */}
-      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-md">
-        <span className="font-serif">{number}</span>
+      {/* Number Circle: Uses primary background and foreground for contrast */}
+      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground dark:bg-primary dark:text-primary-foreground w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-300 z-10 shadow-md">
+        {/* font-serif removed */}
+        <span>{number}</span>
       </div>
       
       {/* Content Box - updated background for better theming */}
       <div className="pt-16 pb-8 px-6 bg-white dark:bg-draft-green/30 shadow-sm rounded-lg transition-all duration-300 h-full">
-        <div className="flex justify-center mb-6 text-draft-green dark:text-draft-yellow">
+        {/* Icon container uses primary accent color */}
+        <div className="flex justify-center mb-6 text-primary dark:text-primary">
           <div className="w-12 h-12">
             {icon}
           </div>
         </div>
         
-        <h3 className="text-xl font-semibold text-center mb-4 text-draft-green dark:text-draft-yellow font-serif">{title}</h3>
-        <p className="text-draft-text dark:text-gray-300 text-center font-serif">{description}</p>
+        {/* Heading color from base styles (text-foreground) */}
+        <h3 className="text-xl font-semibold text-center mb-4">{title}</h3>
+        {/* Description uses muted-foreground */}
+        <p className="text-muted-foreground dark:text-muted-foreground text-center">{description}</p>
       </div>
       
-      {/* Connection Arrow (except for last step) - updated for better theming */}
+      {/* Connection Arrow (except for last step) - uses primary accent color */}
       {number < 3 && <div id={`arrow-${number}`} className="hidden md:flex absolute top-1/3 -right-4 w-8 h-8 opacity-0 transition-opacity duration-700 justify-center items-center z-20">
-          <div className="w-10 h-0.5 bg-draft-green dark:bg-draft-yellow opacity-85 animate-pulse-opacity"></div>
-          <div className="absolute right-0 w-0 h-0 border-t-[6px] border-r-0 border-b-[6px] border-l-[8px] border-t-transparent border-r-transparent border-b-transparent border-l-draft-green dark:border-l-draft-yellow"></div>
+          <div className="w-10 h-0.5 bg-primary dark:bg-primary opacity-85 animate-pulse-opacity"></div>
+          <div className="absolute right-0 w-0 h-0 border-t-[6px] border-r-0 border-b-[6px] border-l-[8px] border-t-transparent border-r-transparent border-b-transparent border-l-primary dark:border-l-primary"></div>
         </div>}
     </div>;
 };
@@ -145,15 +149,18 @@ const BalanceSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-6 relative z-10">
         <div ref={headingRef} className="text-center mb-5 opacity-0 translate-y-6 transition-all duration-700">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md inline-block mb-6">
-            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium font-serif">Our Process</span>
+            {/* Badge text uses primary accent color */}
+            <span className="text-primary dark:text-primary uppercase text-sm font-medium">Our Process</span>
           </div>
           
-          <h2 className="text-heading font-serif mb-6 text-center text-draft-green dark:text-draft-yellow">
+          {/* Heading color from base styles (text-foreground) */}
+          <h2 className="text-heading mb-6 text-center">
             We've engineered a seamless process that transforms your existing resume into an optimized document that gets results.
           </h2>
         </div>
         
-        <p ref={subheadingRef} className="text-center text-lg text-draft-text dark:text-gray-300 max-w-3xl mx-auto mb-16 opacity-0 translate-y-4 transition-all duration-700 delay-300 font-serif">
+        {/* Subheading uses muted-foreground */}
+        <p ref={subheadingRef} className="text-center text-lg text-muted-foreground dark:text-muted-foreground max-w-3xl mx-auto mb-16 opacity-0 translate-y-4 transition-all duration-700 delay-300">
           While other candidates wait in the application black hole, you'll be preparing for interviews.
         </p>
         

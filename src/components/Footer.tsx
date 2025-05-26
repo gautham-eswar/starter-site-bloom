@@ -4,27 +4,33 @@ import { Twitter, Instagram } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#0A2920] dark:bg-[#0A2218] text-white dark:text-draft-green py-16 px-8 md:px-12 lg:px-20">
+    // Updated footer background for consistency, text color will be handled by specific elements or inherited
+    <footer className="bg-slate-900 dark:bg-background py-16 px-8 md:px-12 lg:px-20">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
-          <h2 className="text-3xl font-serif mb-6 text-draft-yellow dark:text-draft-green">Draft Zero</h2>
+          {/* H2: text-3xl (from Subtask 3), color updated to text-primary-foreground, font-serif removed */}
+          <h2 className="text-3xl mb-6 text-primary-foreground">Draft Zero</h2>
           <div className="flex gap-4">
-            <a href="#" className="bg-[#0E3C26] dark:bg-draft-green p-3 rounded-lg hover:opacity-90 transition-opacity">
-              <Twitter size={20} className="text-white dark:text-draft-bg" />
+            {/* Social icon link background: bg-primary */}
+            <a href="#" className="bg-primary p-3 rounded-lg hover:opacity-90 transition-opacity">
+              {/* Social icon color: text-primary-foreground */}
+              <Twitter size={20} className="text-primary-foreground" />
             </a>
-            <a href="#" className="bg-[#0E3C26] dark:bg-draft-green p-3 rounded-lg hover:opacity-90 transition-opacity">
-              <Instagram size={20} className="text-white dark:text-draft-bg" />
+            <a href="#" className="bg-primary p-3 rounded-lg hover:opacity-90 transition-opacity">
+              <Instagram size={20} className="text-primary-foreground" />
             </a>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-lg font-medium mb-4 text-white dark:text-draft-green">ABOUT US</h3>
+            {/* H3: text-xl (from Subtask 3), color updated to text-primary-foreground */}
+            <h3 className="text-xl font-semibold mb-4 text-primary-foreground">ABOUT US</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-gray-300 dark:hover:text-draft-green/70 text-white dark:text-draft-green">Privacy policy</a></li>
-              <li><a href="#" className="hover:text-gray-300 dark:hover:text-draft-green/70 text-white dark:text-draft-green">Terms of service</a></li>
-              <li><a href="#" className="hover:text-gray-300 dark:hover:text-draft-green/70 text-white dark:text-draft-green">Contact information</a></li>
+              {/* Links: text-muted-foreground with hover effect */}
+              <li><a href="#" className="text-muted-foreground hover:text-primary-foreground dark:hover:text-primary-foreground transition-colors">Privacy policy</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary-foreground dark:hover:text-primary-foreground transition-colors">Terms of service</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary-foreground dark:hover:text-primary-foreground transition-colors">Contact information</a></li>
             </ul>
           </div>
         </div>

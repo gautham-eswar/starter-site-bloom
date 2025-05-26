@@ -33,12 +33,14 @@ const FAQCategories: React.FC<FAQCategoriesProps> = ({ activeCategory, setActive
         onValueChange={handleCategoryChange}
         className="w-full max-w-3xl"
       >
-        <TabsList className="w-full grid grid-cols-4 h-12 bg-[#f1f1eb] dark:bg-draft-green/20">
+        {/* TabsList: Updated background to use a muted theme color */}
+        <TabsList className="w-full grid grid-cols-4 h-12 bg-muted/50 dark:bg-muted/20">
           {categories.map(category => (
             <TabsTrigger 
               key={category.id} 
               value={category.id}
-              className="data-[state=active]:bg-draft-green data-[state=active]:text-white dark:data-[state=active]:bg-draft-yellow dark:data-[state=active]:text-draft-green text-draft-text dark:text-gray-300 text-[1.1rem] font-serif"
+              // Updated classes for active/inactive states and typography
+              className="text-base text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {category.label}
             </TabsTrigger>

@@ -13,38 +13,46 @@ const PricingSection: React.FC = () => {
     <section className="py-24 bg-draft-bg dark:bg-[#0A2218]">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-16">
-          <h2 className="text-heading font-serif mb-4 text-draft-green dark:text-draft-yellow">
+          {/* h2: text-3xl. Color from base heading styles. */}
+          <h2 className="text-3xl mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-draft-text dark:text-gray-300 max-w-2xl mx-auto text-lg font-serif">
+          {/* p: text-base, text-muted-foreground. */}
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Choose the plan that's right for you and start optimizing your resume today.
           </p>
           
           <div className="flex items-center justify-center mt-8">
-            <span className="mr-3 text-sm font-medium text-draft-green dark:text-gray-300 font-serif">Monthly</span>
+            {/* Spans: text-sm font-medium text-foreground. */}
+            <span className="mr-3 text-sm font-medium text-foreground">Monthly</span>
             <Switch 
               checked={isAnnual} 
               onCheckedChange={setIsAnnual} 
-              className="data-[state=checked]:bg-draft-green"
+              className="data-[state=checked]:bg-primary" // Use primary for checked state
             />
-            <span className="ml-3 text-sm font-medium text-draft-green dark:text-gray-300 font-serif">
+            <span className="ml-3 text-sm font-medium text-foreground">
               Annual
-              <Badge className="ml-2 bg-draft-yellow text-draft-green font-medium">Save 20%</Badge>
+              {/* Badge: bg-primary text-primary-foreground. */}
+              <Badge className="ml-2 bg-primary text-primary-foreground font-medium">Save 20%</Badge>
             </span>
           </div>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Basic Plan */}
-          <Card className="border border-gray-200 dark:border-draft-green/30 hover:shadow-lg transition-shadow duration-300">
+          <Card className="border hover:shadow-lg transition-shadow duration-300"> {/* Use default border */}
             <CardHeader>
-              <CardTitle className="text-draft-green dark:text-draft-yellow font-serif">Basic</CardTitle>
-              <CardDescription className="font-serif">For individuals getting started</CardDescription>
+              {/* CardTitle (h3): text-2xl. Color from base heading styles. */}
+              <CardTitle className="text-2xl">Basic</CardTitle>
+              {/* CardDescription: text-base text-muted-foreground. */}
+              <CardDescription className="text-base text-muted-foreground">For individuals getting started</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-draft-green dark:text-draft-yellow font-serif">
+                {/* Price text: text-3xl font-bold text-primary. */}
+                <span className="text-3xl font-bold text-primary dark:text-primary">
                   {isAnnual ? '$9' : '$12'}
                 </span>
-                <span className="text-draft-text dark:text-gray-300 ml-1 font-serif">
+                {/* "/month" text: text-base text-muted-foreground. */}
+                <span className="text-base text-muted-foreground ml-1">
                   /{isAnnual ? 'month, billed annually' : 'month'}
                 </span>
               </div>
@@ -57,35 +65,44 @@ const PricingSection: React.FC = () => {
                   '3 Resume Exports per Month',
                   'Email Support'
                 ].map((feature, i) => (
-                  <li key={i} className="flex items-center font-serif">
-                    <Check className="h-5 w-5 mr-2 text-draft-green dark:text-draft-yellow" />
-                    <span className="text-draft-text dark:text-gray-300">{feature}</span>
+                  // li: text-base text-foreground.
+                  <li key={i} className="flex items-center text-base text-foreground">
+                    {/* Check icon: text-primary. */}
+                    <Check className="h-5 w-5 mr-2 text-primary dark:text-primary" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter>
-              <Button className="w-full bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 font-serif">
+              {/* Button: variant="default". */}
+              <Button variant="default" className="w-full">
                 Get Started
               </Button>
             </CardFooter>
           </Card>
           
           {/* Pro Plan */}
-          <Card className="border-2 border-draft-green dark:border-draft-yellow shadow-lg relative">
+          {/* Pro Plan - border-primary for emphasis */}
+          <Card className="border-2 border-primary dark:border-primary shadow-lg relative">
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <Badge className="bg-draft-green text-white dark:bg-draft-yellow dark:text-draft-green font-serif">
+              {/* Badge: bg-primary text-primary-foreground. */}
+              <Badge className="bg-primary text-primary-foreground font-medium">
                 Most Popular
               </Badge>
             </div>
             <CardHeader>
-              <CardTitle className="text-draft-green dark:text-draft-yellow font-serif">Pro</CardTitle>
-              <CardDescription className="font-serif">For professionals seeking an edge</CardDescription>
+              {/* CardTitle (h3): text-2xl. Color from base heading styles. */}
+              <CardTitle className="text-2xl">Pro</CardTitle>
+              {/* CardDescription: text-base text-muted-foreground. */}
+              <CardDescription className="text-base text-muted-foreground">For professionals seeking an edge</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-draft-green dark:text-draft-yellow font-serif">
+                {/* Price text: text-3xl font-bold text-primary. */}
+                <span className="text-3xl font-bold text-primary dark:text-primary">
                   {isAnnual ? '$19' : '$24'}
                 </span>
-                <span className="text-draft-text dark:text-gray-300 ml-1 font-serif">
+                {/* "/month" text: text-base text-muted-foreground. */}
+                <span className="text-base text-muted-foreground ml-1">
                   /{isAnnual ? 'month, billed annually' : 'month'}
                 </span>
               </div>
@@ -100,30 +117,37 @@ const PricingSection: React.FC = () => {
                   'Priority Email Support',
                   'Job Match Recommendations'
                 ].map((feature, i) => (
-                  <li key={i} className="flex items-center font-serif">
-                    <Check className="h-5 w-5 mr-2 text-draft-green dark:text-draft-yellow" />
-                    <span className="text-draft-text dark:text-gray-300">{feature}</span>
+                  // li: text-base text-foreground.
+                  <li key={i} className="flex items-center text-base text-foreground">
+                    {/* Check icon: text-primary. */}
+                    <Check className="h-5 w-5 mr-2 text-primary dark:text-primary" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter>
-              <Button className="w-full bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 font-serif">
+              {/* Button: variant="default". */}
+              <Button variant="default" className="w-full">
                 Get Started
               </Button>
             </CardFooter>
           </Card>
           
           {/* Enterprise Plan */}
-          <Card className="border border-gray-200 dark:border-draft-green/30 hover:shadow-lg transition-shadow duration-300">
+          <Card className="border hover:shadow-lg transition-shadow duration-300"> {/* Use default border */}
             <CardHeader>
-              <CardTitle className="text-draft-green dark:text-draft-yellow font-serif">Enterprise</CardTitle>
-              <CardDescription className="font-serif">For teams and businesses</CardDescription>
+              {/* CardTitle (h3): text-2xl. Color from base heading styles. */}
+              <CardTitle className="text-2xl">Enterprise</CardTitle>
+              {/* CardDescription: text-base text-muted-foreground. */}
+              <CardDescription className="text-base text-muted-foreground">For teams and businesses</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-draft-green dark:text-draft-yellow font-serif">
+                {/* Price text: text-3xl font-bold text-primary. */}
+                <span className="text-3xl font-bold text-primary dark:text-primary">
                   {isAnnual ? '$39' : '$49'}
                 </span>
-                <span className="text-draft-text dark:text-gray-300 ml-1 font-serif">
+                {/* "/month" text: text-base text-muted-foreground. */}
+                <span className="text-base text-muted-foreground ml-1">
                   /{isAnnual ? 'month, billed annually' : 'month'}
                 </span>
               </div>
@@ -139,15 +163,18 @@ const PricingSection: React.FC = () => {
                   'API Access',
                   'Custom Branding'
                 ].map((feature, i) => (
-                  <li key={i} className="flex items-center font-serif">
-                    <Check className="h-5 w-5 mr-2 text-draft-green dark:text-draft-yellow" />
-                    <span className="text-draft-text dark:text-gray-300">{feature}</span>
+                  // li: text-base text-foreground.
+                  <li key={i} className="flex items-center text-base text-foreground">
+                    {/* Check icon: text-primary. */}
+                    <Check className="h-5 w-5 mr-2 text-primary dark:text-primary" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter>
-              <Button className="w-full bg-draft-green hover:bg-draft-green/90 text-white dark:bg-draft-yellow dark:text-draft-green dark:hover:bg-draft-yellow/90 font-serif">
+              {/* Button: variant="default". */}
+              <Button variant="default" className="w-full">
                 Contact Sales
               </Button>
             </CardFooter>
@@ -155,9 +182,10 @@ const PricingSection: React.FC = () => {
         </div>
         
         <div className="mt-16 text-center">
-          <p className="text-draft-text dark:text-gray-300 max-w-2xl mx-auto font-serif">
+          {/* p: text-base text-muted-foreground. */}
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             All plans include a 14-day free trial. No credit card required to start. 
-            Need something different? <a href="#" className="text-draft-green dark:text-draft-yellow underline hover:no-underline font-serif">Contact us</a> for custom pricing.
+            Need something different? <a href="#" className="text-primary dark:text-primary underline hover:no-underline">Contact us</a> for custom pricing.
           </p>
         </div>
       </div>

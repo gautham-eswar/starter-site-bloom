@@ -39,7 +39,8 @@ const FAQSearch: React.FC<FAQSearchProps> = ({ query, setQuery }) => {
     >
       <div className="relative max-w-3xl mx-auto">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+          {/* Search Icon: Updated to text-muted-foreground */}
+          <Search className="h-5 w-5 text-muted-foreground" />
         </div>
         
         <input
@@ -48,13 +49,15 @@ const FAQSearch: React.FC<FAQSearchProps> = ({ query, setQuery }) => {
           placeholder="Search frequently asked questions..."
           value={query}
           onChange={handleSearchChange}
-          className="block w-full pl-12 pr-10 py-4 bg-white dark:bg-draft-green/10 border border-gray-200 dark:border-draft-green/30 rounded-lg shadow-sm focus:ring-2 focus:ring-draft-green dark:focus:ring-draft-yellow focus:border-draft-green dark:focus:border-draft-yellow text-draft-text dark:text-gray-300 text-[1.1rem]"
+          // Input text: text-foreground. Placeholder: placeholder:text-muted-foreground
+          className="block w-full pl-12 pr-10 py-4 bg-white dark:bg-draft-green/10 border border-gray-200 dark:border-draft-green/30 rounded-lg shadow-sm focus:border-[#5A998A] dark:focus:border-[#5A998A] focus:ring-2 focus:ring-[#5A998A]/50 dark:focus:ring-[#5A998A]/40 text-foreground dark:text-foreground placeholder:text-muted-foreground text-base"
         />
         
         {query && (
           <button
             onClick={handleClearSearch}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            // Clear button icon: text-muted-foreground hover:text-foreground
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>

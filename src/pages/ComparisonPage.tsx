@@ -225,8 +225,8 @@ const ComparisonPage: React.FC = () => {
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <Loader className="h-8 w-8 animate-spin text-draft-green mb-4" />
-            <p className="text-draft-green font-serif">Loading optimization results...</p>
+            <Loader className="h-8 w-8 animate-spin text-primary mb-4" /> {/* Updated icon color */}
+            <p className="text-base text-foreground">Loading optimization results...</p> {/* Updated text */}
           </div>
         </div>
       </div>;
@@ -238,11 +238,14 @@ const ComparisonPage: React.FC = () => {
         <Header />
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
-            <h2 className="text-2xl font-serif text-draft-green mb-4">No Results Found</h2>
-            <p className="text-draft-text mb-6 font-serif">
+            {/* h2: text-2xl. Color from base. */}
+            <h2 className="text-2xl mb-4">No Results Found</h2>
+            {/* p: text-base text-muted-foreground. */}
+            <p className="text-base text-muted-foreground mb-6">
               We couldn't find optimization results for this resume. This could be due to missing information or an issue during processing. Please try optimizing your resume again.
             </p>
-            <Button onClick={() => navigate('/')} className="bg-draft-green hover:bg-draft-green/90 text-white">
+            {/* Button: variant="default" */}
+            <Button variant="default" onClick={() => navigate('/')}>
               Back to Home
             </Button>
           </div>
@@ -295,32 +298,34 @@ const ComparisonPage: React.FC = () => {
       <Header />
       
       <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
-        <h1 className="text-3xl font-serif text-draft-green mb-8 text-center">Resume Enhancement Results</h1>
+        {/* h1: text-4xl. Color from base. */}
+        <h1 className="text-4xl mb-8 text-center">Resume Enhancement Results</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left side - Score Summary and Improvements */}
           <div className="space-y-10">
             {/* Score Summary Cards */}
             <div>
-              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Scorecard</h2>
+              {/* h2: text-3xl. Color from base. */}
+              <h2 className="text-3xl mb-6">Resume Scorecard</h2>
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Original Score</p>
-                  <p className="text-4xl font-bold text-draft-green font-serif">
+                <div className="bg-white border border-border rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-primary/40">
+                  <p className="text-sm font-medium text-muted-foreground">Original Score</p>
+                  <p className="text-4xl font-bold text-primary">
                     {analysisData.old_score}/100
                   </p>
                 </div>
                 
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Enhanced Score</p>
-                  <p className="text-4xl font-bold text-draft-green font-serif">
+                <div className="bg-white border border-border rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-primary/40">
+                  <p className="text-sm font-medium text-muted-foreground">Enhanced Score</p>
+                  <p className="text-4xl font-bold text-primary">
                     {analysisData.improved_score}/100
                   </p>
                 </div>
                 
-                <div className="bg-white border border-draft-green/20 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-draft-green/40">
-                  <p className="text-draft-green text-sm mb-2 font-medium font-serif">Job Match</p>
-                  <p className="text-4xl font-bold text-draft-green font-serif">
+                <div className="bg-white border border-border rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-primary/40">
+                  <p className="text-sm font-medium text-muted-foreground">Job Match</p>
+                  <p className="text-4xl font-bold text-primary">
                     {analysisData.match_percentage}%
                   </p>
                 </div>
@@ -329,32 +334,35 @@ const ComparisonPage: React.FC = () => {
             
             {/* Improvements by Company */}
             <div>
-              <h2 className="text-2xl font-serif text-draft-green mb-6">Resume Enhancements</h2>
+              {/* h2: text-3xl. Color from base. */}
+              <h2 className="text-3xl mb-6">Resume Enhancements</h2>
               
               {Object.keys(groupedImprovements).length > 0 ? <div className="space-y-6">
-                  {Object.entries(groupedImprovements).map(([key, group], index) => <Collapsible key={index} defaultOpen={index === 0} className="bg-white rounded-xl overflow-hidden shadow-sm border border-draft-green/10 transition-all hover:shadow-md">
-                      <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-[#F2FCE2]/50 transition-colors">
+                  {Object.entries(groupedImprovements).map(([key, group], index) => <Collapsible key={index} defaultOpen={index === 0} className="bg-card rounded-xl overflow-hidden shadow-sm border border-border transition-all hover:shadow-md">
+                      <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors">
                         <div>
-                          <h3 className="text-xl text-draft-green font-serif">{group.company}</h3>
-                          {group.position && <p className="text-draft-green/70 mt-1 font-serif italic">{group.position}</p>}
+                          {/* h3: text-2xl. Color from base. */}
+                          <h3 className="text-2xl">{group.company}</h3>
+                          {group.position && <p className="text-base text-muted-foreground mt-1 italic">{group.position}</p>}
                         </div>
-                        <ChevronDown className="h-5 w-5 text-draft-green/70 transition-transform duration-200 ui-open:rotate-180" />
+                        <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 ui-open:rotate-180" />
                       </CollapsibleTrigger>
                       
                       <CollapsibleContent className="px-5 pb-5">
                         <div className="space-y-7 pt-2">
                           {group.modifications.map((mod, idx) => <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
-                              <div className="border-l-4 border-draft-green/40 pl-4 mb-6">
-                                <p className="text-sm text-draft-green/70 uppercase tracking-wider mb-2 font-serif">Original</p>
-                                <p className="font-serif text-draft-text/90 leading-relaxed pl-2">{mod.original}</p>
+                              <div className="border-l-4 border-primary/40 pl-4 mb-6">
+                                <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Original</p>
+                                <p className="text-base text-foreground/90 leading-relaxed pl-2">{mod.original}</p>
                               </div>
                               
-                              <div className="bg-[#F2FCE2]/50 p-5 rounded-xl border border-draft-green/10">
-                                <p className="text-sm text-draft-green uppercase tracking-wider mb-2 font-serif">Enhanced</p>
-                                <p className="font-serif text-draft-green leading-relaxed pl-2">{mod.improved}</p>
+                              <div className="bg-primary/10 p-5 rounded-xl border border-primary/20">
+                                <p className="text-sm text-primary uppercase tracking-wider mb-2">Enhanced</p>
+                                <p className="text-base text-primary leading-relaxed pl-2">{mod.improved}</p>
                                 
                                 {mod.type && <div className="mt-4 flex justify-end">
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${mod.type === 'Major' ? 'bg-draft-coral bg-opacity-15 text-draft-coral' : 'bg-draft-mint bg-opacity-15 text-draft-green'} font-serif`}>
+                                    {/* Badge colors are specific, keep as is or create variants */}
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${mod.type === 'Major' ? 'bg-draft-coral bg-opacity-15 text-draft-coral' : 'bg-draft-mint bg-opacity-15 text-draft-green'}`}>
                                       {mod.type} Enhancement
                                     </span>
                                   </div>}
@@ -363,8 +371,8 @@ const ComparisonPage: React.FC = () => {
                         </div>
                       </CollapsibleContent>
                     </Collapsible>)}
-                </div> : <div className="bg-white p-8 text-center rounded-lg border border-draft-green/10">
-                  <p className="text-draft-green/70 font-serif">No enhancements found for this job.</p>
+                </div> : <div className="bg-card p-8 text-center rounded-lg border border-border">
+                  <p className="text-base text-muted-foreground">No enhancements found for this job.</p>
                 </div>}
             </div>
           </div>
@@ -374,9 +382,11 @@ const ComparisonPage: React.FC = () => {
             <div className="sticky top-24 space-y-6">
               {/* Resume preview header and download buttons */}
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-serif text-draft-green">Enhanced Resume</h2>
+                {/* h2: text-3xl. Color from base. */}
+                <h2 className="text-3xl">Enhanced Resume</h2>
                 <div className="flex gap-3">
-                  <Button className="bg-draft-green hover:bg-draft-green/90 text-white" onClick={() => handleDownload('pdf')} disabled={isDownloading && downloadFormat === 'pdf'}>
+                  {/* Buttons use default variant */}
+                  <Button variant="default" onClick={() => handleDownload('pdf')} disabled={isDownloading && downloadFormat === 'pdf'}>
                     {isDownloading && downloadFormat === 'pdf' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     PDF
                   </Button>
@@ -399,8 +409,8 @@ const ComparisonPage: React.FC = () => {
                           ? "Preview unavailable: Missing resume information." 
                           : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
                       </p>
-                      {!pdfUrl && activeEnhancedResumeId && user?.id && !isLoading && <p className="text-sm text-draft-coral mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>}
-                      {isLoading && <Loader className="h-6 w-6 animate-spin text-draft-green mt-4" />}
+                  {!pdfUrl && activeEnhancedResumeId && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>} {/* Changed text-draft-coral to text-destructive */}
+                  {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />} {/* Updated icon color */}
                     </div>
                   </div>
                 )}
