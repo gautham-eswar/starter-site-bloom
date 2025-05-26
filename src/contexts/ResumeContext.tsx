@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -7,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
   UPLOADED = 2,
-  ENHANCING = 3,
+  ENHANCING = 3, // This state might become less used if we jump to ENHANCED
   ENHANCED = 4,
   RENDERING = 5,
   RENDERED = 6;
@@ -24,6 +25,7 @@ type PipelineContextType = {
   enhancedResumeId: string | null;
   enhancementAnalysis: EnhancementAnalysis | null;
   enhancementPending: boolean;
+  isAwaitingApiResponse: boolean; // New state for API call in flight
   
   uploadResume: (file: File) => Promise<void>;
   setJobDescription: (jd: string) => void;
@@ -54,8 +56,9 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [parsedSelectedResume, setParsedSelectedResume] = useState<Object | null>(null);
 
-  // Data for ENHANCING Stage
+  // Data for ENHANCING Stage (or attempting to enhance)
   const [jobDescription, setJobDescription] = useState<string>('');
+  const [isAwaitingApiResponse, setIsAwaitingApiResponse] = useState<boolean>(false); // New state
 
   // Data for ENHANCED Stage
   const [jobId, setJobId] = useState<string | null>(null);
@@ -103,6 +106,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     console.log(`Uploading ${file.name} from user ID: ${user.id}`);
     setPipelineState(UPLOADING);
     setResumeFilename(file.name);
+    // enhancementPending is false by default, can be set true if user clicks enhance while uploading.
   
     const formData = new FormData();
     formData.append("file", file);
@@ -111,16 +115,17 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const response = await apiRequest("/api/upload", {
         method: "POST",
-        headers: {}, // Let browser set content-type for FormData
+        headers: {}, 
         body: formData,
       });
 
-      if (!response || !response.data || !response.data.resume_id) {
-        console.error("Invalid response format from API:", response);
-        setPipelineState(NOT_UPLOADED);
+      if (response?.error || !response?.data?.resume_id) { // Check for error property or missing data
+        console.error("Upload failed or invalid response format from API:", response);
+        setPipelineState(NOT_UPLOADED); // Revert state
+        setResumeFilename(null); // Clear filename on failure
         toast({
           title: "Upload failed",
-          description: response?.error || "Received invalid response from server",
+          description: response?.error || "Received invalid response from server. Please try again.",
           variant: "destructive"
         });
         return;
@@ -131,16 +136,14 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       setResumeId(response.data.resume_id);
       setParsedSelectedResume(response.data.parsed_resume);
       
-      if (enhancementPending) {
-        setEnhancementPending(false);
-        enhanceResume(jobDescription); // Call with current jobDescription
-      }
-    } catch (error) {
+      // No change to enhancementPending here, the useEffect will handle it
+    } catch (error) { // Catching unexpected errors during the upload process itself
       console.error(`Upload ${file.name} failed. Error:`, error);
       setPipelineState(NOT_UPLOADED);
+      setResumeFilename(null);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your resume. Please try again.",
+        description: "An unexpected error occurred during upload. Please try again.",
         variant: "destructive"
       });
     }
@@ -156,7 +159,11 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return false;
     }
     
-    if (!jd.trim()) {
+    // Ensure jd is current for this attempt, though jobDescription state is source of truth for API
+    // This function might be called with a jd, but we use the context's jobDescription for the API call.
+    // If `jd` param is important, ensure `setJobDescription(jd)` was called before this.
+    // For now, assuming `jobDescription` state is what we want.
+    if (!jobDescription.trim()) { 
       toast({
         title: "No job description to enhance from",
         description: "Please type or paste a job listing and try again",
@@ -165,7 +172,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       return false;
     }
     
-    if (pipelineState === NOT_UPLOADED) {
+    if (pipelineState === NOT_UPLOADED && !resumeId) { // Check resumeId as well
       toast({
         title: "No resume selected",
         description: "Please select or upload a resume and try again",
@@ -173,24 +180,21 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
       return false;
     }
-
-    if (pipelineState === ENHANCING) {
-      toast({
-        title: "Already enhancing a resume",
-        description: "Please wait for the current optimization job to finish before starting a new one",
-        variant: "destructive"
-      });
-      return false;
+    
+    // Check if already in a final processing state or awaiting API for another enhancement
+    if (isAwaitingApiResponse || pipelineState === ENHANCED || pipelineState === RENDERING) {
+        toast({
+            title: "Processing in progress",
+            description: "Please wait for the current operation to complete.",
+            variant: "destructive"
+        });
+        return false;
     }
 
-    // setJobDescription(jd); // This is already done by HeroSection typically, or should be if called directly.
-    // If enhanceResume is called internally (e.g., after upload), ensure jd is the correct one.
-    // The jobDescription state variable will be used. If jd param is different, it might lead to confusion.
-    // For clarity, let's ensure the internal jobDescription state is used.
-    
     if (pipelineState === UPLOADING) {
-      setEnhancementPending(true);
-      console.log(`Waiting for ${resumeFilename} to finish uploading before starting optimization job`);
+      setEnhancementPending(true); // If resume is still uploading, mark pending
+      console.log(`Waiting for ${resumeFilename || 'resume'} to finish uploading before starting optimization job`);
+      // Modal will be triggered by UPLOADING state + enhancementPending in HeroSection
       return true; 
     } 
 
@@ -200,58 +204,61 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         description: "Cannot enhance without a resume ID. Please upload a resume first.",
         variant: "destructive"
       });
-      setPipelineState(UPLOADED); 
+      setPipelineState(UPLOADED); // Ensure state is stable if it was something else
       return false;
     }
 
-    console.log(`Initializing enhancement for resume with ID: ${resumeId} using job description:`, jobDescription); // Using the state's jobDescription
-    setPipelineState(ENHANCING);
+    console.log(`Initializing enhancement for resume ID: ${resumeId} using job description.`);
+    setIsAwaitingApiResponse(true); // Indicate API call is starting
+    // We do NOT set pipelineState to ENHANCING here yet.
       
     const formData = new FormData();
     formData.append("resume_id", resumeId!);
     formData.append("user_id", user.id);
-    formData.append("job_description", jobDescription); // Use state's jobDescription
+    formData.append("job_description", jobDescription);
     
     try {
       const response = await apiRequest("/api/optimize", {
         method: "POST",
-        headers: {}, // Let browser set content-type for FormData
+        headers: {}, 
         body: formData,
       });
       
-      if (!response || !response.data) {
-        console.error("Invalid response format from API:", response);
-        setPipelineState(UPLOADED);
+      if (response?.error || !response?.data) { // Check for error property or missing data
+        console.error("Enhancement API call failed or invalid response format:", response);
+        setPipelineState(UPLOADED); // Revert to UPLOADED if API call itself fails
         toast({
           title: "Enhancement failed",
-          description: response?.error || "Received invalid response from server",
+          description: response?.error || "Received invalid response from server during enhancement. Please try again.",
           variant: "destructive"
         });
+        setIsAwaitingApiResponse(false);
         return false;
       }
 
+      // API call was successful and returned data
       console.log(`Resume with ID ${resumeId} Enhanced successfully! \nJob Id: ${response.data.job_id}\nEnhanced Resume Id: ${response.data.enhanced_resume_id}`);
-      console.log('[ResumeContext] Received from API - Job ID:', response.data.job_id, 'Enhanced Resume ID:', response.data.enhanced_resume_id);
       
-      setPipelineState(ENHANCED);
+      setPipelineState(ENHANCED); // Now set to ENHANCED, this will trigger modal via HeroSection
       setJobId(response.data.job_id);
       setEnhancementAnalysis(response.data.analysis);
       setEnhancedResumeId(response.data.enhanced_resume_id);
-
-      console.log('[ResumeContext] Attempting to set Context state - Job ID:', response.data.job_id, 'Enhanced Resume ID:', response.data.enhanced_resume_id);
-      // console.log('[ResumeContext] Context state after setting - Job ID:', jobId, 'Enhanced Resume ID:', enhancedResumeId); // This log is misleading due to async nature of setState
       
-      setTimeout(() => setPipelineState(RENDERED), 500);
+      // Simulate rendering time for demo purposes, as backend returns PDF info quickly.
+      // In a real scenario, if PDF rendering was a separate step, RENDERED state would be set after that.
+      setTimeout(() => setPipelineState(RENDERED), 500); 
+      setIsAwaitingApiResponse(false);
       return true;
       
-    } catch (error) {
+    } catch (error) { // Catch unexpected errors during the enhancement process itself
       console.error(`Enhancement of resume with ID: ${resumeId} failed. Error:`, error);
-      setPipelineState(UPLOADED);
+      setPipelineState(UPLOADED); // Revert to stable state
       toast({
         title: "Enhancement failed",
-        description: "There was an error enhancing your resume. Please try again.",
+        description: "An unexpected error occurred during enhancement. Please try again.",
         variant: "destructive"
       });
+      setIsAwaitingApiResponse(false);
       return false;
     }
   };
@@ -261,12 +268,14 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   useEffect(() => {
-    if (pipelineState === UPLOADED && enhancementPending && resumeId && jobDescription) {
+    // This effect handles auto-starting enhancement if it was pending after an upload.
+    if (pipelineState === UPLOADED && enhancementPending && resumeId && jobDescription && !isAwaitingApiResponse) {
       console.log("[PipelineProvider useEffect] Conditions met for auto-enhancing after upload.");
-      setEnhancementPending(false);
+      setEnhancementPending(false); // Clear pending flag
       enhanceResume(jobDescription); // Call with current jobDescription state
     }
-  }, [pipelineState, enhancementPending, resumeId, jobDescription]); // Removed enhanceResume from deps to avoid re-triggering if its instance changes
+  }, [pipelineState, enhancementPending, resumeId, jobDescription, isAwaitingApiResponse]); // Added isAwaitingApiResponse
+
 
   return (
     <PipelineContext.Provider
@@ -279,6 +288,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         enhancedResumeId,
         enhancementAnalysis,
         enhancementPending,
+        isAwaitingApiResponse, // Provide new state
         
         uploadResume,
         setJobDescription,
