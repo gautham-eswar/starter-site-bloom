@@ -1,4 +1,5 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
+
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +29,7 @@ const HeroSection: React.FC = () => {
       jobId,
       enhancedResumeId,
       enhancementAnalysis,
+      enhancementPending, // Added enhancementPending
       uploadResume,
       setJobDescription,
       enhanceResume,
@@ -35,9 +37,11 @@ const HeroSection: React.FC = () => {
     } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
+
   const handleUploadClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -62,9 +66,11 @@ const HeroSection: React.FC = () => {
     setIsWriteExpanded(true);
     await uploadResume(file)
   };
+
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
+
   const handleMakeItBetter = async () => {
     if (!jobDescription.trim()) {
       toast({
@@ -74,19 +80,25 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-
-    const enhancementProcessStarted = await enhanceResume(jobDescription);
-    
-    if (enhancementProcessStarted) {
-      // Only open the modal if enhanceResume indicates the process has started (or is pending)
-      setIsProgressModalOpen(true);
-    }
-    // If enhancementProcessStarted is false, enhanceResume has already shown a toast for the pre-check failure.
+    // The useEffect will now handle opening the modal based on pipelineState changes.
+    await enhanceResume(jobDescription);
+    // No need to setIsProgressModalOpen here anymore.
   };
 
-  const isUploading = pipelineState == UPLOADING;
-  const isNotStarted = pipelineState == NOT_UPLOADED;
-  const isEnhancing = pipelineState == ENHANCING;
+  const isUploading = pipelineState === UPLOADING;
+  const isNotStarted = pipelineState === NOT_UPLOADED;
+  const isEnhancing = pipelineState === ENHANCING;
+
+  // Define a combined processing state
+  const isInProcessingState = isEnhancing || (isUploading && enhancementPending);
+
+  // useEffect to open the modal when processing starts
+  useEffect(() => {
+    if (isInProcessingState) {
+      setIsProgressModalOpen(true);
+    }
+    // Modal closure is handled by ProgressModal itself (on navigation) or user interaction.
+  }, [isInProcessingState, setIsProgressModalOpen]);
   
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
@@ -168,11 +180,11 @@ const HeroSection: React.FC = () => {
                     {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isInProcessingState} // Updated disabled state
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isEnhancing ? "Processing..." : "Make it better"}
+                      {isInProcessingState ? "Processing..." : "Make it better"} {/* Updated text */}
                     </Button>
                   </div>
                 )}
@@ -182,11 +194,11 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isInProcessingState} // Updated disabled state
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isEnhancing ? "Processing..." : "Make it better"}
+                      {isInProcessingState ? "Processing..." : "Make it better"} {/* Updated text */}
                     </Button>
                   </div>
                 )}
@@ -202,3 +214,4 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
+

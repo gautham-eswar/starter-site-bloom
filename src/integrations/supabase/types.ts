@@ -81,6 +81,7 @@ export type Database = {
           data: Json | null
           enhancement_id: string | null
           file_name: string
+          final_resume_latex: string | null
           id: string
           original_resume_id: string | null
           user_id: string
@@ -90,6 +91,7 @@ export type Database = {
           data?: Json | null
           enhancement_id?: string | null
           file_name: string
+          final_resume_latex?: string | null
           id: string
           original_resume_id?: string | null
           user_id: string
@@ -99,6 +101,7 @@ export type Database = {
           data?: Json | null
           enhancement_id?: string | null
           file_name?: string
+          final_resume_latex?: string | null
           id?: string
           original_resume_id?: string | null
           user_id?: string
