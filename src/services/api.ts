@@ -1,3 +1,4 @@
+import React from 'react'; // Added for JSX in toast
 import { toast } from "@/hooks/use-toast";
 import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage"; // Assuming pdfStorage.ts is still relevant
 import { supabase } from "@/integrations/supabase/client";
@@ -8,11 +9,22 @@ const API_BASE_URL = "https://draft-zero.onrender.com"; // Updated API Base URL
 const handleApiError = (error: any) => {
   console.error("API Error:", error);
   const errorMessage = error?.response?.data?.message || error.message || "Something went wrong";
-  toast({
-    title: "Error",
-    description: errorMessage,
-    variant: "destructive",
-  });
+
+  const isNetworkError = /failed to fetch|networkerror/i.test(error.message?.toLowerCase() || '');
+
+  if (isNetworkError) {
+    toast({
+      title: <span className="text-draft-green dark:text-draft-yellow">Service Unreachable</span>,
+      description: "We're having trouble connecting. Please check your internet connection or try again shortly.",
+      variant: "default",
+    });
+  } else {
+    toast({
+      title: <span className="text-draft-green dark:text-draft-yellow">An Error Occurred</span>,
+      description: errorMessage,
+      variant: "default", // Changed from "destructive" for a less alarming default
+    });
+  }
   return { error: errorMessage };
 };
 
@@ -41,6 +53,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
       const errorMessage = errorData.message || `Request failed with status ${response.status}`;
       console.error(`API request to ${url} failed with status ${response.status}: ${errorMessage}`, errorData);
+      // This toast is for when the server *responds* with an error (e.g., 4xx, 5xx)
+      // It remains "destructive" as these are specific API functional errors.
       toast({
         title: `API Error: ${response.status}`,
         description: errorMessage,
@@ -53,7 +67,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     return data;
   } catch (error: any) {
     console.error("API Request Exception:", error); // Added more generic log for any catch here
-    return handleApiError(error); // Generic error handling for all caught exceptions
+    // This calls our updated handleApiError for network issues or other fetch-related exceptions
+    return handleApiError(error); 
   }
 }
 
@@ -133,6 +148,8 @@ export async function downloadResume(resumeId: string, format: string = "pdf") {
     return response; // Return the original response for the client to handle (e.g., save file)
   } catch (error) {
     console.error("Download error:", error);
+    // This toast is for download-specific errors and can remain destructive.
+    // Or, it could also call a more generic error handler if desired.
     toast({
       title: "Download Failed",
       description: error instanceof Error ? error.message : "Could not download the file.",
