@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OptimizationResult, EnhancementAnalysis } from '@/types/api';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -216,6 +215,17 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     formData.append("resume_id", resumeId!);
     formData.append("user_id", user.id);
     formData.append("job_description", jobDescription);
+
+    // Added logging for FormData entries
+    console.log("FormData entries being sent to /api/optimize:");
+    for (const pair of formData.entries()) {
+      // Check if the value is a File object and log its name, otherwise log the value directly
+      if (pair[1] instanceof File) {
+        console.log(`${pair[0]}: ${pair[1].name} (File)`);
+      } else {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+    }
     
     try {
       const response = await apiRequest("/api/optimize", {
