@@ -1,4 +1,4 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,10 +11,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
   UPLOADED = 2,
-  ENHANCING = 3,
   ENHANCED = 4,
-  RENDERING = 5,
-  RENDERED = 6;
+  RENDERING = 5;
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
@@ -23,21 +21,20 @@ const HeroSection: React.FC = () => {
   const {
       pipelineState,
       resumeFilename,
-      resumeId,
       jobDescription,
-      jobId,
-      enhancedResumeId,
-      enhancementAnalysis,
+      enhancementPending,
+      isAwaitingApiResponse,
       uploadResume,
       setJobDescription,
       enhanceResume,
-      renderEnhancedResume,
     } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
   };
+
   const handleUploadClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -60,11 +57,13 @@ const HeroSection: React.FC = () => {
     }
     
     setIsWriteExpanded(true);
-    await uploadResume(file)
+    await uploadResume(file);
   };
+
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
+
   const handleMakeItBetter = async () => {
     if (!jobDescription.trim()) {
       toast({
@@ -74,19 +73,37 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-
-    const enhancementProcessStarted = await enhanceResume(jobDescription);
-    
-    if (enhancementProcessStarted) {
-      // Only open the modal if enhanceResume indicates the process has started (or is pending)
-      setIsProgressModalOpen(true);
-    }
-    // If enhancementProcessStarted is false, enhanceResume has already shown a toast for the pre-check failure.
+    // enhanceResume now handles setting isAwaitingApiResponse and pipelineState appropriately.
+    // Modal opening is now solely driven by pipelineState changes in the useEffect below.
+    await enhanceResume(jobDescription); 
   };
 
-  const isUploading = pipelineState == UPLOADING;
-  const isNotStarted = pipelineState == NOT_UPLOADED;
-  const isEnhancing = pipelineState == ENHANCING;
+  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending; // Only true for initial upload
+  const isResumeNotUploaded = pipelineState === NOT_UPLOADED;
+
+  // Determine if the system is busy with an operation relevant to the "Make it Better" button
+  const isSystemBusy = 
+    isAwaitingApiResponse || // Waiting for optimize API response
+    (pipelineState === UPLOADING && enhancementPending) || // Uploading as part of "Make it Better"
+    pipelineState === ENHANCED || // Enhancement succeeded, modal likely showing progress
+    pipelineState === RENDERING;   // Rendering PDF, modal likely showing progress
+
+  // Determine if the modal should be open based on "Make it Better" flow
+  // This ensures modal only shows for enhancement-related processing.
+  const isModalRelevantForMakeItBetterFlow =
+    pipelineState === ENHANCED ||
+    pipelineState === RENDERING ||
+    (pipelineState === UPLOADING && enhancementPending); // Crucial: UPLOADING state only relevant for modal if enhancement is pending.
+
+  useEffect(() => {
+    if (isModalRelevantForMakeItBetterFlow && !isProgressModalOpen) {
+      console.log(`[HeroSection useEffect] Opening modal for Make it Better flow. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
+      setIsProgressModalOpen(true);
+    } else if (!isModalRelevantForMakeItBetterFlow && isProgressModalOpen) {
+      console.log(`[HeroSection useEffect] Closing modal. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
+      setIsProgressModalOpen(false);
+    }
+  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]); // Added pipelineState to ensure re-evaluation when it changes
   
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
@@ -121,12 +138,12 @@ const HeroSection: React.FC = () => {
                 </p>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploading}>
-                  {isUploading ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploadingFile}>
+                  {isUploadingFile ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {resumeFilename && <p className="text-sm text-draft-green mt-2">
-                    { isNotStarted ? 
-                      "Couldn't upload file:" : "Selected file: "
+                    { isResumeNotUploaded && !isUploadingFile ? 
+                      "Couldn't upload file: " : "Selected file: "
                     }
                     {resumeFilename}
                   </p>}
@@ -165,28 +182,26 @@ const HeroSection: React.FC = () => {
                       Write <ArrowRight size={16} />
                     </Button>
                     
-                    {/* Make it better button - centered below Write button when collapsed */}
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isEnhancing ? "Processing..." : "Make it better"}
+                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
                     </Button>
                   </div>
                 )}
                 
-                {/* Make it better button - only shown when textarea is expanded */}
                 {isWriteExpanded && (
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isEnhancing}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isEnhancing ? "Processing..." : "Make it better"}
+                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
                     </Button>
                   </div>
                 )}

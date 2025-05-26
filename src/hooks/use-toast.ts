@@ -1,16 +1,20 @@
+
 import * as React from "react"
 
 import type {
   ToastActionElement,
-  ToastProps,
+  ToastProps, // This is from @/components/ui/toast
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = ToastProps & {
+// Adjusted ToasterToast type
+// We Omit 'title' from ToastProps to avoid collision with the HTML 'title' attribute (string)
+// and then redefine it as React.ReactNode to allow JSX.
+type ToasterToast = Omit<ToastProps, 'title'> & {
   id: string
-  title?: React.ReactNode
+  title?: React.ReactNode // Ensures title can be JSX
   description?: React.ReactNode
   action?: ToastActionElement
 }
@@ -142,10 +146,10 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: ToasterToast) => // Parameter type should be Partial<ToasterToast> or Omit<ToasterToast, 'id'>
     dispatch({
       type: "UPDATE_TOAST",
-      toast: { ...props, id },
+      toast: { ...props, id } as ToasterToast, // Ensure the dispatched toast matches ToasterToast fully
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
@@ -158,7 +162,7 @@ function toast({ ...props }: Toast) {
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
-    },
+    } as ToasterToast, // Ensure the dispatched toast matches ToasterToast fully
   })
 
   return {
@@ -189,3 +193,4 @@ function useToast() {
 }
 
 export { useToast, toast }
+

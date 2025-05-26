@@ -41,14 +41,14 @@ export async function setupStorage(): Promise<boolean> {
 
 /**
  * Generates the storage path for a resume PDF
- * Following the exact structure: resume-pdfs/{userId}/{resumeId}/enhanced_resume_{resumeId}.pdf
+ * Following the structure: Resumes/{userId}/{resumeId}/enhanced_resume_{resumeId}.pdf
  * @param userId User ID
- * @param resumeId Resume ID
+ * @param resumeId Resume ID (typically the enhanced_resume_id)
  * @param format File format (pdf or docx)
  * @returns Storage path
  */
 export function generateResumePath(userId: string, resumeId: string, format: 'pdf' | 'docx' = 'pdf'): string {
-  return `${userId}/${resumeId}/enhanced_resume_${resumeId}.${format}`;
+  return `Resumes/${userId}/${resumeId}/enhanced_resume_${resumeId}.${format}`;
 }
 
 /**
@@ -85,20 +85,29 @@ export async function checkResumeExists(userId: string, resumeId: string, format
  * @param userId User ID
  * @param resumeId Resume ID
  * @param format File format (pdf or docx)
- * @param download Whether to get a download URL
+ * @param download Whether to get a download URL (forces download if true)
  * @returns Promise resolving to URL string
  */
 export async function getResumeUrl(
   userId: string, 
   resumeId: string, 
   format: 'pdf' | 'docx' = 'pdf',
-  download: boolean = false
+  download: boolean = false // Default is false, meaning for viewing
 ): Promise<string | null> {
   try {
     const path = generateResumePath(userId, resumeId, format);
+    
+    // Prepare options for createSignedUrl.
+    // Only include the 'download' property if download is explicitly true.
+    // An empty options object or omitting options should result in a URL for inline viewing.
+    const signedUrlOptions: { download?: string } = {};
+    if (download) {
+      signedUrlOptions.download = `enhanced_resume_${resumeId}.${format}`;
+    }
+    
     const { data, error } = await supabase.storage
       .from(RESUME_BUCKET)
-      .createSignedUrl(path, 60 * 60, { download: download ? `enhanced_resume_${resumeId}.${format}` : undefined });
+      .createSignedUrl(path, 60 * 60, signedUrlOptions); // Pass the conditionally built options
     
     if (error || !data?.signedUrl) {
       console.error('Error getting signed URL:', error);

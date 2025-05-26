@@ -11,14 +11,17 @@ const FAQHero: React.FC = () => {
       <div className="container mx-auto px-8 md:px-12 lg:px-6 z-10 text-center">
         <div className="flex flex-col items-center">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md mb-6">
-            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium font-serif">Support Center</span>
+            {/* Badge text: Updated to use primary color, font-serif removed */}
+            <span className="text-primary dark:text-primary uppercase text-sm font-medium">Support Center</span>
           </div>
           
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif mb-6 text-draft-green dark:text-draft-yellow max-w-3xl mx-auto">
+          {/* H1: Typographic classes (font-serif) removed, color classes removed (handled by base styles) */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl mb-6 max-w-3xl mx-auto">
             Frequently Asked Questions
           </h1>
           
-          <p className="text-lg md:text-xl text-draft-text dark:text-gray-300 max-w-2xl mx-auto font-serif">
+          {/* P: Typographic classes (font-serif, text-lg, md:text-xl) removed/updated. Color classes updated to use foreground. */}
+          <p className="text-base text-foreground dark:text-foreground max-w-2xl mx-auto">
             Find answers to common questions about DraftZero's resume optimization technology and services.
           </p>
         </div>

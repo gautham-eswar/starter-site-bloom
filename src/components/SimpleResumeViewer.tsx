@@ -6,13 +6,14 @@ import { ArrowLeft, ArrowRight, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader } from 'lucide-react';
+import { RESUME_BUCKET } from '@/services/supabaseSetup'; // Import RESUME_BUCKET
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface SimpleResumeViewerProps {
-  resumeId: string;
-  fileName: string;
+  resumeId: string; // This should be the folder path, e.g., "user123/actual-resume-id"
+  fileName: string; // This is the actual file name, e.g., "enhanced_resume.pdf"
 }
 
 const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileName }) => {
@@ -28,7 +29,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   
   // Debug state
   const [logs, setLogs] = useState<string[]>([]);
-  const [viewLogs, setViewLogs] = useState<boolean>(true);
+  const [viewLogs, setViewLogs] = useState<boolean>(true); // Default to true for easier debugging initially
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // Helper function to add logs
@@ -51,15 +52,16 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   const fetchPdfUrl = async () => {
     setLoading(true);
     setError(null);
-    addLog(`Starting fetch for resumeId: ${resumeId}, fileName: ${fileName}`);
+    setPdfUrl(null); // Clear previous URL
+    addLog(`Starting fetch for resumeId (path prefix): ${resumeId}, fileName: ${fileName}`);
     
     try {
       if (!resumeId || !fileName) {
-        throw new Error('Resume ID and file name are required');
+        throw new Error('Resume ID (path prefix) and file name are required');
       }
       
-      const bucketName = 'resumes';
-      const storagePath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266/${fileName}`;
+      const bucketName = RESUME_BUCKET; // Use imported RESUME_BUCKET
+      const storagePath = `${resumeId}/${fileName}`; // Corrected storage path
       addLog(`Accessing bucket: ${bucketName}, path: ${storagePath}`);
 
       // First attempt: Try public URL
@@ -71,10 +73,17 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       
       if (publicData && publicData.publicUrl) {
         addLog(`Got public URL: ${publicData.publicUrl}`);
-        setPdfUrl(publicData.publicUrl);
-        return;
+        // Test if URL is accessible before setting it
+        const testResponse = await fetch(publicData.publicUrl, { method: 'HEAD' });
+        if (testResponse.ok) {
+          addLog(`Public URL is accessible (${testResponse.status}). Setting PDF URL.`);
+          setPdfUrl(publicData.publicUrl);
+          return;
+        } else {
+          addLog(`Public URL not accessible (${testResponse.status}). Trying signed URL.`);
+        }
       } else {
-        addLog('No public URL returned');
+        addLog('No public URL returned or structure is unexpected. Trying signed URL.');
       }
       
       // Second attempt: Try signed URL
@@ -82,19 +91,17 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       const { data: signedData, error: signedError } = await supabase
         .storage
         .from(bucketName)
-        .createSignedUrl(storagePath, 3600);
+        .createSignedUrl(storagePath, 3600); // 1 hour expiry
         
       if (signedError) {
-        addLog(`Signed URL error: ${signedError.message}`);
-        throw signedError;
-      }
-      
-      if (signedData && signedData.signedUrl) {
+        addLog(`Signed URL error: ${signedError.message}. Trying download.`);
+        // Don't throw yet, try download as a last resort
+      } else if (signedData && signedData.signedUrl) {
         addLog(`Got signed URL: ${signedData.signedUrl}`);
         setPdfUrl(signedData.signedUrl);
         return;
       } else {
-        addLog('No signed URL returned');
+        addLog('No signed URL returned. Trying download.');
       }
       
       // Third attempt: Direct download
@@ -106,7 +113,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
         
       if (downloadError) {
         addLog(`Download error: ${downloadError.message}`);
-        throw downloadError;
+        throw downloadError; // If all methods fail, this is the final error
       }
       
       if (downloadData) {
@@ -116,14 +123,14 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
         setPdfUrl(url);
         return;
       } else {
-        addLog('No download data returned');
+        addLog('No download data returned.');
       }
       
-      throw new Error('All attempts to fetch PDF failed');
+      throw new Error('All attempts to fetch PDF failed. Check bucket, path, and permissions.');
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      addLog(`Error: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred while fetching PDF';
+      addLog(`Error in fetchPdfUrl: ${errorMessage}`);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -134,40 +141,46 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   // Check if the file exists
   const checkFileExists = async () => {
     try {
-      addLog('Checking if file exists in bucket...');
+      addLog(`Checking if file exists: bucket=${RESUME_BUCKET}, pathPrefix=${resumeId}, fileName=${fileName}`);
       
-      const bucketName = 'resumes';
-      const folderPath = `${resumeId}/f92b9a89-7189-4796-b009-bb700e9f8266`;
+      const bucketName = RESUME_BUCKET;
+      // `resumeId` prop is now the folderPath itself
+      const folderPathToList = resumeId; 
       
-      const { data, error } = await supabase
+      const { data, error: listError } = await supabase
         .storage
         .from(bucketName)
-        .list(folderPath);
+        .list(folderPathToList, {
+          limit: 100, // List more files in the directory for debugging
+          search: fileName // Search for the specific file
+        });
         
-      if (error) {
-        addLog(`List error: ${error.message}`);
+      if (listError) {
+        addLog(`List error during file check: ${listError.message}`);
+        setError(`Failed to check file existence: ${listError.message}`);
         return;
       }
       
       if (!data || data.length === 0) {
-        addLog(`No files found in path: ${folderPath}`);
+        addLog(`File "${fileName}" NOT found in path: "${folderPathToList}" within bucket "${bucketName}". (Searched using .list())`);
+        setError(`File "${fileName}" not found at path "${folderPathToList}".`);
         return;
       }
 
-      addLog(`Files in folder (${data.length}):`);
-      data.forEach(file => {
-        addLog(`- ${file.name} (${file.metadata?.size || 'unknown size'} bytes)`);
-      });
-      
       const targetFile = data.find(file => file.name === fileName);
       
       if (targetFile) {
-        addLog(`File "${fileName}" found! Size: ${targetFile.metadata?.size || 'unknown'} bytes`);
+        addLog(`File "${fileName}" found in "${folderPathToList}"! Size: ${targetFile.metadata?.size || 'unknown'} bytes. Last modified: ${targetFile.metadata?.last_modified || 'unknown'}`);
       } else {
-        addLog(`File "${fileName}" NOT found in bucket!`);
+        addLog(`File "${fileName}" NOT found in the listed files from "${folderPathToList}". Check if search pattern in .list() is too restrictive or filename is exact.`);
+        addLog('Files found in directory:');
+        data.forEach(file => addLog(`- ${file.name}`));
+        setError(`File "${fileName}" not found in directory "${folderPathToList}", though other files might exist.`);
       }
     } catch (err) {
-      addLog(`Check file error: ${err instanceof Error ? err.message : String(err)}`);
+      const message = err instanceof Error ? err.message : String(err);
+      addLog(`Check file existence error: ${message}`);
+      setError(`Error checking file: ${message}`);
     }
   };
 
@@ -196,14 +209,22 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   
   // Fetch PDF on component mount and when resumeId or fileName change
   useEffect(() => {
-    fetchPdfUrl();
+    if (resumeId && fileName) { // Ensure both are present before fetching
+      fetchPdfUrl();
+    } else {
+      addLog("resumeId or fileName is missing, not fetching PDF.");
+      setError("Resume ID (path prefix) or File Name not provided.");
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId, fileName]);
+  }, [resumeId, fileName]); // Removed pdfOptions from dependency array as it's stable
   
   // Handle PDF load success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setPageNumber(1);
+    setLoading(false); // Ensure loading is false on success
+    setError(null); // Clear any previous errors
     addLog(`PDF loaded successfully with ${numPages} pages`);
   };
   
@@ -230,6 +251,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
             variant="outline"
             size="sm"
             onClick={fetchPdfUrl}
+            disabled={loading || !resumeId || !fileName}
             className="flex items-center gap-1"
           >
             <RefreshCw className="h-4 w-4" />
@@ -240,15 +262,16 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
             variant="ghost" 
             size="sm" 
             onClick={checkFileExists}
+            disabled={!resumeId || !fileName}
           >
-            Check Files
+            Check File Exists
           </Button>
           
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={testUrl}
-            disabled={!pdfUrl}
+            disabled={!pdfUrl || loading}
           >
             Test URL
           </Button>
@@ -303,32 +326,34 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
             <p className="text-gray-700 font-medium">Loading PDF...</p>
           </div>
         ) : error ? (
-          <div className="p-6 bg-white rounded-lg shadow-md max-w-md">
+          <div className="p-6 bg-white rounded-lg shadow-md max-w-md text-center">
             <p className="text-xl font-bold text-red-600 mb-2">Error Loading PDF</p>
-            <p className="text-gray-700 mb-4">{error}</p>
-            <Button onClick={fetchPdfUrl}>Try Again</Button>
+            <p className="text-gray-700 mb-4 whitespace-pre-wrap">{error}</p>
+            <Button onClick={fetchPdfUrl} disabled={!resumeId || !fileName}>Try Again</Button>
           </div>
         ) : !pdfUrl ? (
           <div className="p-6 bg-white rounded-lg shadow-md max-w-md text-center">
-            <p className="text-lg font-medium text-gray-700 mb-4">No PDF URL available</p>
-            <Button onClick={fetchPdfUrl}>Try Again</Button>
+            <p className="text-lg font-medium text-gray-700 mb-4">No PDF URL available or still loading.</p>
+            <Button onClick={fetchPdfUrl} disabled={!resumeId || !fileName}>Try Fetching PDF</Button>
           </div>
         ) : (
           <div className="shadow-xl bg-white rounded-lg overflow-hidden">
             <Document
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={(error) => {
-                addLog(`PDF load error: ${error.message}`);
-                setError(`Failed to load PDF: ${error.message}`);
+              onLoadError={(pdfJsError) => {
+                addLog(`PDF.js load error: ${pdfJsError.message} (URL: ${pdfUrl})`);
+                setError(`Failed to load PDF content: ${pdfJsError.message}. Please check if the URL is valid and the file is a proper PDF.`);
+                setLoading(false); // Ensure loading is false on error
               }}
               loading={
                 <div className="flex flex-col items-center justify-center p-6">
                   <Loader className="h-8 w-8 animate-spin text-gray-700 mb-2" />
-                  <p className="text-gray-700 font-medium">Loading PDF content...</p>
+                  <p className="text-gray-700 font-medium">Loading PDF content from URL...</p>
                 </div>
               }
               options={pdfOptions}
+              key={pdfUrl} // Add key to force re-render when URL changes
             >
               <Page 
                 pageNumber={pageNumber} 
@@ -336,6 +361,10 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
                 className="pdf-page"
+                onRenderError={(error) => {
+                    addLog(`PDF.js page render error: ${error.message}`);
+                    setError(`Failed to render PDF page: ${error.message}`);
+                }}
               />
             </Document>
           </div>

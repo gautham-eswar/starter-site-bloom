@@ -20,10 +20,12 @@ const TestimonialsSection: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col items-center mb-12">
           <div className="bg-[#f1f1eb] dark:bg-draft-green/30 px-4 py-2 rounded-md mb-6">
-            <span className="text-draft-green dark:text-draft-yellow uppercase text-sm font-medium">Testimonials</span>
+            {/* Badge text: using primary for its distinct color in both modes */}
+            <span className="text-primary dark:text-primary uppercase text-sm font-medium">Testimonials</span>
           </div>
           
-          <h2 className="text-heading font-serif text-center mb-6 text-draft-green dark:text-draft-yellow">
+          {/* h2: text-3xl. Color from base heading styles (text-foreground). font-serif and text-heading removed by typography subtask. */}
+          <h2 className="text-3xl text-center mb-6">
             Hear from real people
           </h2>
           
@@ -40,16 +42,19 @@ const TestimonialsSection: React.FC = () => {
           {testimonials.map((testimonial, index) => (
             <div 
               key={index} 
-              className={`bg-white dark:bg-draft-green/10 p-6 rounded-lg border border-[#1D5F5B] dark:border-draft-green/30 ${
+              className={`bg-slate-50 dark:bg-white/5 p-6 rounded-lg transition-colors duration-300 ease-in-out ${
                 testimonialView === 'list' ? 'max-w-2xl mx-auto' : ''
               }`}
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium dark:text-draft-yellow">{testimonial.name}</span>
-                  <span className="text-gray-500 dark:text-gray-300 text-sm">{testimonial.handle}</span>
+                  {/* Name: font-medium, text-muted-foreground */}
+                  <span className="font-medium text-muted-foreground dark:text-muted-foreground">{testimonial.name}</span>
+                  {/* Handle: text-sm, text-muted-foreground */}
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground">{testimonial.handle}</span>
                 </div>
-                <p className="text-draft-text dark:text-gray-300">{testimonial.text}</p>
+                {/* Quote text: text-lg, text-foreground */}
+                <p className="text-lg text-foreground dark:text-foreground">{testimonial.text}</p>
               </div>
             </div>
           ))}

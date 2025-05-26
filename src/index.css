@@ -30,33 +30,33 @@
 
 @layer base {
   :root {
-    --background: 45 33% 97%;
-    --foreground: 0 0% 10%;
+    --background: 43 33% 97%; /* #FDFBF5 */
+    --foreground: 158 71% 13%; /* #0E3C26 - Preserved Main Text & Headings for Light Mode */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card: 0 0% 100%; 
+    --card-foreground: 158 71% 13%; /* Text on card */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 0 0% 100%; 
+    --popover-foreground: 158 71% 13%;
 
-    --primary: 158 78% 17%;
-    --primary-foreground: 45 33% 97%;
+    --primary: 167 71% 21%; /* #0E5C4A - Primary Action */
+    --primary-foreground: 43 33% 97%; /* #FBF9F7 - Text on Primary */
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 0 0% 96%; /* Default, can be reviewed if specific secondary palette needed */
+    --secondary-foreground: 158 71% 13%; 
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 90%; /* Lighter gray for muted backgrounds e.g. #E5E5E5 */
+    --muted-foreground: 0 0% 45%; /* #737373 - Preserved Muted Text */
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 167 71% 21%; /* Using primary as main accent for light mode */
+    --accent-foreground: 43 33% 97%; 
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 60%; 
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 158 78% 17%;
+    --border: 0 0% 87%; /* Slightly darker border e.g. #DDD */
+    --input: 0 0% 93%;  /* Slightly darker input e.g. #EEE */
+    --ring: 167 71% 21%; /* Using primary for rings */
 
     --radius: 0.5rem;
 
@@ -71,33 +71,33 @@
   }
   
   .dark {
-    --background: 158 25% 18%;
-    --foreground: 65 100% 94%;
+    --background: 30 7% 16%; /* #2D2A26 */
+    --foreground: 40 10% 90%; /* #E8E6E3 */
 
-    --card: 158 20% 20%;
-    --card-foreground: 65 100% 94%;
+    --card: 30 7% 20%; 
+    --card-foreground: 40 10% 90%; 
 
-    --popover: 158 20% 20%;
-    --popover-foreground: 65 100% 94%;
+    --popover: 30 7% 20%; 
+    --popover-foreground: 40 10% 90%;
 
-    --primary: 65 100% 74%;
-    --primary-foreground: 158 78% 17%;
+    --primary: 161 25% 48%; /* #5A998A (Primary Accent for Dark Mode) */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-    --secondary: 158 15% 25%;
-    --secondary-foreground: 65 100% 94%;
+    --secondary: 30 7% 25%; 
+    --secondary-foreground: 40 10% 90%;
 
-    --muted: 158 15% 25%;
-    --muted-foreground: 65 100% 84%;
+    --muted: 30 7% 25%; /* Darker muted background */
+    --muted-foreground: 38 3% 62%; /* #A09D9A */
 
-    --accent: 158 15% 25%;
-    --accent-foreground: 65 100% 94%;
+    --accent: 161 25% 48%; /* Using primary accent for dark mode */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 65 100% 94%;
+    --destructive: 0 70% 50%; /* Adjusted for dark mode contrast */
+    --destructive-foreground: 0 0% 100%; 
 
-    --border: 158 15% 25%;
-    --input: 158 15% 25%;
-    --ring: 65 100% 74%;
+    --border: 30 7% 25%; 
+    --input: 30 7% 22%; /* Slightly darker input for dark */
+    --ring: 161 25% 48%; 
   }
 }
 

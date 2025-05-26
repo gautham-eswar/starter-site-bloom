@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 import { FAQCategory } from '@/pages/FAQ';
+import { Button } from '@/components/ui/button'; // Added this import
 
 interface FAQItemProps {
   question: string;
@@ -280,41 +281,50 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
                 key={questionId} 
                 value={questionId}
                 id={`faq-${questionId}`}
-                className="faq-item opacity-0 translate-y-4 transition-all duration-500 border border-gray-200 dark:border-draft-green/30 rounded-lg overflow-hidden data-[state=open]:bg-[#F7F4ED] dark:data-[state=open]:bg-draft-green/20"
+                // Use theme border and muted bg for open/hover states
+                className="faq-item opacity-0 translate-y-4 transition-all duration-500 border border-border rounded-lg overflow-hidden data-[state=open]:bg-muted/50"
               >
-                <AccordionTrigger className="px-6 py-4 text-draft-green dark:text-draft-yellow text-left text-lg font-medium hover:bg-[#F7F4ED] dark:hover:bg-draft-green/10">
+                <AccordionTrigger className="px-6 py-4 text-primary dark:text-primary text-left text-lg font-medium hover:bg-muted/50 dark:hover:bg-muted/50">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6 text-draft-text dark:text-gray-300 text-[1.1rem]">
+                {/* Answer text: text-foreground, size already text-base from previous subtask */}
+                <AccordionContent className="px-6 pb-6 text-foreground dark:text-foreground text-base">
                   <div className="mb-6">
                     {faq.answer}
                   </div>
                   
-                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-draft-green/20">
+                  {/* Use theme border */}
+                  <div className="mt-4 pt-3 border-t border-border">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {/* "Was this helpful?" text: text-muted-foreground */}
+                      <div className="text-sm text-muted-foreground">
                         Was this helpful?
                       </div>
                       
                       {feedbackGiven[questionId] ? (
-                        <div className="text-sm text-draft-green dark:text-draft-yellow animate-fade-in">
+                        // "Thank you" text: text-primary
+                        <div className="text-sm text-primary dark:text-primary animate-fade-in">
                           Thank you for your feedback!
                         </div>
                       ) : (
                         <div className="flex space-x-2">
+                          {/* Button component is used here */}
                           <button 
                             onClick={() => handleFeedback(questionId, 'positive')}
-                            className="p-2 rounded-full hover:bg-draft-green/10 dark:hover:bg-draft-green/20 transition-colors"
+                            className="p-2 rounded-full hover:bg-muted/50 dark:hover:bg-muted/50 transition-colors"
                             aria-label="Yes, this was helpful"
                           >
-                            <ThumbsUp className="h-5 w-5 text-draft-green dark:text-draft-yellow" />
+                            {/* Feedback icons: text-primary */}
+                            <ThumbsUp className="h-5 w-5 text-primary dark:text-primary" />
                           </button>
+                          {/* Button component is used here */}
                           <button 
                             onClick={() => handleFeedback(questionId, 'negative')}
-                            className="p-2 rounded-full hover:bg-draft-green/10 dark:hover:bg-draft-green/20 transition-colors"
+                            className="p-2 rounded-full hover:bg-muted/50 dark:hover:bg-muted/50 transition-colors"
                             aria-label="No, this wasn't helpful"
                           >
-                            <ThumbsDown className="h-5 w-5 text-draft-green dark:text-draft-yellow" />
+                            {/* Feedback icons: text-primary */}
+                            <ThumbsDown className="h-5 w-5 text-primary dark:text-primary" />
                           </button>
                         </div>
                       )}
@@ -326,20 +336,25 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
           })}
         </Accordion>
       ) : (
-        <div className="text-center py-16 bg-white dark:bg-draft-green/10 rounded-lg border border-gray-200 dark:border-draft-green/30">
+        <div className="text-center py-16 bg-card dark:bg-card rounded-lg border border-border"> {/* Use theme card and border */}
           <div className="mb-4">
-            <Search className="h-12 w-12 mx-auto text-gray-400" />
+            {/* Search Icon: text-muted-foreground */}
+            <Search className="h-12 w-12 mx-auto text-muted-foreground" />
           </div>
-          <h3 className="text-xl font-medium text-draft-green dark:text-draft-yellow mb-2 font-serif">No results found</h3>
-          <p className="text-draft-text dark:text-gray-300 font-serif">
+          {/* h3: text-2xl font-semibold. Color from base heading styles (text-foreground). Font-serif removed. */}
+          <h3 className="text-2xl font-semibold text-foreground dark:text-foreground mb-2">No results found</h3>
+          {/* p: text-base text-muted-foreground. Font-serif removed. */}
+          <p className="text-base text-muted-foreground">
             We couldn't find any FAQs matching your search.
           </p>
-          <button 
+          {/* Button: Updated to use Button component with outline variant */}
+          <Button
+            variant="outline"
             onClick={clearSearch}
-            className="mt-4 px-4 py-2 bg-draft-green dark:bg-draft-yellow text-white dark:text-draft-green rounded-md hover:bg-draft-green/90 dark:hover:bg-draft-yellow/90 transition-colors font-serif"
+            className="mt-4"
           >
             Clear search
-          </button>
+          </Button>
         </div>
       )}
       
