@@ -14,13 +14,13 @@ const handleApiError = (error: any) => {
 
   if (isNetworkError) {
     toast({
-      title: <span className="text-draft-green dark:text-draft-yellow">Service Unreachable</span>,
+      title: <span className="text-draft-green dark:text-draft-yellow">Service Unreachable</span> as React.ReactNode,
       description: "We're having trouble connecting. Please check your internet connection or try again shortly.",
       variant: "default",
     });
   } else {
     toast({
-      title: <span className="text-draft-green dark:text-draft-yellow">An Error Occurred</span>,
+      title: <span className="text-draft-green dark:text-draft-yellow">An Error Occurred</span> as React.ReactNode,
       description: errorMessage,
       variant: "default", // Changed from "destructive" for a less alarming default
     });
@@ -44,19 +44,14 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       }
     }
     
-    // Removed timeout management logic (AbortController, setTimeout, clearTimeout)
-    // The options.signal can still be passed in if needed for external cancellation.
-    
     const response = await fetch(url, options);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
       const errorMessage = errorData.message || `Request failed with status ${response.status}`;
       console.error(`API request to ${url} failed with status ${response.status}: ${errorMessage}`, errorData);
-      // This toast is for when the server *responds* with an error (e.g., 4xx, 5xx)
-      // It remains "destructive" as these are specific API functional errors.
       toast({
-        title: `API Error: ${response.status}`,
+        title: `API Error: ${response.status}` as React.ReactNode, // Also cast here if this title could be JSX later
         description: errorMessage,
         variant: "destructive",
       });
@@ -66,8 +61,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     const data = await response.json();
     return data;
   } catch (error: any) {
-    console.error("API Request Exception:", error); // Added more generic log for any catch here
-    // This calls our updated handleApiError for network issues or other fetch-related exceptions
+    console.error("API Request Exception:", error); 
     return handleApiError(error); 
   }
 }
@@ -80,9 +74,8 @@ export async function uploadResume(file: File, userId: string) {
   formData.append('user_id', userId);
   
   console.log(`Starting resume upload for user ID: ${userId} to ${API_BASE_URL}/api/upload`);
-  return await apiRequest("/api/upload", { // Fixed: Added /api prefix
+  return await apiRequest("/api/upload", {
     method: "POST",
-    // headers: {}, // Content-Type for FormData is set by the browser
     body: formData,
   });
 }
@@ -94,35 +87,25 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   formData.append("resume_id", resumeId);
   formData.append("user_id", userId);
   formData.append("job_description", jobDescription);
-  return await apiRequest("/api/optimize", { // Fixed: Added /api prefix
+  return await apiRequest("/api/optimize", {
     method: "POST",
-    // headers: {}, // Content-Type for FormData is set by the browser
     body: formData,
   });
 }
 
-// Removed getOptimizationResults and checkOptimizationStatus as they are no longer used by the new backend.
-// The /api/optimize endpoint now returns complete results directly.
-
 // Download optimized resume
 export async function downloadResume(resumeId: string, format: string = "pdf") {
   try {
-    // Get the current auth session
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
     
-    const downloadUrl = `${API_BASE_URL}/api/download/${resumeId}/${format}`; // Fixed: Added /api prefix
+    const downloadUrl = `${API_BASE_URL}/api/download/${resumeId}/${format}`;
     console.log(`Attempting to download resume from: ${downloadUrl}`);
 
-    // If we have userId and format is PDF, check if it exists in our Supabase storage first
-    // This caching logic might still be beneficial
     if (userId && format === "pdf") {
-      const existsInSupabase = await checkPdfExists(resumeId, userId); // checkPdfExists comes from './pdfStorage'
+      const existsInSupabase = await checkPdfExists(resumeId, userId);
       if (existsInSupabase) {
         console.log(`PDF ${resumeId} for user ${userId} found in Supabase storage. Preparing download.`);
-        // If it exists in our storage, get it from there (or generate a signed URL if that's how pdfStorage works)
-        // This part depends on how checkPdfExists and subsequent download from Supabase are implemented.
-        // For now, let's assume direct download from API and cache after.
       }
     }
     
@@ -132,29 +115,24 @@ export async function downloadResume(resumeId: string, format: string = "pdf") {
       throw new Error(errorData.message || `Download failed with status ${response.status}`);
     }
     
-    // If it's PDF, try to store it in Supabase for future use (caching)
     if (format === "pdf" && userId) {
       try {
-        const blobCopy = await response.clone().blob(); // Clone response for caching
-        // Assuming enhanced_resume_{resumeId}.pdf is the desired filename in storage
-        await uploadPdfFromBlob(blobCopy, `enhanced_resume_${resumeId}.pdf`, resumeId, userId); // uploadPdfFromBlob from './pdfStorage'
+        const blobCopy = await response.clone().blob();
+        await uploadPdfFromBlob(blobCopy, `enhanced_resume_${resumeId}.pdf`, resumeId, userId);
         console.log(`Cached ${resumeId}.pdf to Supabase storage for user ${userId}.`);
       } catch (uploadError) {
         console.error("Failed to cache PDF in Supabase storage:", uploadError);
-        // Continue with the download even if storage caching fails
       }
     }
     
-    return response; // Return the original response for the client to handle (e.g., save file)
+    return response;
   } catch (error) {
     console.error("Download error:", error);
-    // This toast is for download-specific errors and can remain destructive.
-    // Or, it could also call a more generic error handler if desired.
     toast({
-      title: "Download Failed",
+      title: "Download Failed" as React.ReactNode, // Also cast here
       description: error instanceof Error ? error.message : "Could not download the file.",
       variant: "destructive",
     });
-    throw error; // Re-throw to be caught by calling function if necessary
+    throw error;
   }
 }
