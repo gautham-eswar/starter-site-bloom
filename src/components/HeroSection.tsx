@@ -57,7 +57,7 @@ const HeroSection: React.FC = () => {
     }
     
     setIsWriteExpanded(true);
-    await uploadResume(file)
+    await uploadResume(file);
   };
 
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -78,32 +78,32 @@ const HeroSection: React.FC = () => {
     await enhanceResume(jobDescription); 
   };
 
-  const isUploadingFile = pipelineState === UPLOADING;
-  const isResumeNotUploaded = pipelineState === NOT_UPLOADED; // Used for "Couldn't upload file" message
+  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending; // Only true for initial upload
+  const isResumeNotUploaded = pipelineState === NOT_UPLOADED;
 
   // Determine if the system is busy with an operation relevant to the "Make it Better" button
   const isSystemBusy = 
     isAwaitingApiResponse || // Waiting for optimize API response
-    pipelineState === UPLOADING || // Resume is uploading
+    (pipelineState === UPLOADING && enhancementPending) || // Uploading as part of "Make it Better"
     pipelineState === ENHANCED || // Enhancement succeeded, modal likely showing progress
     pipelineState === RENDERING;   // Rendering PDF, modal likely showing progress
 
-  // Determine if the modal should be open based on pipeline state
-  // These are states where the ProgressModal is relevant.
-  const isModalRelevantState =
-    pipelineState === UPLOADING ||
+  // Determine if the modal should be open based on "Make it Better" flow
+  // This ensures modal only shows for enhancement-related processing.
+  const isModalRelevantForMakeItBetterFlow =
     pipelineState === ENHANCED ||
-    pipelineState === RENDERING;
+    pipelineState === RENDERING ||
+    (pipelineState === UPLOADING && enhancementPending); // Crucial: UPLOADING state only relevant for modal if enhancement is pending.
 
   useEffect(() => {
-    if (isModalRelevantState && !isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Opening modal. State: ${pipelineState}, ModalOpen: ${isProgressModalOpen}`);
+    if (isModalRelevantForMakeItBetterFlow && !isProgressModalOpen) {
+      console.log(`[HeroSection useEffect] Opening modal for Make it Better flow. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
       setIsProgressModalOpen(true);
-    } else if (!isModalRelevantState && isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Closing modal. State: ${pipelineState}, ModalOpen: ${isProgressModalOpen}`);
+    } else if (!isModalRelevantForMakeItBetterFlow && isProgressModalOpen) {
+      console.log(`[HeroSection useEffect] Closing modal. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
       setIsProgressModalOpen(false);
     }
-  }, [isModalRelevantState, isProgressModalOpen, pipelineState]); // Added pipelineState to ensure re-evaluation when it changes
+  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]); // Added pipelineState to ensure re-evaluation when it changes
   
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
@@ -142,7 +142,7 @@ const HeroSection: React.FC = () => {
                   {isUploadingFile ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
                 {resumeFilename && <p className="text-sm text-draft-green mt-2">
-                    { isResumeNotUploaded && !isUploadingFile ? // Show "Couldn't upload" only if NOT_UPLOADED and not currently trying to upload
+                    { isResumeNotUploaded && !isUploadingFile ? 
                       "Couldn't upload file: " : "Selected file: "
                     }
                     {resumeFilename}
@@ -184,7 +184,7 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -197,7 +197,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
