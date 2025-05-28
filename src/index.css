@@ -1,352 +1,165 @@
-
-/* Import GT Alpina Trial font */
-@font-face {
-  font-family: 'GT Alpina Trial';
-  src: url('/fonts/GT-Alpina-Trial-Standard-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina Trial';
-  src: url('/fonts/GT-Alpina-Trial-Standard-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina Trial';
-  src: url('/fonts/GT-Alpina-Trial-Standard-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 43 33% 97%; /* #FDFBF5 */
-    --foreground: 158 71% 13%; /* #0E3C26 - Preserved Main Text & Headings for Light Mode */
-
-    --card: 0 0% 100%; 
-    --card-foreground: 158 71% 13%; /* Text on card */
-
-    --popover: 0 0% 100%; 
-    --popover-foreground: 158 71% 13%;
-
-    --primary: 167 71% 21%; /* #0E5C4A - Primary Action */
-    --primary-foreground: 43 33% 97%; /* #FBF9F7 - Text on Primary */
-
-    --secondary: 0 0% 96%; /* Default, can be reviewed if specific secondary palette needed */
-    --secondary-foreground: 158 71% 13%; 
-
-    --muted: 0 0% 90%; /* Lighter gray for muted backgrounds e.g. #E5E5E5 */
-    --muted-foreground: 0 0% 45%; /* #737373 - Preserved Muted Text */
-
-    --accent: 167 71% 21%; /* Using primary as main accent for light mode */
-    --accent-foreground: 43 33% 97%; 
-
-    --destructive: 0 84% 60%; 
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 87%; /* Slightly darker border e.g. #DDD */
-    --input: 0 0% 93%;  /* Slightly darker input e.g. #EEE */
-    --ring: 167 71% 21%; /* Using primary for rings */
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  
-  .dark {
-    --background: 30 7% 16%; /* #2D2A26 */
-    --foreground: 40 10% 90%; /* #E8E6E3 */
-
-    --card: 30 7% 20%; 
-    --card-foreground: 40 10% 90%; 
-
-    --popover: 30 7% 20%; 
-    --popover-foreground: 40 10% 90%;
-
-    --primary: 161 25% 48%; /* #5A998A (Primary Accent for Dark Mode) */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF */
-
-    --secondary: 30 7% 25%; 
-    --secondary-foreground: 40 10% 90%;
-
-    --muted: 30 7% 25%; /* Darker muted background */
-    --muted-foreground: 38 3% 62%; /* #A09D9A */
-
-    --accent: 161 25% 48%; /* Using primary accent for dark mode */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 70% 50%; /* Adjusted for dark mode contrast */
-    --destructive-foreground: 0 0% 100%; 
-
-    --border: 30 7% 25%; 
-    --input: 30 7% 22%; /* Slightly darker input for dark */
-    --ring: 161 25% 48%; 
-  }
+@font-face {
+  font-family: 'GT Alpina Trial';
+  src: url('/fonts/GT-Alpina-Condensed-Light-Trial.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GT Alpina Trial';
+  src: url('/fonts/GT-Alpina-Condensed-Regular-Trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GT Alpina Trial';
+  src: url('/fonts/GT-Alpina-Condensed-Medium-Trial.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GT Alpina Trial';
+  src: url('/fonts/GT-Alpina-Condensed-Bold-Trial.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GT Alpina Finer Trial';
+  src: url('/fonts/GT-Alpina-Finer-Regular-LC-Trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
 }
 
+/* Ensure this is the first @layer base if there are multiple */
 @layer base {
   * {
     @apply border-border;
   }
+}
 
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* White */
+    --foreground: 158 71% 13%; /* #0E3C26 - Preserved Light Main Text/h2-h6 */
+    --card: 0 0% 100%;
+    --card-foreground: 158 71% 13%; /* #0E3C26 */
+    --popover: 0 0% 100%;
+    --popover-foreground: 158 71% 13%; /* #0E3C26 */
+    --primary: 167 71% 21%; /* #0E5C4A - Preserved Light Primary / H1 */
+    --primary-foreground: 45 33% 97%; /* #FBF9F7 - Preserved Text on Light Primary */
+    --secondary: 0 0% 96%; /* #F5F5F5 */
+    --secondary-foreground: 0 0% 34%; /* #575757 - Preserved Light Muted Text (was --muted-foreground) */
+    --muted: 0 0% 96%; /* #F5F5F5 */
+    --muted-foreground: 0 0% 45%; /* #737373 - Preserved Light Muted Text */
+    --accent: 0 0% 96%; /* #F5F5F5 */
+    --accent-foreground: 0 0% 9.019607843137255%; /* #171717 - (Ensure this is intended light accent text) */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 63.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 35 7% 16%; /* #2D2A26 - New Dark Background */
+    --foreground: 40 10% 90%; /* #E8E6E3 - New Dark Main Text */
+    --card: 35 7% 16%; /* #2D2A26 */
+    --card-foreground: 40 10% 90%; /* #E8E6E3 */
+    --popover: 35 7% 16%; /* #2D2A26 */
+    --popover-foreground: 40 10% 90%; /* #E8E6E3 */
+    --primary: 161 25% 48%; /* #5A998A - New Dark Primary Accent */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF - New Text on Dark Primary Accent */
+    --secondary: 36 6% 20%; /* #3A3633 - Adjusted Dark Secondary */
+    --secondary-foreground: 40 10% 90%; /* #E8E6E3 */
+    --muted: 36 6% 20%; /* #3A3633 */
+    --muted-foreground: 38 3% 62%; /* #A09D9A - New Dark Muted Text */
+    --accent: 36 6% 20%; /* #3A3633 */
+    --accent-foreground: 40 10% 90%; /* #E8E6E3 */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 36 5% 26%; /* #4A4642 - Adjusted Dark Border */
+    --input: 36 5% 26%; /* #4A4642 */
+    --ring: 161 25% 48%; /* #5A998A */
+  }
+}
+
+/* This is the main @layer base for element styling */
+@layer base {
   body {
-    @apply bg-draft-bg transition-colors duration-300;
-    color: #0E3C26; /* Use direct color value for draft-text */
-    background-color: theme('colors.draft-bg');
-    .dark & {
-      background-color: #1A3F35;
-      color: #E9FF7D; /* Use direct color value for draft-yellow */
-    }
-    font-family: 'GT Alpina Trial', serif;
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family: theme('fontFamily.sans');
+    font-weight: 400;
+    line-height: theme('lineHeight.relaxed');
+    letter-spacing: theme('letterSpacing.normal');
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+  h1 {
+    @apply text-4xl font-bold leading-tight text-primary;
+    /* In dark mode, --primary is #5A998A. If H1 dark should be #E8E6E3 (foreground),
+       then add: .dark & { @apply text-foreground; } */
   }
-  
-  .dark .bg-draft-bg {
-    background-color: #1A3F35;
+  h2 {
+    @apply text-3xl font-semibold leading-tight text-foreground;
   }
-  
-  .dark .bg-[#F7F4ED] {
-    background-color: #0A2218;
+  h3 {
+    @apply text-2xl font-semibold leading-snug text-foreground;
   }
-  
-  .dark .text-draft-green {
-    color: #E9FF7D; /* Direct value for draft-yellow */
+  h4 {
+    @apply text-xl font-medium leading-snug text-foreground; /* Worker used font-medium for H4, consistent with plan */
   }
-  
-  .dark .border-draft-green {
-    border-color: #E9FF7D; /* Direct value for draft-yellow */
+  h5 {
+    @apply text-base font-medium leading-normal text-foreground; /* Worker used font-medium for H5, consistent */
   }
-  
-  .dark .hover\:bg-draft-bg\/80:hover {
-    background-color: rgba(26, 63, 53, 0.8); 
-  }
-  
-  /* Update Header sign in button in dark mode */
-  .dark .border-draft-green.text-draft-green {
-    border-color: #E9FF7D; /* Direct value for draft-yellow */
-    color: #E9FF7D; /* Direct value for draft-yellow */
-  }
-  
-  .dark .hover\:text-draft-green:hover {
-    color: #E9FF7D; /* Direct value for draft-yellow */
+  h6 {
+    @apply text-base font-medium leading-normal text-foreground; /* Worker used font-medium for H6, consistent */
   }
 
-  /* Updated text color for subtitle text in dark mode */
-  .dark .text-draft-text {
-    color: #d1d5db; /* Direct value for gray-300 */
+  a {
+    @apply text-primary hover:underline;
   }
 
-  /* Fix for "How to" badge/button in dark mode */
-  .dark .bg-\[\#f1f1eb\] {
-    background-color: rgba(26, 63, 53, 0.3);
+  button, .button {
+    @apply text-base font-semibold; /* Base button text styling from previous fixes */
   }
 
-  /* Ensure proper coloring for opacity-based texts */
-  .dark .text-draft-text.opacity-90,
-  .dark .text-draft-text.opacity-80,
-  .dark .text-draft-text.opacity-70 {
-    color: #d1d5db; /* Direct value for gray-300 */
-  }
-  
-  /* Features section and Testimonials section heading in dark mode */
-  .dark .bg-\[\#e6e6e0\] {
-    background-color: rgba(26, 63, 53, 0.2);
-  }
-  
-  /* Background for testimonial cards in dark mode */
-  .dark .bg-white {
-    background-color: rgba(26, 63, 53, 0.1);
-  }
-  
-  /* Border for testimonial cards in dark mode */
-  .dark .border-\[\#1D5F5B\] {
-    border-color: rgba(26, 63, 53, 0.3);
-  }
-  
-  /* Stats section and Features section in dark mode - using the same background color as testimonials */
-  .dark .bg-\[\#F7F4ED\] {
-    background-color: #0A2218;
-  }
-  
-  /* Footer in dark mode */
-  .dark .bg-\[\#0A2920\] {
-    background-color: #FDFBF5; /* Use the draft-bg color value directly */
-  }
-  
-  /* Fix for feature section hover and selected states */
-  .dark .bg-\[\#EDEEE7\] {
-    background-color: rgba(26, 63, 53, 0.2);
-  }
-  
-  /* Fix for dark mode "Make it better" button text */
-  .dark .bg-draft-yellow.text-draft-green {
-    color: #0E3C26 !important; /* Make it dark green in dark mode with !important to ensure it applies */
-  }
-
-  /* Authentication page specific dark mode overrides */
-  .dark .border-\[\#e6e6e0\] {
-    border-color: #1E433A;
-  }
-
+  /* Preserve other base styles if they were in this block and are correct */
   .hide {
-    display:none;
+    display: none !important;
   }
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .shape-blob {
-  border-radius: 42% 56% 72% 28% / 42% 42% 56% 48%;
-}
-
-/* Add new styles for semantic visualization */
-@keyframes floatAnimation {
-  0% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(5px, 5px);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
+  animation: blobMotion 10s infinite;
+  transform-origin: 50% 50%;
 }
 
 .word-node {
-  font-family: 'GT Alpina Trial', serif;
-  animation: floatAnimation 6s ease-in-out infinite;
-  animation-delay: calc(var(--animation-delay, 0) * 1s);
+  transition: transform 0.3s ease-in-out;
 }
 
-/* Animations for scroll-triggered elements */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+.word-node:hover {
+  transform: scale(1.1);
+}
+
+@keyframes blobMotion {
+  0%, 100% {
+    transform: scale(1) translate(0, 0) rotate(0deg);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  25% {
+    transform: scale(1.1) translate(20px, -30px) rotate(90deg);
+  }
+  50% {
+    transform: scale(0.9) translate(-20px, 30px) rotate(180deg);
+  }
+  75% {
+    transform: scale(1.2) translate(30px, -20px) rotate(270deg);
   }
 }
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
-
-/* NEW ANIMATIONS FOR PROCESS SECTION */
-@keyframes pulseOpacity {
-  0% { opacity: 0.85; }
-  50% { opacity: 1; }
-  100% { opacity: 0.85; }
-}
-
-@keyframes pulseScale {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-  100% { transform: scale(1); }
-}
-
-@keyframes scanEffect {
-  0% { transform: translateY(-10px); opacity: 0.7; }
-  50% { transform: translateY(10px); opacity: 1; }
-  100% { transform: translateY(-10px); opacity: 0.7; }
-}
-
-@keyframes networkEffect {
-  0% { transform: scale(0.97); opacity: 0.7; }
-  50% { transform: scale(1.03); opacity: 1; }
-  100% { transform: scale(0.97); opacity: 0.7; }
-}
-
-@keyframes balanceEffect {
-  0% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-  100% { transform: rotate(-2deg); }
-}
-
-@keyframes floatUp {
-  0% { transform: translateY(0); opacity: 0.1; }
-  100% { transform: translateY(-200px); opacity: 0; }
-}
-
-.animate-pulse-opacity {
-  animation: pulseOpacity 3s infinite ease-in-out;
-}
-
-.animate-pulse-scale {
-  animation: pulseScale 5s infinite ease-in-out;
-}
-
-.animate-scan-effect {
-  animation: scanEffect 2.5s infinite ease-in-out;
-}
-
-.animate-network-effect {
-  animation: networkEffect 4s infinite ease-in-out;
-}
-
-.animate-balance-effect {
-  animation: balanceEffect 3s infinite ease-in-out;
-}
-
-.hover\:scale-103:hover {
-  transform: scale(1.03);
-}
-
-/* Particle styling */
-.particle {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background-color: rgba(233, 255, 125, 0.1);
-  border-radius: 50%;
-  animation: floatUp 30s linear infinite;
-}
-
-/* Fix for accordion content padding */
-.accordion-content {
-  padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-/* Styles for FAQ feedback buttons */
-.feedback-button {
-  transition: all 0.2s ease;
-}
-
-.feedback-button:hover {
-  background-color: rgba(14, 60, 38, 0.1);
-}
-
-.dark .feedback-button:hover {
-  background-color: rgba(233, 255, 125, 0.1);
-}
-
-/* Thank you message animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
