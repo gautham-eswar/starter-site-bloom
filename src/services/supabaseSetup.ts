@@ -48,7 +48,9 @@ export async function setupStorage(): Promise<boolean> {
  * @returns Storage path
  */
 export function generateResumePath(userId: string, resumeId: string, format: 'pdf' | 'docx' = 'pdf'): string {
-  return `Resumes/${userId}/${resumeId}/enhanced_resume_${resumeId}.${format}`;
+  const path = `Resumes/${userId}/${resumeId}/enhanced_resume_${resumeId}.${format}`;
+  console.log(`[generateResumePath] Generated path: ${path} for userId: ${userId}, resumeId: ${resumeId}`);
+  return path;
 }
 
 /**
@@ -61,21 +63,33 @@ export function generateResumePath(userId: string, resumeId: string, format: 'pd
 export async function checkResumeExists(userId: string, resumeId: string, format: 'pdf' | 'docx' = 'pdf'): Promise<boolean> {
   try {
     const path = generateResumePath(userId, resumeId, format);
+    console.log(`[checkResumeExists] Checking existence of: ${path}`);
     
     // Use .list() with prefix instead of getMetadata to check if file exists
+    const folderPath = path.split('/').slice(0, -1).join('/');
+    const fileName = path.split('/').pop() || '';
+    
+    console.log(`[checkResumeExists] Listing folder: ${folderPath}, searching for: ${fileName}`);
+    
     const { data, error } = await supabase.storage
       .from(RESUME_BUCKET)
-      .list(path.split('/').slice(0, -1).join('/'), {
-        limit: 1,
-        search: path.split('/').pop() || ''
+      .list(folderPath, {
+        limit: 100,
+        search: fileName
       });
     
     if (error) {
+      console.error(`[checkResumeExists] Error listing files:`, error);
       return false;
     }
     
-    return data && data.length > 0;
+    console.log(`[checkResumeExists] Found files:`, data?.map(f => f.name));
+    const exists = data && data.length > 0 && data.some(file => file.name === fileName);
+    console.log(`[checkResumeExists] File ${fileName} exists: ${exists}`);
+    
+    return exists;
   } catch (error) {
+    console.error(`[checkResumeExists] Exception:`, error);
     return false;
   }
 }
@@ -96,6 +110,7 @@ export async function getResumeUrl(
 ): Promise<string | null> {
   try {
     const path = generateResumePath(userId, resumeId, format);
+    console.log(`[getResumeUrl] Getting URL for path: ${path}, download: ${download}`);
     
     // Prepare options for createSignedUrl.
     // Only include the 'download' property if download is explicitly true.
@@ -105,18 +120,26 @@ export async function getResumeUrl(
       signedUrlOptions.download = `enhanced_resume_${resumeId}.${format}`;
     }
     
+    console.log(`[getResumeUrl] Creating signed URL with options:`, signedUrlOptions);
+    
     const { data, error } = await supabase.storage
       .from(RESUME_BUCKET)
       .createSignedUrl(path, 60 * 60, signedUrlOptions); // Pass the conditionally built options
     
-    if (error || !data?.signedUrl) {
-      console.error('Error getting signed URL:', error);
+    if (error) {
+      console.error(`[getResumeUrl] Error creating signed URL:`, error);
       return null;
     }
     
+    if (!data?.signedUrl) {
+      console.error(`[getResumeUrl] No signed URL returned`);
+      return null;
+    }
+    
+    console.log(`[getResumeUrl] Successfully created signed URL: ${data.signedUrl}`);
     return data.signedUrl;
   } catch (error) {
-    console.error('Error getting resume URL:', error);
+    console.error('[getResumeUrl] Exception:', error);
     return null;
   }
 }

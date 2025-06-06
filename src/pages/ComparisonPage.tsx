@@ -60,6 +60,7 @@ const ComparisonPage: React.FC = () => {
   const activeJobId = jobIdParam || pipelineJobId || contextJobId;
 
   console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'activeEnhancedResumeId:', activeEnhancedResumeId);
+  console.log('[ComparisonPage] All IDs - Enhanced:', activeEnhancedResumeId, 'Original:', activeOriginalResumeId, 'Job:', activeJobId, 'User:', user?.id);
 
   // Check if PDF exists and get URL for the ENHANCED resume
   useEffect(() => {
@@ -406,4 +407,5 @@ const ComparisonPage: React.FC = () => {
       </main>
     </div>;
 };
+
 export default ComparisonPage;

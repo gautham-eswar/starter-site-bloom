@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { RESUME_BUCKET, generateResumePath, checkResumeExists } from './supabaseSetup';
 import { toast } from '@/hooks/use-toast';
@@ -69,18 +70,32 @@ export async function uploadPdf(file: File, resumeId: string, userId: string): P
  */
 export async function getPdfUrl(resumeId: string, userId: string): Promise<string> {
   try {
+    console.log(`[getPdfUrl] Starting with resumeId: ${resumeId}, userId: ${userId}`);
+    
     const cacheKey = `${userId}-${resumeId}-pdf`;
     
     // Check if URL is in cache and not expired
     if (urlCache[cacheKey] && urlCache[cacheKey].expires > Date.now()) {
+      console.log(`[getPdfUrl] Using cached URL for ${resumeId}`);
       return urlCache[cacheKey].url;
     }
     
     const path = generateResumePath(userId, resumeId);
+    console.log(`[getPdfUrl] Generated path: ${path}`);
+    
+    // First check if the file exists
+    const exists = await checkResumeExists(userId, resumeId, 'pdf');
+    console.log(`[getPdfUrl] File exists check: ${exists}`);
+    
+    if (!exists) {
+      console.log(`[getPdfUrl] File does not exist at path: ${path}`);
+      throw new Error(`PDF file not found at path: ${path}`);
+    }
     
     // Create a signed URL for the file with exactly 1 hour expiration
-    // The getResumeUrl from supabaseSetup handles the download:false option for inline viewing
-    const signedUrl = await import('./supabaseSetup').then(module => module.getResumeUrl(userId, resumeId, 'pdf', false));
+    const { getResumeUrl } = await import('./supabaseSetup');
+    const signedUrl = await getResumeUrl(userId, resumeId, 'pdf', false);
+    console.log(`[getPdfUrl] getResumeUrl returned: ${signedUrl}`);
 
     if (!signedUrl) {
       throw new Error('Failed to get PDF URL: No URL returned from getResumeUrl');
@@ -92,14 +107,15 @@ export async function getPdfUrl(resumeId: string, userId: string): Promise<strin
       expires: Date.now() + CACHE_DURATION,
     };
     
+    console.log(`[getPdfUrl] Successfully generated and cached URL for ${resumeId}`);
     return signedUrl;
   } catch (error) {
-    console.error('Error in getPdfUrl:', error);
+    console.error('[getPdfUrl] Error:', error);
     // Ensure a more specific error is thrown if it's not already an error object
     const thrownError = error instanceof Error ? error : new Error('Failed to get PDF URL');
     // Log the specific error message if available
     if (thrownError.message.includes('No URL returned')) {
-         console.error('Detailed error: getResumeUrl in supabaseSetup returned null.');
+         console.error('[getPdfUrl] Detailed error: getResumeUrl in supabaseSetup returned null.');
     }
     throw thrownError;
   }

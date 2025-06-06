@@ -15,8 +15,8 @@ import Test2 from "./pages/Test2";
 import Test3 from "./pages/Test3";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
-import { PipelineProvider, ResumeProvider, usePipelineContext } from "./contexts/ResumeContext";
-import React, { useEffect } from "react";
+import { PipelineProvider, ResumeProvider } from "./contexts/ResumeContext";
+import React from "react";
 
 const queryClient = new QueryClient();
 
@@ -33,25 +33,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // App Routes component that uses AuthProvider
 const AppRoutes = () => {
-  // This component can now safely use contexts provided above it.
-  const { performApiHealthCheck } = usePipelineContext(); 
-
-  useEffect(() => {
-    console.log("[AppRoutes useEffect] Effect triggered. Checking performApiHealthCheck...");
-    if (typeof performApiHealthCheck === 'function') {
-      console.log("[AppRoutes useEffect] performApiHealthCheck is a function. Calling it...");
-      performApiHealthCheck()
-        .then(() => {
-          console.log("[AppRoutes useEffect] performApiHealthCheck call completed or its promise resolved.");
-        })
-        .catch(error => {
-          console.error("[AppRoutes useEffect] Error caught from performApiHealthCheck promise:", error);
-        });
-    } else {
-      console.error("[AppRoutes useEffect] performApiHealthCheck is not a function or is undefined. This might indicate an issue with PipelineContext.");
-    }
-  }, [performApiHealthCheck]);
-
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -77,12 +58,12 @@ const App = () => (
     <ThemeProvider>
       <TooltipProvider>
         <BrowserRouter>
-          <AuthProvider> {/* Moved AuthProvider up */}
-            <PipelineProvider> {/* Moved PipelineProvider up */}
-              <ResumeProvider> {/* Moved ResumeProvider up */}
+          <AuthProvider>
+            <ResumeProvider>
+              <PipelineProvider>
                 <AppRoutes />
-              </ResumeProvider>
-            </PipelineProvider>
+              </PipelineProvider>
+            </ResumeProvider>
           </AuthProvider>
         </BrowserRouter>
         <Toaster />
