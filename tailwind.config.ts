@@ -124,7 +124,7 @@ export default {
       },
       fontFamily: {
         'serif': ['GT Alpina Trial', 'Georgia', 'serif'],
-        'sans': ['GT Alpina Trial', 'system-ui', 'sans-serif'],
+        'sans': ['GT Alpina Trial', 'Georgia', 'serif'], // Changed to serif for default
       },
       fontSize: {
         'title': '72px',

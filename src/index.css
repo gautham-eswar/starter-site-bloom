@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,7 +92,7 @@
 @layer base {
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-    font-family: theme('fontFamily.sans');
+    font-family: 'GT Alpina Trial', Georgia, serif;
     font-weight: 400;
     line-height: theme('lineHeight.relaxed');
     letter-spacing: theme('letterSpacing.normal');
@@ -99,31 +100,45 @@
 
   h1 {
     @apply text-4xl font-bold leading-tight text-primary;
-    /* In dark mode, --primary is #5A998A. If H1 dark should be #E8E6E3 (foreground),
-       then add: .dark & { @apply text-foreground; } */
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
   h2 {
     @apply text-3xl font-semibold leading-tight text-foreground;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
   h3 {
     @apply text-2xl font-semibold leading-snug text-foreground;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
   h4 {
-    @apply text-xl font-medium leading-snug text-foreground; /* Worker used font-medium for H4, consistent with plan */
+    @apply text-xl font-medium leading-snug text-foreground;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
   h5 {
-    @apply text-base font-medium leading-normal text-foreground; /* Worker used font-medium for H5, consistent */
+    @apply text-base font-medium leading-normal text-foreground;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
   h6 {
-    @apply text-base font-medium leading-normal text-foreground; /* Worker used font-medium for H6, consistent */
+    @apply text-base font-medium leading-normal text-foreground;
+    font-family: 'GT Alpina Trial', Georgia, serif;
+  }
+
+  p {
+    font-family: 'GT Alpina Trial', Georgia, serif;
+  }
+
+  span {
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
 
   a {
     @apply text-primary hover:underline;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
 
   button, .button {
-    @apply text-base font-semibold; /* Base button text styling from previous fixes */
+    @apply text-base font-semibold;
+    font-family: 'GT Alpina Trial', Georgia, serif;
   }
 
   /* Preserve other base styles if they were in this block and are correct */
