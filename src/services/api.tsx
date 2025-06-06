@@ -59,6 +59,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     }
     
     const data = await response.json();
+    console.log(`[API] Response from ${endpoint}:`, data);
     return data;
   } catch (error: any) {
     console.error("API Request Exception:", error); 
@@ -87,10 +88,16 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   formData.append("resume_id", resumeId);
   formData.append("user_id", userId);
   formData.append("job_description", jobDescription);
-  return await apiRequest("/api/optimize", {
+  
+  const response = await apiRequest("/api/optimize", {
     method: "POST",
     body: formData,
   });
+  
+  console.log(`[API] Optimize response status check - response.status: ${response?.status}, typeof: ${typeof response?.status}`);
+  
+  // The backend should return: { status: "success", data: { job_id, enhanced_resume_id } }
+  return response;
 }
 
 // Download optimized resume
