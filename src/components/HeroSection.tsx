@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
@@ -12,10 +11,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
   UPLOADED = 2,
-  ENHANCING = 3,
   ENHANCED = 4,
-  RENDERING = 5,
-  RENDERED = 6;
+  RENDERING = 5;
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
@@ -48,6 +45,7 @@ const HeroSection: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     console.log(`File selected: ${file.name}`);
+    // Check if file is PDF or DOCX
     const fileType = file.name.split('.').pop()?.toLowerCase();
     if (fileType !== 'pdf' && fileType !== 'docx') {
       toast({
@@ -75,39 +73,38 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-    
-    console.log("[HeroSection] Starting enhancement process...");
+    // enhanceResume now handles setting isAwaitingApiResponse and pipelineState appropriately.
+    // Modal opening is now solely driven by pipelineState changes in the useEffect below.
     await enhanceResume(jobDescription); 
   };
 
-  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending;
+  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending; // Only true for initial upload
   const isResumeNotUploaded = pipelineState === NOT_UPLOADED;
 
+  // Determine if the system is busy with an operation relevant to the "Make it Better" button
   const isSystemBusy = 
-    isAwaitingApiResponse ||
-    (pipelineState === UPLOADING && enhancementPending) ||
-    pipelineState === ENHANCING ||
-    pipelineState === ENHANCED ||
-    pipelineState === RENDERING;
+    isAwaitingApiResponse || // Waiting for optimize API response
+    (pipelineState === UPLOADING && enhancementPending) || // Uploading as part of "Make it Better"
+    pipelineState === ENHANCED || // Enhancement succeeded, modal likely showing progress
+    pipelineState === RENDERING;   // Rendering PDF, modal likely showing progress
 
-  // Open modal when enhancement process starts (ENHANCING state)
+  // Determine if the modal should be open based on "Make it Better" flow
+  // This ensures modal only shows for enhancement-related processing.
   const isModalRelevantForMakeItBetterFlow =
-    pipelineState === ENHANCING ||
     pipelineState === ENHANCED ||
     pipelineState === RENDERING ||
-    (pipelineState === UPLOADING && enhancementPending);
+    (pipelineState === UPLOADING && enhancementPending); // Crucial: UPLOADING state only relevant for modal if enhancement is pending.
 
   useEffect(() => {
-    console.log(`[HeroSection useEffect] Pipeline state: ${pipelineState}, Modal relevant: ${isModalRelevantForMakeItBetterFlow}, Modal open: ${isProgressModalOpen}`);
-    
     if (isModalRelevantForMakeItBetterFlow && !isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Opening modal for enhancement flow.`);
+      console.log(`[HeroSection useEffect] Opening modal for Make it Better flow. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
       setIsProgressModalOpen(true);
     } else if (!isModalRelevantForMakeItBetterFlow && isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Closing modal.`);
+      console.log(`[HeroSection useEffect] Closing modal. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
       setIsProgressModalOpen(false);
     }
-  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]);
+  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]); // Added pipelineState to ensure re-evaluation when it changes
+  
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -120,6 +117,7 @@ const HeroSection: React.FC = () => {
             <p className="mt-6 text-lg md:text-xl text-draft-text dark:text-gray-200 opacity-90">
               Tailor your resume to match a job description in minutes
             </p>
+            
           </div>
         </div>
         
@@ -186,7 +184,7 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending)}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -199,7 +197,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending)}
+                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -213,6 +211,7 @@ const HeroSection: React.FC = () => {
         </div>
       </div>
 
+      {/* Progress Modal */}
       <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
     </section>;
 };

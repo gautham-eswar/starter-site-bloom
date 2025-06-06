@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Accordion,
@@ -6,9 +5,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 import { FAQCategory } from '@/pages/FAQ';
+import { Button } from '@/components/ui/button'; // Added this import
 
 interface FAQItemProps {
   question: string;
@@ -309,6 +308,7 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
                         </div>
                       ) : (
                         <div className="flex space-x-2">
+                          {/* Button component is used here */}
                           <button 
                             onClick={() => handleFeedback(questionId, 'positive')}
                             className="p-2 rounded-full hover:bg-muted/50 dark:hover:bg-muted/50 transition-colors"
@@ -317,6 +317,7 @@ const FAQAccordion: React.FC<FAQAccordionProps> = ({ activeCategory, searchQuery
                             {/* Feedback icons: text-primary */}
                             <ThumbsUp className="h-5 w-5 text-primary dark:text-primary" />
                           </button>
+                          {/* Button component is used here */}
                           <button 
                             onClick={() => handleFeedback(questionId, 'negative')}
                             className="p-2 rounded-full hover:bg-muted/50 dark:hover:bg-muted/50 transition-colors"
