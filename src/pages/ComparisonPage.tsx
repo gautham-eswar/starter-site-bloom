@@ -23,6 +23,7 @@ interface GroupedModifications {
     modifications: Modification[];
   };
 }
+
 const ComparisonPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -66,18 +67,9 @@ const ComparisonPage: React.FC = () => {
       if (activeEnhancedResumeId && user?.id) {
         console.log(`[ComparisonPage] PDF Effect: Starting PDF check for enhancedResumeId: ${activeEnhancedResumeId}, user: ${user.id}`);
         try {
-          // We can be optimistic here. If getPdfUrl fails, it will throw.
-          // const exists = await checkPdfExists(activeEnhancedResumeId, user.id);
-          // console.log(`[ComparisonPage] PDF Effect: PDF exists? ${exists} for ${activeEnhancedResumeId}`);
-          // if (exists) {
           const url = await getPdfUrl(activeEnhancedResumeId, user.id);
           setPdfUrl(url);
           console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${activeEnhancedResumeId}: ${url}`);
-          // } else {
-          //   setPdfUrl(null);
-          //   console.warn(`[ComparisonPage] PDF Effect: PDF for ${activeEnhancedResumeId} not found by checkPdfExists.`);
-          //   toast({ title: "PDF Not Found", description: "The enhanced PDF could not be located in storage.", variant: "warning" });
-          // }
         } catch (err) {
           console.error('[ComparisonPage] PDF Effect: Error getting PDF URL:', err);
           setPdfUrl(null);
@@ -94,16 +86,13 @@ const ComparisonPage: React.FC = () => {
       }
     };
     checkAndFetchPdf();
-  }, [activeEnhancedResumeId, user?.id]); // Removed toast from dependencies as it's stable
+  }, [activeEnhancedResumeId, user?.id]);
 
   // Fetch/process optimization results
   useEffect(() => {
     console.log("[ComparisonPage] Optimization Effect: Triggered. Initial state - isLoading:", isLoading);
-    setIsLoading(true); // Explicitly set loading true at the beginning of this effect
+    setIsLoading(true);
     console.log("[ComparisonPage] Optimization Effect: Set isLoading to true. Active IDs - Original:", activeOriginalResumeId, "Enhanced:", activeEnhancedResumeId, "Job:", activeJobId);
-    console.log("[ComparisonPage] Optimization Effect: Context states - enhancementAnalysis:", enhancementAnalysis, "optimizationResult:", optimizationResult);
-    console.log("[ComparisonPage] Optimization Effect: Pipeline context IDs - Original:", pipelineOriginalResumeId, "Enhanced:", pipelineEnhancedResumeId, "Job:", pipelineJobId);
-
 
     if (!activeEnhancedResumeId || !activeOriginalResumeId || !activeJobId) {
       toast({
@@ -167,7 +156,7 @@ const ComparisonPage: React.FC = () => {
     setContextEnhancedResumeId, setContextJobId, setOptimizationResult,
     contextResumeId, contextJobId,
     pipelineJobId, pipelineEnhancedResumeId, pipelineOriginalResumeId
-  ]); // Removed toast from dependencies
+  ]);
 
   // Handle download for the ENHANCED resume
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
@@ -225,8 +214,8 @@ const ComparisonPage: React.FC = () => {
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <Loader className="h-8 w-8 animate-spin text-primary mb-4" /> {/* Updated icon color */}
-            <p className="text-base text-foreground">Loading optimization results...</p> {/* Updated text */}
+            <Loader className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-base text-foreground">Loading optimization results...</p>
           </div>
         </div>
       </div>;
@@ -238,13 +227,10 @@ const ComparisonPage: React.FC = () => {
         <Header />
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
-            {/* h2: text-2xl. Color from base. */}
             <h2 className="text-2xl mb-4">No Results Found</h2>
-            {/* p: text-base text-muted-foreground. */}
             <p className="text-base text-muted-foreground mb-6">
               We couldn't find optimization results for this resume. This could be due to missing information or an issue during processing. Please try optimizing your resume again.
             </p>
-            {/* Button: variant="default" */}
             <Button variant="default" onClick={() => navigate('/')}>
               Back to Home
             </Button>
@@ -254,7 +240,6 @@ const ComparisonPage: React.FC = () => {
   }
   
   console.log('[ComparisonPage] Rendering: Main content with results.');
-  // ... keep existing code (improvementData, analysisData, groupedImprovements processing)
   const improvementData = optimizationResult?.modifications || [];
   console.log("[ComparisonPage] Data for rendering: Improvements data:", improvementData);
 
@@ -267,6 +252,13 @@ const ComparisonPage: React.FC = () => {
   };
   console.log("[ComparisonPage] Data for rendering: Analysis data:", analysisData);
 
+  // Helper function to safely convert type
+  const normalizeModificationType = (type: string | undefined): "Major" | "Minor" => {
+    if (type === "Major" || type === "Minor") {
+      return type;
+    }
+    return "Minor"; // Default fallback
+  };
 
   const groupedImprovements: GroupedModifications = {};
   improvementData.forEach(mod => {
@@ -286,7 +278,7 @@ const ComparisonPage: React.FC = () => {
       section: mod.section || '',
       original: originalText,
       improved: improvedText,
-      type: mod.type || 'Minor',
+      type: normalizeModificationType(mod.type),
       company,
       position
     };
@@ -298,7 +290,6 @@ const ComparisonPage: React.FC = () => {
       <Header />
       
       <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
-        {/* h1: text-4xl. Color from base. */}
         <h1 className="text-4xl mb-8 text-center">Resume Enhancement Results</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -306,7 +297,6 @@ const ComparisonPage: React.FC = () => {
           <div className="space-y-10">
             {/* Score Summary Cards */}
             <div>
-              {/* h2: text-3xl. Color from base. */}
               <h2 className="text-3xl mb-6">Resume Scorecard</h2>
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-white border border-border rounded-xl shadow-sm p-6 flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-primary/40">
@@ -334,14 +324,12 @@ const ComparisonPage: React.FC = () => {
             
             {/* Improvements by Company */}
             <div>
-              {/* h2: text-3xl. Color from base. */}
               <h2 className="text-3xl mb-6">Resume Enhancements</h2>
               
               {Object.keys(groupedImprovements).length > 0 ? <div className="space-y-6">
                   {Object.entries(groupedImprovements).map(([key, group], index) => <Collapsible key={index} defaultOpen={index === 0} className="bg-card rounded-xl overflow-hidden shadow-sm border border-border transition-all hover:shadow-md">
                       <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors">
                         <div>
-                          {/* h3: text-2xl. Color from base. */}
                           <h3 className="text-2xl">{group.company}</h3>
                           {group.position && <p className="text-base text-muted-foreground mt-1 italic">{group.position}</p>}
                         </div>
@@ -361,7 +349,6 @@ const ComparisonPage: React.FC = () => {
                                 <p className="text-base text-primary leading-relaxed pl-2">{mod.improved}</p>
                                 
                                 {mod.type && <div className="mt-4 flex justify-end">
-                                    {/* Badge colors are specific, keep as is or create variants */}
                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${mod.type === 'Major' ? 'bg-draft-coral bg-opacity-15 text-draft-coral' : 'bg-draft-mint bg-opacity-15 text-draft-green'}`}>
                                       {mod.type} Enhancement
                                     </span>
@@ -382,10 +369,8 @@ const ComparisonPage: React.FC = () => {
             <div className="sticky top-24 space-y-6">
               {/* Resume preview header and download buttons */}
               <div className="flex justify-between items-center">
-                {/* h2: text-3xl. Color from base. */}
                 <h2 className="text-3xl">Enhanced Resume</h2>
                 <div className="flex gap-3">
-                  {/* Buttons use default variant */}
                   <Button variant="default" onClick={() => handleDownload('pdf')} disabled={isDownloading && downloadFormat === 'pdf'}>
                     {isDownloading && downloadFormat === 'pdf' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                     PDF
@@ -409,8 +394,8 @@ const ComparisonPage: React.FC = () => {
                           ? "Preview unavailable: Missing resume information." 
                           : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
                       </p>
-                  {!pdfUrl && activeEnhancedResumeId && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>} {/* Changed text-draft-coral to text-destructive */}
-                  {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />} {/* Updated icon color */}
+                  {!pdfUrl && activeEnhancedResumeId && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>}
+                  {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />}
                     </div>
                   </div>
                 )}

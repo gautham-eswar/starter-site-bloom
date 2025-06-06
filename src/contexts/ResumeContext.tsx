@@ -3,41 +3,7 @@ import { uploadResume as uploadResumeAPI, optimizeResume as optimizeResumeAPI } 
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-
-interface OptimizationResult {
-  resume_id: string;
-  job_id: string;
-  status: string;
-  created_at: string;
-  modifications: Modification[];
-  analysis_data: {
-    old_score: number;
-    improved_score: number;
-    match_percentage: number;
-    keyword_matches: number;
-    total_keywords: number;
-  };
-}
-
-export interface EnhancementAnalysis {
-  old_score: number;
-  improved_score: number;
-  match_percentage: number;
-  keyword_matches: number;
-  total_keywords: number;
-  modifications_summary: Modification[];
-}
-
-export interface Modification {
-  section: string;
-  original: string;
-  improved: string;
-  type?: string;
-  company?: string;
-  position?: string;
-  original_bullet?: string;
-  enhanced_bullet?: string;
-}
+import { OptimizationResult, EnhancementAnalysis, Modification } from '@/types/api';
 
 export type PipelineState = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
