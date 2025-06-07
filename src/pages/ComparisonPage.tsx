@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -93,19 +94,31 @@ const ComparisonPage: React.FC = () => {
         }
         setContextJobId(jobIdParam);
 
-        // Create optimization result from job data
+        // Create optimization result from job data with proper type casting
+        const modificationsData = Array.isArray(data.modifications) 
+          ? data.modifications as Modification[]
+          : [];
+
+        const matchDetails = (data.match_details && typeof data.match_details === 'object') 
+          ? data.match_details as any 
+          : {};
+
+        const keywordsExtracted = Array.isArray(data.keywords_extracted) 
+          ? data.keywords_extracted 
+          : [];
+
         const optimizationData: OptimizationResult = {
           resume_id: data.enhanced_resume_id || '',
           job_id: jobIdParam,
           status: data.status || 'completed',
           created_at: data.created_at,
-          modifications: data.modifications || [],
+          modifications: modificationsData,
           analysis_data: {
-            old_score: data.match_details?.old_score || 0,
-            improved_score: data.match_details?.improved_score || 0,
-            match_percentage: data.match_details?.match_percentage || 0,
+            old_score: matchDetails.old_score || 0,
+            improved_score: matchDetails.improved_score || 0,
+            match_percentage: matchDetails.match_percentage || 0,
             keyword_matches: data.match_count || 0,
-            total_keywords: data.keywords_extracted?.length || 0,
+            total_keywords: keywordsExtracted.length || 0,
           }
         };
 
