@@ -8,7 +8,7 @@ import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { processResume } from '@/services/api';
+import { uploadResume, optimizeResume } from '@/services/api';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -88,27 +88,56 @@ const HeroSection: React.FC = () => {
       return;
     }
 
-    console.log("Starting unified resume processing...");
+    console.log("Starting two-step resume processing...");
     setIsProcessing(true);
 
     try {
-      const response = await processResume(resumeFile, jobDescription, user.id);
+      // Step 1: Upload resume
+      console.log("Step 1: Uploading resume...");
+      const uploadResponse = await uploadResume(resumeFile, user.id);
       
-      if (response?.error) {
-        console.error("Processing failed:", response.error);
+      if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
+        console.error("Upload failed:", uploadResponse?.error);
         toast({
-          title: "Processing failed",
-          description: response.error,
+          title: "Upload failed",
+          description: uploadResponse?.error || "Failed to upload resume",
           variant: "destructive",
         });
         setIsProcessing(false);
         return;
       }
 
-      console.log("Processing successful:", response);
+      const resumeId = uploadResponse.data.resume_id;
+      console.log("Upload successful, resume ID:", resumeId);
+
+      // Step 2: Optimize resume
+      console.log("Step 2: Optimizing resume...");
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+      
+      if (optimizeResponse?.error) {
+        console.error("Optimization failed:", optimizeResponse.error);
+        toast({
+          title: "Optimization failed",
+          description: optimizeResponse.error,
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      console.log("Optimization successful:", optimizeResponse);
+      
       // Redirect to comparison page
-      if (response?.data?.job_id) {
-        navigate(`/comparison?job_id=${response.data.job_id}`);
+      if (optimizeResponse?.data?.job_id) {
+        navigate(`/comparison?job_id=${optimizeResponse.data.job_id}`);
+      } else {
+        console.error("No job_id in optimization response");
+        toast({
+          title: "Processing incomplete",
+          description: "Resume was processed but could not navigate to results.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
       }
       
     } catch (error) {

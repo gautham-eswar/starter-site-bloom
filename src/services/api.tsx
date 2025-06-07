@@ -1,3 +1,4 @@
+
 import React from 'react'; // Added for JSX in toast
 import { toast } from "@/hooks/use-toast";
 import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage"; // Assuming pdfStorage.ts is still relevant
@@ -88,21 +89,6 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   formData.append("user_id", userId);
   formData.append("job_description", jobDescription);
   return await apiRequest("/api/optimize", {
-    method: "POST",
-    body: formData,
-  });
-}
-
-// New unified process resume function
-export async function processResume(file: File, jobDescription: string, userId: string) {
-  const formData = new FormData();
-  
-  formData.append("file", file);
-  formData.append("job_description", jobDescription);
-  formData.append("user_id", userId);
-  
-  console.log(`Starting unified resume processing for user ID: ${userId} to ${API_BASE_URL}/api/process`);
-  return await apiRequest("/api/process", {
     method: "POST",
     body: formData,
   });
