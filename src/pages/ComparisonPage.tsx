@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Loader, ChevronDown } from 'lucide-react';
+import { Download, Loader, ChevronDown, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { OptimizationResult, Modification } from '@/types/api';
@@ -46,10 +46,12 @@ const ComparisonPage: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [jobData, setJobData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pollingAttempts, setPollingAttempts] = useState(0);
+  const [isPolling, setIsPolling] = useState(false);
 
   console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'jobIdParam:', jobIdParam, 'user:', user?.id);
 
-  // Fetch optimization job data from Supabase
+  // Fetch optimization job data from Supabase with polling
   useEffect(() => {
     const fetchJobData = async () => {
       if (!jobIdParam) {
@@ -66,7 +68,7 @@ const ComparisonPage: React.FC = () => {
       }
 
       try {
-        console.log(`[ComparisonPage] Fetching job data for job_id: ${jobIdParam}`);
+        console.log(`[ComparisonPage] Fetching job data for job_id: ${jobIdParam}, attempt: ${pollingAttempts + 1}`);
         
         const { data, error } = await supabase
           .from('optimization_jobs')
@@ -75,6 +77,28 @@ const ComparisonPage: React.FC = () => {
           .single();
 
         if (error) {
+          if (error.code === 'PGRST116') {
+            // Job doesn't exist yet, start/continue polling
+            if (pollingAttempts < 30) { // Poll for up to 5 minutes (30 * 10 seconds)
+              setPollingAttempts(prev => prev + 1);
+              setIsPolling(true);
+              console.log(`[ComparisonPage] Job not found yet, polling attempt ${pollingAttempts + 1}/30`);
+              
+              // Poll every 10 seconds
+              setTimeout(() => {
+                fetchJobData();
+              }, 10000);
+              return;
+            } else {
+              // Exceeded polling attempts
+              console.error('[ComparisonPage] Exceeded polling attempts, job may have failed');
+              setError("The optimization is taking longer than expected. The job may have failed or is still processing.");
+              setIsLoading(false);
+              setIsPolling(false);
+              return;
+            }
+          }
+          
           console.error('[ComparisonPage] Error fetching job data:', error);
           setError(`Failed to load optimization results: ${error.message}`);
           toast({
@@ -83,6 +107,7 @@ const ComparisonPage: React.FC = () => {
             variant: "destructive"
           });
           setIsLoading(false);
+          setIsPolling(false);
           return;
         }
 
@@ -90,11 +115,40 @@ const ComparisonPage: React.FC = () => {
           console.warn('[ComparisonPage] No job data found for job_id:', jobIdParam);
           setError("No optimization results found for this job");
           setIsLoading(false);
+          setIsPolling(false);
+          return;
+        }
+
+        // Check if job is still processing
+        if (data.status === 'pending' || data.status === 'processing') {
+          if (pollingAttempts < 30) {
+            setPollingAttempts(prev => prev + 1);
+            setIsPolling(true);
+            console.log(`[ComparisonPage] Job still processing (${data.status}), polling attempt ${pollingAttempts + 1}/30`);
+            
+            setTimeout(() => {
+              fetchJobData();
+            }, 10000);
+            return;
+          } else {
+            setError("The optimization is taking longer than expected. Please try again later.");
+            setIsLoading(false);
+            setIsPolling(false);
+            return;
+          }
+        }
+
+        // Check if job failed
+        if (data.status === 'error') {
+          setError(`Optimization failed: ${data.error_message || 'Unknown error'}`);
+          setIsLoading(false);
+          setIsPolling(false);
           return;
         }
 
         console.log('[ComparisonPage] Job data retrieved:', data);
         setJobData(data);
+        setIsPolling(false);
 
         // Update context with the fetched data
         if (data.enhanced_resume_id) {
@@ -142,9 +196,12 @@ const ComparisonPage: React.FC = () => {
           variant: "destructive"
         });
         setIsLoading(false);
+        setIsPolling(false);
       }
     };
 
+    setIsLoading(true);
+    setPollingAttempts(0);
     fetchJobData();
   }, [jobIdParam, user?.id, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
 
@@ -246,17 +303,47 @@ const ComparisonPage: React.FC = () => {
     }
   };
 
-  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl, 'error:', error);
+  // Manual retry function
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setPollingAttempts(0);
+    setIsPolling(false);
+    // Trigger the useEffect to refetch
+    window.location.reload();
+  };
 
-  if (isLoading) {
-    console.log('[ComparisonPage] Rendering: Main loading state.');
+  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl, 'error:', error, 'isPolling:', isPolling);
+
+  if (isLoading || isPolling) {
+    console.log('[ComparisonPage] Rendering: Main loading/polling state.');
     return (
       <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Loader className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-base text-foreground">Loading optimization results...</p>
+          <div className="flex flex-col items-center max-w-md text-center">
+            <div className="flex items-center mb-4">
+              {isPolling ? (
+                <RefreshCw className="h-8 w-8 animate-spin text-primary mr-3" />
+              ) : (
+                <Loader className="h-8 w-8 animate-spin text-primary mr-3" />
+              )}
+              <div>
+                <p className="text-base text-foreground font-medium">
+                  {isPolling ? 'Waiting for optimization to complete...' : 'Loading optimization results...'}
+                </p>
+                {isPolling && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Checking progress... (Attempt {pollingAttempts}/30)
+                  </p>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {isPolling 
+                ? 'The backend is still processing your resume. This typically takes 1-3 minutes.' 
+                : 'Please wait while we load your results.'}
+            </p>
           </div>
         </div>
       </div>
@@ -276,9 +363,15 @@ const ComparisonPage: React.FC = () => {
             <p className="text-base text-muted-foreground mb-6">
               {error || `We couldn't find optimization results for job ID: ${jobIdParam}. This could be due to missing information or an issue during processing. Please try optimizing your resume again.`}
             </p>
-            <Button variant="default" onClick={() => navigate('/')}>
-              Back to Home
-            </Button>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={handleRetry}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+              <Button variant="default" onClick={() => navigate('/')}>
+                Back to Home
+              </Button>
+            </div>
           </div>
         </div>
       </div>
