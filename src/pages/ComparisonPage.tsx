@@ -25,9 +25,16 @@ interface GroupedModifications {
 }
 
 const ComparisonPage: React.FC = () => {
+  console.log('[ComparisonPage] === COMPONENT RENDER START ===');
+  
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const jobIdParam = searchParams.get('job_id');
+  
+  console.log('[ComparisonPage] URL Search Params:', {
+    job_id: jobIdParam,
+    all_params: Object.fromEntries(searchParams.entries())
+  });
 
   const {
     resumeId: contextResumeId,
@@ -49,126 +56,192 @@ const ComparisonPage: React.FC = () => {
   const [pollingAttempts, setPollingAttempts] = useState(0);
   const [isPolling, setIsPolling] = useState(false);
 
-  console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'jobIdParam:', jobIdParam, 'user:', user?.id);
+  console.log('[ComparisonPage] Current State:', {
+    user_id: user?.id,
+    user_email: user?.email,
+    isLoading,
+    jobData: jobData ? { id: jobData.id, status: jobData.status } : null,
+    error,
+    pollingAttempts,
+    isPolling,
+    contextResumeId,
+    contextJobId,
+    optimizationResult: optimizationResult ? { status: optimizationResult.status } : null
+  });
 
-  // Fetch optimization job data from Supabase with polling
+  // Main data fetching effect
   useEffect(() => {
+    console.log('[ComparisonPage] === MAIN USEEFFECT TRIGGERED ===');
+    console.log('[ComparisonPage] Effect Dependencies:', {
+      jobIdParam,
+      user_id: user?.id,
+      user_authenticated: !!user
+    });
+    
     const fetchJobData = async () => {
+      console.log('[ComparisonPage] === fetchJobData STARTED ===');
+      
+      // Reset previous states
+      setError(null);
+      setJobData(null);
+      setPdfUrl(null);
+      
       if (!jobIdParam) {
-        console.warn("[ComparisonPage] No job_id parameter found in URL");
+        console.error("[ComparisonPage] CRITICAL: No job_id in URL parameters");
         setError("No job ID provided in URL");
         setIsLoading(false);
         return;
       }
 
       if (!user?.id) {
-        console.warn("[ComparisonPage] User not authenticated");
+        console.warn("[ComparisonPage] CRITICAL: User not authenticated");
+        console.log("[ComparisonPage] User object:", user);
         setIsLoading(false);
         return;
       }
 
       try {
-        console.log(`[ComparisonPage] Fetching job data for job_id: ${jobIdParam}, attempt: ${pollingAttempts + 1}`);
+        console.log(`[ComparisonPage] === QUERYING SUPABASE ===`);
+        console.log(`[ComparisonPage] Query params: job_id=${jobIdParam}, user_id=${user.id}`);
         
+        // First, let's see what's in the optimization_jobs table
+        const { data: recentJobs, error: listError } = await supabase
+          .from('optimization_jobs')
+          .select('id, status, created_at, user_id, enhanced_resume_id')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        console.log('[ComparisonPage] Recent jobs in table:', recentJobs);
+        if (listError) {
+          console.error('[ComparisonPage] Error listing recent jobs:', listError);
+        }
+
+        // Now query for the specific job
         const { data, error } = await supabase
           .from('optimization_jobs')
           .select('*')
           .eq('id', jobIdParam)
-          .single();
+          .maybeSingle();
+
+        console.log('[ComparisonPage] === SUPABASE QUERY RESULT ===');
+        console.log('[ComparisonPage] Data:', data);
+        console.log('[ComparisonPage] Error:', error);
 
         if (error) {
-          if (error.code === 'PGRST116') {
-            // Job doesn't exist yet, start/continue polling
-            if (pollingAttempts < 30) { // Poll for up to 5 minutes (30 * 10 seconds)
-              setPollingAttempts(prev => prev + 1);
-              setIsPolling(true);
-              console.log(`[ComparisonPage] Job not found yet, polling attempt ${pollingAttempts + 1}/30`);
-              
-              // Poll every 10 seconds
-              setTimeout(() => {
-                fetchJobData();
-              }, 10000);
-              return;
-            } else {
-              // Exceeded polling attempts
-              console.error('[ComparisonPage] Exceeded polling attempts, job may have failed');
-              setError("The optimization is taking longer than expected. The job may have failed or is still processing.");
-              setIsLoading(false);
-              setIsPolling(false);
-              return;
-            }
-          }
+          console.error('[ComparisonPage] Supabase query error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           
-          console.error('[ComparisonPage] Error fetching job data:', error);
-          setError(`Failed to load optimization results: ${error.message}`);
+          setError(`Database error: ${error.message}`);
           toast({
-            title: "Failed to load results",
-            description: `Could not retrieve optimization results: ${error.message}`,
+            title: "Database Error",
+            description: `Failed to query optimization results: ${error.message}`,
             variant: "destructive"
           });
           setIsLoading(false);
-          setIsPolling(false);
           return;
         }
 
         if (!data) {
-          console.warn('[ComparisonPage] No job data found for job_id:', jobIdParam);
-          setError("No optimization results found for this job");
-          setIsLoading(false);
-          setIsPolling(false);
-          return;
-        }
-
-        // Check if job is still processing
-        if (data.status === 'pending' || data.status === 'processing') {
+          console.warn('[ComparisonPage] No job found with ID:', jobIdParam);
+          console.log('[ComparisonPage] Available job IDs from recent query:', 
+            recentJobs?.map(job => job.id) || 'none');
+          
+          // Check if we should poll (job might not be created yet)
           if (pollingAttempts < 30) {
             setPollingAttempts(prev => prev + 1);
             setIsPolling(true);
-            console.log(`[ComparisonPage] Job still processing (${data.status}), polling attempt ${pollingAttempts + 1}/30`);
+            console.log(`[ComparisonPage] Job not found, polling attempt ${pollingAttempts + 1}/30`);
             
             setTimeout(() => {
               fetchJobData();
-            }, 10000);
+            }, 5000); // Poll every 5 seconds
+            return;
+          } else {
+            setError(`No optimization job found with ID: ${jobIdParam}`);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        console.log('[ComparisonPage] === JOB FOUND ===');
+        console.log('[ComparisonPage] Job details:', {
+          id: data.id,
+          status: data.status,
+          user_id: data.user_id,
+          enhanced_resume_id: data.enhanced_resume_id,
+          created_at: data.created_at,
+          modifications_count: Array.isArray(data.modifications) ? data.modifications.length : 'not array',
+          modifications_type: typeof data.modifications,
+          match_details_type: typeof data.match_details,
+          keywords_extracted_count: Array.isArray(data.keywords_extracted) ? data.keywords_extracted.length : 'not array'
+        });
+
+        // Check if job is still processing
+        if (data.status === 'pending' || data.status === 'processing') {
+          console.log(`[ComparisonPage] Job still processing: ${data.status}`);
+          
+          if (pollingAttempts < 30) {
+            setPollingAttempts(prev => prev + 1);
+            setIsPolling(true);
+            console.log(`[ComparisonPage] Continuing to poll, attempt ${pollingAttempts + 1}/30`);
+            
+            setTimeout(() => {
+              fetchJobData();
+            }, 5000);
             return;
           } else {
             setError("The optimization is taking longer than expected. Please try again later.");
             setIsLoading(false);
-            setIsPolling(false);
             return;
           }
         }
 
         // Check if job failed
         if (data.status === 'error') {
+          console.error('[ComparisonPage] Job failed:', data.error_message);
           setError(`Optimization failed: ${data.error_message || 'Unknown error'}`);
           setIsLoading(false);
-          setIsPolling(false);
           return;
         }
 
-        console.log('[ComparisonPage] Job data retrieved:', data);
+        // Job completed successfully
+        console.log('[ComparisonPage] === PROCESSING COMPLETED JOB ===');
         setJobData(data);
         setIsPolling(false);
 
-        // Update context with the fetched data
+        // Update context
         if (data.enhanced_resume_id) {
+          console.log('[ComparisonPage] Setting enhanced resume ID:', data.enhanced_resume_id);
           setContextEnhancedResumeId(data.enhanced_resume_id);
         }
         setContextJobId(jobIdParam);
 
-        // Create optimization result from job data with proper type casting
-        const modificationsData = Array.isArray(data.modifications) 
-          ? (data.modifications as unknown) as Modification[]
-          : [];
+        // Process modifications data
+        let modificationsData: Modification[] = [];
+        if (Array.isArray(data.modifications)) {
+          modificationsData = data.modifications as Modification[];
+          console.log('[ComparisonPage] Processed modifications:', modificationsData.length, 'items');
+        } else {
+          console.warn('[ComparisonPage] Modifications is not an array:', typeof data.modifications);
+        }
 
+        // Process match details
         const matchDetails = (data.match_details && typeof data.match_details === 'object') 
           ? data.match_details as any 
           : {};
+        console.log('[ComparisonPage] Match details:', matchDetails);
 
+        // Process keywords
         const keywordsExtracted = Array.isArray(data.keywords_extracted) 
           ? data.keywords_extracted 
           : [];
+        console.log('[ComparisonPage] Keywords extracted:', keywordsExtracted.length, 'items');
 
+        // Create optimization result
         const optimizationData: OptimizationResult = {
           resume_id: data.enhanced_resume_id || '',
           job_id: jobIdParam,
@@ -184,73 +257,92 @@ const ComparisonPage: React.FC = () => {
           }
         };
 
+        console.log('[ComparisonPage] === SETTING OPTIMIZATION RESULT ===');
+        console.log('[ComparisonPage] Final optimization data:', optimizationData);
         setOptimizationResult(optimizationData);
         setIsLoading(false);
 
       } catch (error) {
-        console.error('[ComparisonPage] Error in fetchJobData:', error);
-        setError(`An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error('[ComparisonPage] === EXCEPTION IN fetchJobData ===');
+        console.error('[ComparisonPage] Exception details:', error);
+        setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         toast({
-          title: "Error loading results",
-          description: "An unexpected error occurred while loading optimization results.",
+          title: "Error",
+          description: "An unexpected error occurred while loading results.",
           variant: "destructive"
         });
         setIsLoading(false);
-        setIsPolling(false);
       }
     };
 
-    setIsLoading(true);
+    // Reset polling attempts when dependencies change
     setPollingAttempts(0);
+    setIsLoading(true);
     fetchJobData();
   }, [jobIdParam, user?.id, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
 
-  // Check if PDF exists and get URL for the resume
+  // PDF loading effect
   useEffect(() => {
-    const checkAndFetchPdf = async () => {
-      // Use the enhanced_resume_id for PDF operations
+    console.log('[ComparisonPage] === PDF LOADING EFFECT ===');
+    console.log('[ComparisonPage] PDF Effect Dependencies:', {
+      jobData: jobData ? { enhanced_resume_id: jobData.enhanced_resume_id } : null,
+      user_id: user?.id,
+      isLoading,
+      error
+    });
+    
+    const loadPdf = async () => {
       const resumeIdForPdf = jobData?.enhanced_resume_id;
       
-      if (resumeIdForPdf && user?.id) {
-        console.log(`[ComparisonPage] PDF Effect: Starting PDF check for resumeId: ${resumeIdForPdf}, user: ${user.id}`);
-        try {
-          // First check if the PDF exists
-          const exists = await checkResumeExists(user.id, resumeIdForPdf);
-          console.log(`[ComparisonPage] PDF exists check result: ${exists}`);
-          
-          if (exists) {
-            // Get the URL for viewing (not download)
-            const url = await getResumeUrl(user.id, resumeIdForPdf, 'pdf', false);
-            setPdfUrl(url);
-            console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${resumeIdForPdf}: ${url}`);
-          } else {
-            console.warn(`[ComparisonPage] PDF does not exist for resume ${resumeIdForPdf}`);
-            setPdfUrl(null);
-          }
-        } catch (err) {
-          console.error('[ComparisonPage] PDF Effect: Error getting PDF URL:', err);
+      if (!resumeIdForPdf || !user?.id || isLoading || error) {
+        console.log('[ComparisonPage] PDF loading skipped:', {
+          resumeIdForPdf: !!resumeIdForPdf,
+          user_id: !!user?.id,
+          isLoading,
+          error
+        });
+        return;
+      }
+
+      console.log(`[ComparisonPage] === CHECKING PDF EXISTENCE ===`);
+      console.log(`[ComparisonPage] Resume ID for PDF: ${resumeIdForPdf}`);
+      
+      try {
+        const exists = await checkResumeExists(user.id, resumeIdForPdf);
+        console.log(`[ComparisonPage] PDF exists check result: ${exists}`);
+        
+        if (exists) {
+          const url = await getResumeUrl(user.id, resumeIdForPdf, 'pdf', false);
+          console.log(`[ComparisonPage] Generated PDF URL: ${url}`);
+          setPdfUrl(url);
+        } else {
+          console.warn(`[ComparisonPage] PDF does not exist for resume ${resumeIdForPdf}`);
           setPdfUrl(null);
-          toast({
-            title: "PDF Load Error",
-            description: `Failed to retrieve PDF. ${err instanceof Error ? err.message : 'Unknown error'}`,
-            variant: "destructive"
-          });
         }
-      } else {
-        setPdfUrl(null); 
-        if (!resumeIdForPdf) console.warn("[ComparisonPage] PDF Effect: enhanced_resume_id is missing for PDF check.");
-        if (!user?.id) console.warn("[ComparisonPage] PDF Effect: user.id is missing for PDF check.");
+      } catch (err) {
+        console.error('[ComparisonPage] Error in PDF loading:', err);
+        setPdfUrl(null);
+        toast({
+          title: "PDF Load Error",
+          description: `Failed to load PDF preview: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          variant: "destructive"
+        });
       }
     };
     
-    if (jobData && !isLoading && !error) {
-      checkAndFetchPdf();
-    }
+    loadPdf();
   }, [jobData, user?.id, isLoading, error]);
 
-  // Handle download for the resume
+  // Download handler
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
+    console.log('[ComparisonPage] === DOWNLOAD INITIATED ===');
     const resumeIdForDownload = jobData?.enhanced_resume_id;
+    
+    console.log('[ComparisonPage] Download params:', {
+      format,
+      resumeIdForDownload,
+      user_id: user?.id
+    });
     
     if (!resumeIdForDownload || !user?.id) {
       toast({
@@ -262,61 +354,66 @@ const ComparisonPage: React.FC = () => {
     }
     
     setIsDownloading(true);
-    setDownloadFormat(format); 
-    console.log(`[ComparisonPage] Download: Initiated for ${format}, resume ID: ${resumeIdForDownload}`);
+    setDownloadFormat(format);
     
     try {
       if (format === 'docx') {
-        console.log("[ComparisonPage] Download: DOCX format selected (to be implemented via API).");
+        console.log("[ComparisonPage] DOCX download requested (not implemented)");
         toast({ 
           title: "DOCX Download", 
-          description: "DOCX download functionality to be implemented via API.", 
+          description: "DOCX download functionality to be implemented.", 
           variant: "default" 
         });
         setIsDownloading(false); 
         return; 
       }
 
-      // Get download URL (forces download)
       const url = await getResumeUrl(user.id, resumeIdForDownload, 'pdf', true);
       if (!url) {
-        throw new Error('Could not generate download URL for the resume.');
+        throw new Error('Could not generate download URL');
       }
-      console.log(`[ComparisonPage] Download: PDF URL for download: ${url}`);
       
+      console.log(`[ComparisonPage] Opening download URL: ${url}`);
       window.open(url, '_blank');
       
       toast({
         title: "Download successful",
-        description: `Your optimized resume (${format.toUpperCase()}) has been opened in a new tab.`
+        description: "Your resume download has started."
       });
     } catch (error) {
-      console.error("[ComparisonPage] Download: Error for resume:", error);
+      console.error("[ComparisonPage] Download error:", error);
       toast({
         title: "Download failed",
-        description: error instanceof Error ? error.message : "There was an error downloading your resume. Please try again.",
+        description: error instanceof Error ? error.message : "Download failed",
         variant: "destructive"
       });
     } finally {
       setIsDownloading(false);
-      console.log("[ComparisonPage] Download: Finished.");
     }
   };
 
-  // Manual retry function
+  // Retry handler
   const handleRetry = () => {
+    console.log('[ComparisonPage] === RETRY INITIATED ===');
     setError(null);
-    setIsLoading(true);
     setPollingAttempts(0);
     setIsPolling(false);
-    // Trigger the useEffect to refetch
-    window.location.reload();
+    setIsLoading(true);
+    // The useEffect will automatically trigger and refetch
   };
 
-  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl, 'error:', error, 'isPolling:', isPolling);
+  console.log('[ComparisonPage] === RENDER DECISION ===');
+  console.log('[ComparisonPage] Render state:', {
+    isLoading,
+    isPolling,
+    error,
+    hasOptimizationResult: !!optimizationResult,
+    pdfUrl
+  });
 
+  // Loading state
   if (isLoading || isPolling) {
-    console.log('[ComparisonPage] Rendering: Main loading/polling state.');
+    console.log('[ComparisonPage] Rendering loading state');
     return (
       <div className="min-h-screen bg-draft-bg">
         <Header />
@@ -350,8 +447,9 @@ const ComparisonPage: React.FC = () => {
     );
   }
 
+  // Error state
   if (error || (!optimizationResult && !isLoading)) {
-    console.log('[ComparisonPage] Rendering: Error or no optimization result found.');
+    console.log('[ComparisonPage] Rendering error state');
     return (
       <div className="min-h-screen bg-draft-bg">
         <Header />
@@ -361,7 +459,7 @@ const ComparisonPage: React.FC = () => {
               {error ? "Error Loading Results" : "No Results Found"}
             </h2>
             <p className="text-base text-muted-foreground mb-6">
-              {error || `We couldn't find optimization results for job ID: ${jobIdParam}. This could be due to missing information or an issue during processing. Please try optimizing your resume again.`}
+              {error || `We couldn't find optimization results for job ID: ${jobIdParam}.`}
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={handleRetry}>
@@ -378,12 +476,10 @@ const ComparisonPage: React.FC = () => {
     );
   }
   
-  console.log('[ComparisonPage] Rendering: Main content with results.');
+  console.log('[ComparisonPage] Rendering main content');
   
-  // ... keep existing code (improvementData, analysisData, groupedImprovements processing)
+  // Process data for rendering
   const improvementData = optimizationResult?.modifications || [];
-  console.log("[ComparisonPage] Data for rendering: Improvements data:", improvementData);
-
   const analysisData = optimizationResult?.analysis_data || {
     old_score: 0,
     improved_score: 0,
@@ -391,8 +487,8 @@ const ComparisonPage: React.FC = () => {
     keyword_matches: 0,
     total_keywords: 0
   };
-  console.log("[ComparisonPage] Data for rendering: Analysis data:", analysisData);
 
+  // Group modifications by company/position
   const groupedImprovements: GroupedModifications = {};
   improvementData.forEach(mod => {
     const originalText = mod.original || mod.original_bullet || '';
@@ -400,6 +496,7 @@ const ComparisonPage: React.FC = () => {
     const company = mod.company || mod.section || 'General';
     const position = mod.position || '';
     const key = `${company}${position ? ` - ${position}` : ''}`;
+    
     if (!groupedImprovements[key]) {
       groupedImprovements[key] = {
         company,
@@ -407,6 +504,7 @@ const ComparisonPage: React.FC = () => {
         modifications: []
       };
     }
+    
     const normalizedMod: Modification = {
       section: mod.section || '',
       original: originalText,
@@ -417,7 +515,13 @@ const ComparisonPage: React.FC = () => {
     };
     groupedImprovements[key].modifications.push(normalizedMod);
   });
-  console.log("[ComparisonPage] Data for rendering: Grouped improvements:", groupedImprovements);
+
+  console.log('[ComparisonPage] Rendering with data:', {
+    improvementData_count: improvementData.length,
+    analysisData,
+    groupedImprovements_keys: Object.keys(groupedImprovements),
+    pdfUrl: !!pdfUrl
+  });
   
   return (
     <div className="min-h-screen bg-draft-bg">
@@ -536,14 +640,13 @@ const ComparisonPage: React.FC = () => {
                       <p className="text-draft-green/70 font-serif">
                         {(!jobData?.enhanced_resume_id || !user?.id) 
                           ? "Preview unavailable: Missing resume information." 
-                          : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
+                          : "Loading preview or PDF not found..."} 
                       </p>
-                      {!pdfUrl && jobData?.enhanced_resume_id && user?.id && !isLoading && (
+                      {!pdfUrl && jobData?.enhanced_resume_id && user?.id && (
                         <p className="text-sm text-destructive mt-2">
-                          PDF file may not be available or could not be loaded. Resume ID: {jobData.enhanced_resume_id}
+                          PDF file may not be available. Resume ID: {jobData.enhanced_resume_id}
                         </p>
                       )}
-                      {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />}
                     </div>
                   </div>
                 )}
