@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
@@ -7,6 +8,7 @@ import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { processResume } from '@/services/api';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -16,18 +18,10 @@ const NOT_UPLOADED = 0,
 
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
-  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [jobDescription, setJobDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const {
-      pipelineState,
-      resumeFilename,
-      jobDescription,
-      enhancementPending,
-      isAwaitingApiResponse,
-      uploadResume,
-      setJobDescription,
-      enhanceResume,
-    } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -44,6 +38,7 @@ const HeroSection: React.FC = () => {
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     console.log(`File selected: ${file.name}`);
     // Check if file is PDF or DOCX
     const fileType = file.name.split('.').pop()?.toLowerCase();
@@ -56,8 +51,8 @@ const HeroSection: React.FC = () => {
       return;
     }
     
+    setResumeFile(file);
     setIsWriteExpanded(true);
-    await uploadResume(file);
   };
 
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -65,6 +60,16 @@ const HeroSection: React.FC = () => {
   };
 
   const handleMakeItBetter = async () => {
+    // Validation
+    if (!resumeFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please upload a resume file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!jobDescription.trim()) {
       toast({
         title: "Job description empty",
@@ -73,40 +78,62 @@ const HeroSection: React.FC = () => {
       });
       return;
     }
-    // enhanceResume now handles setting isAwaitingApiResponse and pipelineState appropriately.
-    // Modal opening is now solely driven by pipelineState changes in the useEffect below.
-    await enhanceResume(jobDescription); 
+
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Starting unified resume processing...");
+    setIsProcessing(true);
+
+    try {
+      const response = await processResume(resumeFile, jobDescription, user.id);
+      
+      if (response?.error) {
+        console.error("Processing failed:", response.error);
+        toast({
+          title: "Processing failed",
+          description: response.error,
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      console.log("Processing successful:", response);
+      // Redirect to comparison page
+      if (response?.data?.job_id) {
+        navigate(`/comparison?job_id=${response.data.job_id}`);
+      }
+      
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
   };
 
-  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending; // Only true for initial upload
-  const isResumeNotUploaded = pipelineState === NOT_UPLOADED;
-
-  // Determine if the system is busy with an operation relevant to the "Make it Better" button
-  const isSystemBusy = 
-    isAwaitingApiResponse || // Waiting for optimize API response
-    (pipelineState === UPLOADING && enhancementPending) || // Uploading as part of "Make it Better"
-    pipelineState === ENHANCED || // Enhancement succeeded, modal likely showing progress
-    pipelineState === RENDERING;   // Rendering PDF, modal likely showing progress
-
-  // Determine if the modal should be open based on "Make it Better" flow
-  // This ensures modal only shows for enhancement-related processing.
-  const isModalRelevantForMakeItBetterFlow =
-    pipelineState === ENHANCED ||
-    pipelineState === RENDERING ||
-    (pipelineState === UPLOADING && enhancementPending); // Crucial: UPLOADING state only relevant for modal if enhancement is pending.
-
-  useEffect(() => {
-    if (isModalRelevantForMakeItBetterFlow && !isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Opening modal for Make it Better flow. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
-      setIsProgressModalOpen(true);
-    } else if (!isModalRelevantForMakeItBetterFlow && isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Closing modal. State: ${pipelineState}, EnhPending: ${enhancementPending}, ModalOpen: ${isProgressModalOpen}`);
-      setIsProgressModalOpen(false);
-    }
-  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]); // Added pipelineState to ensure re-evaluation when it changes
-  
-  
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
+      {/* Full-page loading overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
+            <h3 className="text-lg font-medium text-draft-green">Processing your resume...</h3>
+            <p className="text-draft-text mt-2">This may take a few moments.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
         <div className="flex flex-col justify-center lg:sticky lg:top-24 lg:self-start">
@@ -136,16 +163,24 @@ const HeroSection: React.FC = () => {
                 <p className="text-draft-text dark:text-gray-300 opacity-70 mt-1">
                   We will use this resume as a base.
                 </p>
-                <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".pdf,.docx" 
+                  onChange={handleFileChange} 
+                />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploadingFile}>
-                  {isUploadingFile ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
+                <Button 
+                  variant="ghost" 
+                  className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" 
+                  onClick={handleUploadClick}
+                  disabled={isProcessing}
+                >
+                  {resumeFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {resumeFilename && <p className="text-sm text-draft-green mt-2">
-                    { isResumeNotUploaded && !isUploadingFile ? 
-                      "Couldn't upload file: " : "Selected file: "
-                    }
-                    {resumeFilename}
+                {resumeFile && <p className="text-sm text-draft-green mt-2">
+                    Selected file: {resumeFile.name}
                   </p>}
               </div>
               <div className="absolute right-0 h-full flex items-center">
@@ -168,8 +203,15 @@ const HeroSection: React.FC = () => {
               
               <div className="mt-4 h-[200px] relative flex flex-col">
                 {isWriteExpanded ? (
-                  <div className="border border-draft-green dark:border-draft-yellow rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in">
-                    <Textarea placeholder="Add description" className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" value={jobDescription} onChange={handleJobDescriptionChange} />
+                  <div className={`border rounded-md h-full flex flex-col transition-all duration-300 ease-in-out animate-fade-in ${
+                    !jobDescription.trim() ? 'border-red-500' : 'border-draft-green dark:border-draft-yellow'
+                  }`}>
+                    <Textarea 
+                      placeholder="Add description" 
+                      className="flex-1 border-none focus-visible:ring-0 text-draft-green dark:text-draft-yellow resize-none dark:bg-draft-footer/70" 
+                      value={jobDescription} 
+                      onChange={handleJobDescriptionChange}
+                    />
                     <div className="p-2">
                       <Button variant="ghost" size="icon" onClick={toggleWriteExpanded} className="p-0 hover:bg-transparent">
                         <ArrowLeft size={16} className="text-draft-green dark:text-draft-yellow" />
@@ -184,11 +226,11 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
+                      disabled={isProcessing}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
+                      {isProcessing ? "Processing..." : "Make it better"}
                     </Button>
                   </div>
                 )}
@@ -197,11 +239,11 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending) /* Disable if initial upload is happening */}
+                      disabled={isProcessing}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
+                      {isProcessing ? "Processing..." : "Make it better"}
                     </Button>
                   </div>
                 )}
@@ -210,9 +252,6 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Progress Modal */}
-      <ProgressModal isOpen={isProgressModalOpen} onOpenChange={setIsProgressModalOpen} />
     </section>;
 };
 
