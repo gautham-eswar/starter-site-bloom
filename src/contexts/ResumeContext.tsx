@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { uploadResume as uploadResumeAPI, optimizeResume as optimizeResumeAPI } from '@/services/api';
+import { uploadResume as uploadResumeAPI, optimizeResume as optimizeResumeAPI, processResume, downloadResume } from '@/services/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -67,6 +67,7 @@ interface PipelineContextType {
   uploadResume: (file: File) => Promise<void>;
   setJobDescription: (description: string) => void;
   enhanceResume: (jobDescription: string) => Promise<void>;
+  processResumeUnified: (file: File, jobDescription: string) => Promise<void>; // NEW: Unified process
   performApiHealthCheck: () => Promise<void>;
 }
 
@@ -91,6 +92,95 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Health check implementation if needed
   }, []);
 
+  // NEW: Unified process function that handles everything in one API call
+  const processResumeUnified = useCallback(async (file: File, jobDesc: string) => {
+    if (!user?.id) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to process your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsAwaitingApiResponse(true);
+      setEnhancementPending(true);
+      setPipelineState(ENHANCING);
+      setResumeFilename(file.name);
+      
+      console.log(`[PipelineContext] Starting unified processing for file: ${file.name}`);
+
+      const response = await processResume(file, jobDesc, user.id);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      console.log("[PipelineContext] Unified processing response:", response);
+
+      if (response.status === 'success' && response.data) {
+        const { job_id, original_resume_id, enhanced_resume_id, analysis } = response.data;
+        
+        console.log(`[PipelineContext] Processing complete! Job ID: ${job_id}, Enhanced Resume ID: ${enhanced_resume_id}`);
+        
+        setJobId(job_id);
+        setResumeId(original_resume_id);
+        setEnhancedResumeId(enhanced_resume_id);
+        
+        // Set analysis data if available
+        if (analysis) {
+          setEnhancementAnalysis({
+            modifications_summary: analysis.modifications_summary || [],
+            old_score: analysis.old_score || 0,
+            improved_score: analysis.improved_score || 0,
+            match_percentage: analysis.match_percentage || 0,
+            keyword_matches: analysis.keyword_matches || 0,
+            total_keywords: analysis.total_keywords || 0,
+          });
+        }
+        
+        setPipelineState(RENDERED);
+        
+        // Download and cache the enhanced resume PDF
+        try {
+          console.log(`[PipelineContext] Downloading and caching enhanced resume PDF: ${enhanced_resume_id}`);
+          await downloadResume(enhanced_resume_id, 'pdf');
+        } catch (downloadError) {
+          console.error('[PipelineContext] Failed to download and cache enhanced resume:', downloadError);
+          // Don't fail the whole process if PDF caching fails
+        }
+        
+        // Navigate to comparison page
+        const comparisonUrl = `/comparison?originalResumeId=${original_resume_id}&enhancedResumeId=${enhanced_resume_id}&jobId=${job_id}`;
+        console.log(`[PipelineContext] Redirecting to: ${comparisonUrl}`);
+        
+        navigate(comparisonUrl);
+        
+        toast({
+          title: "Resume processed successfully",
+          description: "Your resume has been optimized and is ready for comparison!",
+        });
+      } else {
+        throw new Error(response.message || "Processing failed");
+      }
+
+    } catch (error) {
+      console.error("[PipelineContext] Unified processing failed:", error);
+      setPipelineState(NOT_UPLOADED);
+      setEnhancementPending(false);
+      
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : "Failed to process resume.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAwaitingApiResponse(false);
+    }
+  }, [user?.id, navigate]);
+
+  // Keep existing functions for backward compatibility
   const uploadResume = useCallback(async (file: File) => {
     if (!user?.id) {
       toast({
@@ -156,7 +246,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       console.log("[PipelineContext] Optimization response:", response);
 
-      // Check if the response indicates immediate success
       if (response.status === 'success' && response.data) {
         const { job_id, enhanced_resume_id } = response.data;
         
@@ -165,6 +254,13 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
         setJobId(job_id);
         setEnhancedResumeId(enhanced_resume_id);
         setPipelineState(RENDERED);
+        
+        // Download and cache the enhanced resume PDF
+        try {
+          await downloadResume(enhanced_resume_id, 'pdf');
+        } catch (downloadError) {
+          console.error('[PipelineContext] Failed to download and cache enhanced resume:', downloadError);
+        }
         
         // Navigate to comparison page
         const comparisonUrl = `/comparison?originalResumeId=${resumeId}&enhancedResumeId=${enhanced_resume_id}&jobId=${job_id}`;
@@ -177,7 +273,6 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
           description: "Your resume has been successfully optimized!",
         });
       } else {
-        // Handle other response scenarios
         console.log("[PipelineContext] Optimization response not immediately successful, may need polling");
         toast({
           title: "Processing",
@@ -214,6 +309,7 @@ export const PipelineProvider: React.FC<{ children: ReactNode }> = ({ children }
       uploadResume,
       setJobDescription,
       enhanceResume,
+      processResumeUnified, // NEW: Expose the unified process function
       performApiHealthCheck,
     }}>
       {children}

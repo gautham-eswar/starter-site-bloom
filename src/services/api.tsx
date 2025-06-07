@@ -1,9 +1,9 @@
-import React from 'react'; // Added for JSX in toast
+import React from 'react';
 import { toast } from "@/hooks/use-toast";
-import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage"; // Assuming pdfStorage.ts is still relevant
+import { uploadPdfFromBlob, checkPdfExists } from "./pdfStorage";
 import { supabase } from "@/integrations/supabase/client";
 
-const API_BASE_URL = "https://draft-zero.onrender.com"; // Updated API Base URL
+const API_BASE_URL = "https://draft-zero.onrender.com";
 
 // Helper function to handle API errors
 const handleApiError = (error: any) => {
@@ -22,7 +22,7 @@ const handleApiError = (error: any) => {
     toast({
       title: <span className="text-draft-green dark:text-draft-yellow">An Error Occurred</span> as React.ReactNode,
       description: errorMessage,
-      variant: "default", // Changed from "destructive" for a less alarming default
+      variant: "default",
     });
   }
   return { error: errorMessage };
@@ -31,9 +31,8 @@ const handleApiError = (error: any) => {
 // Helper function for making API requests
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   try {
-    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`; // Ensuring correct path joining
+    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
     
-    // Set default headers if not provided, but FormData needs special handling
     if (!(options.body instanceof FormData) && !options.headers) {
       options.headers = {
         "Content-Type": "application/json",
@@ -51,7 +50,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       const errorMessage = errorData.message || `Request failed with status ${response.status}`;
       console.error(`API request to ${url} failed with status ${response.status}: ${errorMessage}`, errorData);
       toast({
-        title: `API Error: ${response.status}` as React.ReactNode, // Also cast here if this title could be JSX later
+        title: `API Error: ${response.status}` as React.ReactNode,
         description: errorMessage,
         variant: "destructive",
       });
@@ -67,7 +66,22 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   }
 }
 
-// Upload resume
+// NEW: Unified process endpoint - handles upload, parsing, and optimization in one call
+export async function processResume(file: File, jobDescription: string, userId: string) {
+  const formData = new FormData();
+  
+  formData.append("resume_file", file);
+  formData.append("job_description", jobDescription);
+  formData.append("user_id", userId);
+  
+  console.log(`[API] Starting unified resume processing for user ID: ${userId}`);
+  return await apiRequest("/api/process", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+// Keep existing functions for backward compatibility and specific use cases
 export async function uploadResume(file: File, userId: string) {
   const formData = new FormData();
   
@@ -81,7 +95,6 @@ export async function uploadResume(file: File, userId: string) {
   });
 }
 
-// Optimize resume with job description
 export async function optimizeResume(resumeId: string, jobDescription: string, userId: string) {
   console.log(`Optimizing resume ID: ${resumeId} for user ID: ${userId} with job description.`);
   const formData = new FormData();
@@ -95,12 +108,10 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   });
   
   console.log(`[API] Optimize response status check - response.status: ${response?.status}, typeof: ${typeof response?.status}`);
-  
-  // The backend should return: { status: "success", data: { job_id, enhanced_resume_id } }
   return response;
 }
 
-// Download optimized resume
+// Download resume from backend
 export async function downloadResume(resumeId: string, format: string = "pdf") {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -136,7 +147,7 @@ export async function downloadResume(resumeId: string, format: string = "pdf") {
   } catch (error) {
     console.error("Download error:", error);
     toast({
-      title: "Download Failed" as React.ReactNode, // Also cast here
+      title: "Download Failed" as React.ReactNode,
       description: error instanceof Error ? error.message : "Could not download the file.",
       variant: "destructive",
     });

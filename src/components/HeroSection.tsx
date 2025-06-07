@@ -20,6 +20,7 @@ const NOT_UPLOADED = 0,
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
       pipelineState,
@@ -30,6 +31,7 @@ const HeroSection: React.FC = () => {
       uploadResume,
       setJobDescription,
       enhanceResume,
+      processResumeUnified, // NEW: Use the unified process function
     } = usePipelineContext();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -47,67 +49,101 @@ const HeroSection: React.FC = () => {
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     console.log(`File selected: ${file.name}`);
     const fileType = file.name.split('.').pop()?.toLowerCase();
-    if (fileType !== 'pdf' && fileType !== 'docx') {
+    if (fileType !== 'pdf' && fileType !== 'docx' && fileType !== 'txt') {
       toast({
         title: "Invalid file format",
-        description: "Please upload a PDF or DOCX file",
+        description: "Please upload a PDF, DOCX, or TXT file",
         variant: "destructive"
       });
       return;
     }
     
+    setSelectedFile(file);
     setIsWriteExpanded(true);
-    await uploadResume(file);
   };
 
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
 
+  // NEW: Unified "Make it Better" function
   const handleMakeItBetter = async () => {
+    // Validation
+    if (!selectedFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please select a resume file to optimize.",
+        variant: "destructive",
+      });
+      // Add visual feedback - red border on file input
+      if (fileInputRef.current) {
+        fileInputRef.current.style.border = "2px solid red";
+        setTimeout(() => {
+          if (fileInputRef.current) {
+            fileInputRef.current.style.border = "";
+          }
+        }, 3000);
+      }
+      return;
+    }
+    
     if (!jobDescription.trim()) {
       toast({
         title: "Job description empty",
         description: "Please provide a job description to tailor your resume.",
         variant: "destructive",
       });
+      // Add visual feedback - red border on textarea
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.style.border = "2px solid red";
+        setTimeout(() => {
+          textarea.style.border = "";
+        }, 3000);
+      }
       return;
     }
     
-    console.log("[HeroSection] Starting enhancement process...");
-    await enhanceResume(jobDescription); 
+    if (!user?.id) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to optimize your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log("[HeroSection] Starting unified processing...");
+    // This will trigger the full-page loading overlay via the progress modal
+    await processResumeUnified(selectedFile, jobDescription); 
   };
-
-  const isUploadingFile = pipelineState === UPLOADING && !enhancementPending;
-  const isResumeNotUploaded = pipelineState === NOT_UPLOADED;
 
   const isSystemBusy = 
     isAwaitingApiResponse ||
-    (pipelineState === UPLOADING && enhancementPending) ||
     pipelineState === ENHANCING ||
     pipelineState === ENHANCED ||
     pipelineState === RENDERING;
 
-  // Open modal when enhancement process starts (ENHANCING state)
-  const isModalRelevantForMakeItBetterFlow =
+  // Open modal when processing starts
+  const isModalRelevant =
     pipelineState === ENHANCING ||
     pipelineState === ENHANCED ||
-    pipelineState === RENDERING ||
-    (pipelineState === UPLOADING && enhancementPending);
+    pipelineState === RENDERING;
 
   useEffect(() => {
-    console.log(`[HeroSection useEffect] Pipeline state: ${pipelineState}, Modal relevant: ${isModalRelevantForMakeItBetterFlow}, Modal open: ${isProgressModalOpen}`);
+    console.log(`[HeroSection useEffect] Pipeline state: ${pipelineState}, Modal relevant: ${isModalRelevant}, Modal open: ${isProgressModalOpen}`);
     
-    if (isModalRelevantForMakeItBetterFlow && !isProgressModalOpen) {
-      console.log(`[HeroSection useEffect] Opening modal for enhancement flow.`);
+    if (isModalRelevant && !isProgressModalOpen) {
+      console.log(`[HeroSection useEffect] Opening modal for processing flow.`);
       setIsProgressModalOpen(true);
-    } else if (!isModalRelevantForMakeItBetterFlow && isProgressModalOpen) {
+    } else if (!isModalRelevant && isProgressModalOpen) {
       console.log(`[HeroSection useEffect] Closing modal.`);
       setIsProgressModalOpen(false);
     }
-  }, [isModalRelevantForMakeItBetterFlow, isProgressModalOpen, pipelineState, enhancementPending]);
+  }, [isModalRelevant, isProgressModalOpen, pipelineState]);
   
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -138,16 +174,13 @@ const HeroSection: React.FC = () => {
                 <p className="text-draft-text dark:text-gray-300 opacity-70 mt-1">
                   We will use this resume as a base.
                 </p>
-                <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx" onChange={handleFileChange} />
+                <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx,.txt" onChange={handleFileChange} />
                 
-                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick} disabled={isUploadingFile}>
-                  {isUploadingFile ? "Uploading..." : resumeFilename ? "Change File" : "Upload"} <ArrowRight size={16} />
+                <Button variant="ghost" className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" onClick={handleUploadClick}>
+                  {selectedFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
-                {resumeFilename && <p className="text-sm text-draft-green mt-2">
-                    { isResumeNotUploaded && !isUploadingFile ? 
-                      "Couldn't upload file: " : "Selected file: "
-                    }
-                    {resumeFilename}
+                {selectedFile && <p className="text-sm text-draft-green mt-2">
+                    Selected file: {selectedFile.name}
                   </p>}
               </div>
               <div className="absolute right-0 h-full flex items-center">
@@ -186,11 +219,11 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending)}
+                      disabled={isSystemBusy}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
+                      {isAwaitingApiResponse ? "Processing..." : (isSystemBusy ? "Processing..." : "Make it better")}
                     </Button>
                   </div>
                 )}
@@ -199,11 +232,11 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={!jobDescription.trim() || isSystemBusy || (pipelineState === UPLOADING && !enhancementPending)}
+                      disabled={isSystemBusy}
                       variant="outline" 
                       className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
-                      {isAwaitingApiResponse ? "Submitting..." : (isSystemBusy ? "Processing..." : "Make it better")}
+                      {isAwaitingApiResponse ? "Processing..." : (isSystemBusy ? "Processing..." : "Make it better")}
                     </Button>
                   </div>
                 )}
