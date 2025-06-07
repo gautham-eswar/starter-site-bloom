@@ -93,6 +93,21 @@ export async function optimizeResume(resumeId: string, jobDescription: string, u
   });
 }
 
+// New unified process resume function
+export async function processResume(file: File, jobDescription: string, userId: string) {
+  const formData = new FormData();
+  
+  formData.append("file", file);
+  formData.append("job_description", jobDescription);
+  formData.append("user_id", userId);
+  
+  console.log(`Starting unified resume processing for user ID: ${userId} to ${API_BASE_URL}/api/process`);
+  return await apiRequest("/api/process", {
+    method: "POST",
+    body: formData,
+  });
+}
+
 // Download optimized resume
 export async function downloadResume(resumeId: string, format: string = "pdf") {
   try {
