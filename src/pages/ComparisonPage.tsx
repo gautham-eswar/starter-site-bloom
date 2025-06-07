@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown, RefreshCw } from 'lucide-react';
@@ -23,6 +22,28 @@ interface GroupedModifications {
     modifications: Modification[];
   };
 }
+
+// Helper function to safely convert Json to Modification array
+const parseModifications = (modificationsJson: any): Modification[] => {
+  if (!Array.isArray(modificationsJson)) {
+    console.warn('[ComparisonPage] Modifications is not an array:', typeof modificationsJson);
+    return [];
+  }
+
+  return modificationsJson.map((mod: any) => ({
+    section: mod.section || '',
+    original: mod.original || mod.original_bullet || '',
+    improved: mod.improved || mod.enhanced_bullet || '',
+    type: (mod.type as "Major" | "Minor") || 'Minor',
+    company: mod.company,
+    position: mod.position,
+    bullet_idx: mod.bullet_idx,
+    experience_idx: mod.experience_idx,
+    keywords_added: mod.keywords_added,
+    original_bullet: mod.original_bullet,
+    enhanced_bullet: mod.enhanced_bullet
+  })) as Modification[];
+};
 
 const ComparisonPage: React.FC = () => {
   console.log('[ComparisonPage] === COMPONENT RENDER START ===');
@@ -220,14 +241,9 @@ const ComparisonPage: React.FC = () => {
         }
         setContextJobId(jobIdParam);
 
-        // Process modifications data
-        let modificationsData: Modification[] = [];
-        if (Array.isArray(data.modifications)) {
-          modificationsData = data.modifications as Modification[];
-          console.log('[ComparisonPage] Processed modifications:', modificationsData.length, 'items');
-        } else {
-          console.warn('[ComparisonPage] Modifications is not an array:', typeof data.modifications);
-        }
+        // Process modifications data with proper type handling
+        const modificationsData = parseModifications(data.modifications);
+        console.log('[ComparisonPage] Processed modifications:', modificationsData.length, 'items');
 
         // Process match details
         const matchDetails = (data.match_details && typeof data.match_details === 'object') 
