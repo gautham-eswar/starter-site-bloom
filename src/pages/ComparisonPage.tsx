@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
@@ -96,7 +95,7 @@ const ComparisonPage: React.FC = () => {
 
         // Create optimization result from job data with proper type casting
         const modificationsData = Array.isArray(data.modifications) 
-          ? data.modifications as Modification[]
+          ? (data.modifications as unknown) as Modification[]
           : [];
 
         const matchDetails = (data.match_details && typeof data.match_details === 'object') 
