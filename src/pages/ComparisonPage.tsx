@@ -1,17 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
-import { usePipelineContext } from '@/contexts/ResumeContext';
-import { OptimizationResult, EnhancementAnalysis, Modification } from '@/types/api';
+import { OptimizationResult, Modification } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DirectPDFViewer } from '@/components/DirectPDFViewer';
-import { getPdfUrl, checkPdfExists } from '@/services/pdfStorage';
+import { getResumeUrl, checkResumeExists } from '@/services/supabaseSetup';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,14 +45,22 @@ const ComparisonPage: React.FC = () => {
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'docx'>('pdf');
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [jobData, setJobData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'jobIdParam:', jobIdParam);
+  console.log('[ComparisonPage] Render. isLoading:', isLoading, 'pdfUrl:', pdfUrl, 'jobIdParam:', jobIdParam, 'user:', user?.id);
 
   // Fetch optimization job data from Supabase
   useEffect(() => {
     const fetchJobData = async () => {
       if (!jobIdParam) {
         console.warn("[ComparisonPage] No job_id parameter found in URL");
+        setError("No job ID provided in URL");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!user?.id) {
+        console.warn("[ComparisonPage] User not authenticated");
         setIsLoading(false);
         return;
       }
@@ -69,9 +76,10 @@ const ComparisonPage: React.FC = () => {
 
         if (error) {
           console.error('[ComparisonPage] Error fetching job data:', error);
+          setError(`Failed to load optimization results: ${error.message}`);
           toast({
             title: "Failed to load results",
-            description: "Could not retrieve optimization results from database.",
+            description: `Could not retrieve optimization results: ${error.message}`,
             variant: "destructive"
           });
           setIsLoading(false);
@@ -80,6 +88,7 @@ const ComparisonPage: React.FC = () => {
 
         if (!data) {
           console.warn('[ComparisonPage] No job data found for job_id:', jobIdParam);
+          setError("No optimization results found for this job");
           setIsLoading(false);
           return;
         }
@@ -126,6 +135,7 @@ const ComparisonPage: React.FC = () => {
 
       } catch (error) {
         console.error('[ComparisonPage] Error in fetchJobData:', error);
+        setError(`An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`);
         toast({
           title: "Error loading results",
           description: "An unexpected error occurred while loading optimization results.",
@@ -136,45 +146,54 @@ const ComparisonPage: React.FC = () => {
     };
 
     fetchJobData();
-  }, [jobIdParam, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
+  }, [jobIdParam, user?.id, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
 
   // Check if PDF exists and get URL for the resume
   useEffect(() => {
     const checkAndFetchPdf = async () => {
-      // Use the original resume_id from job data instead of enhanced_resume_id
-      const resumeIdForPdf = jobData?.resume_id;
+      // Use the enhanced_resume_id for PDF operations
+      const resumeIdForPdf = jobData?.enhanced_resume_id;
       
       if (resumeIdForPdf && user?.id) {
         console.log(`[ComparisonPage] PDF Effect: Starting PDF check for resumeId: ${resumeIdForPdf}, user: ${user.id}`);
         try {
-          const url = await getPdfUrl(resumeIdForPdf, user.id);
-          setPdfUrl(url);
-          console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${resumeIdForPdf}: ${url}`);
+          // First check if the PDF exists
+          const exists = await checkResumeExists(user.id, resumeIdForPdf);
+          console.log(`[ComparisonPage] PDF exists check result: ${exists}`);
+          
+          if (exists) {
+            // Get the URL for viewing (not download)
+            const url = await getResumeUrl(user.id, resumeIdForPdf, 'pdf', false);
+            setPdfUrl(url);
+            console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${resumeIdForPdf}: ${url}`);
+          } else {
+            console.warn(`[ComparisonPage] PDF does not exist for resume ${resumeIdForPdf}`);
+            setPdfUrl(null);
+          }
         } catch (err) {
           console.error('[ComparisonPage] PDF Effect: Error getting PDF URL:', err);
           setPdfUrl(null);
           toast({
             title: "PDF Load Error",
-            description: `Failed to retrieve PDF URL. ${err instanceof Error ? err.message : 'Unknown error'}`,
+            description: `Failed to retrieve PDF. ${err instanceof Error ? err.message : 'Unknown error'}`,
             variant: "destructive"
           });
         }
       } else {
         setPdfUrl(null); 
-        if (!resumeIdForPdf) console.warn("[ComparisonPage] PDF Effect: resume_id is missing for PDF check.");
+        if (!resumeIdForPdf) console.warn("[ComparisonPage] PDF Effect: enhanced_resume_id is missing for PDF check.");
         if (!user?.id) console.warn("[ComparisonPage] PDF Effect: user.id is missing for PDF check.");
       }
     };
     
-    if (jobData && !isLoading) {
+    if (jobData && !isLoading && !error) {
       checkAndFetchPdf();
     }
-  }, [jobData, user?.id, isLoading]);
+  }, [jobData, user?.id, isLoading, error]);
 
   // Handle download for the resume
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
-    // Use the original resume_id from job data instead of enhanced_resume_id
-    const resumeIdForDownload = jobData?.resume_id;
+    const resumeIdForDownload = jobData?.enhanced_resume_id;
     
     if (!resumeIdForDownload || !user?.id) {
       toast({
@@ -191,13 +210,18 @@ const ComparisonPage: React.FC = () => {
     
     try {
       if (format === 'docx') {
-          console.log("[ComparisonPage] Download: DOCX format selected (to be implemented via API).");
-          toast({ title: "DOCX Download", description: "DOCX download functionality to be implemented via API.", variant: "default" });
-          setIsDownloading(false); 
-          return; 
+        console.log("[ComparisonPage] Download: DOCX format selected (to be implemented via API).");
+        toast({ 
+          title: "DOCX Download", 
+          description: "DOCX download functionality to be implemented via API.", 
+          variant: "default" 
+        });
+        setIsDownloading(false); 
+        return; 
       }
 
-      const url = await getPdfUrl(resumeIdForDownload, user.id); 
+      // Get download URL (forces download)
+      const url = await getResumeUrl(user.id, resumeIdForDownload, 'pdf', true);
       if (!url) {
         throw new Error('Could not generate download URL for the resume.');
       }
@@ -222,11 +246,12 @@ const ComparisonPage: React.FC = () => {
     }
   };
 
-  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl);
+  console.log('[ComparisonPage] Before main return. isLoading:', isLoading, 'optimizationResult:', !!optimizationResult, 'pdfUrl:', pdfUrl, 'error:', error);
 
   if (isLoading) {
     console.log('[ComparisonPage] Rendering: Main loading state.');
-    return <div className="min-h-screen bg-draft-bg">
+    return (
+      <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center">
@@ -234,25 +259,30 @@ const ComparisonPage: React.FC = () => {
             <p className="text-base text-foreground">Loading optimization results...</p>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
 
-  if (!optimizationResult && !isLoading) {
-    console.log('[ComparisonPage] Rendering: No optimization result found and not loading.');
-    return <div className="min-h-screen bg-draft-bg">
+  if (error || (!optimizationResult && !isLoading)) {
+    console.log('[ComparisonPage] Rendering: Error or no optimization result found.');
+    return (
+      <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="px-8 py-10 md:px-12 lg:px-20">
           <div className="text-center max-w-xl mx-auto">
-            <h2 className="text-2xl mb-4">No Results Found</h2>
+            <h2 className="text-2xl mb-4">
+              {error ? "Error Loading Results" : "No Results Found"}
+            </h2>
             <p className="text-base text-muted-foreground mb-6">
-              We couldn't find optimization results for job ID: {jobIdParam}. This could be due to missing information or an issue during processing. Please try optimizing your resume again.
+              {error || `We couldn't find optimization results for job ID: ${jobIdParam}. This could be due to missing information or an issue during processing. Please try optimizing your resume again.`}
             </p>
             <Button variant="default" onClick={() => navigate('/')}>
               Back to Home
             </Button>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
   
   console.log('[ComparisonPage] Rendering: Main content with results.');
@@ -296,7 +326,8 @@ const ComparisonPage: React.FC = () => {
   });
   console.log("[ComparisonPage] Data for rendering: Grouped improvements:", groupedImprovements);
   
-  return <div className="min-h-screen bg-draft-bg">
+  return (
+    <div className="min-h-screen bg-draft-bg">
       <Header />
       
       <main className="px-4 py-8 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
@@ -336,8 +367,10 @@ const ComparisonPage: React.FC = () => {
             <div>
               <h2 className="text-3xl mb-6">Resume Enhancements</h2>
               
-              {Object.keys(groupedImprovements).length > 0 ? <div className="space-y-6">
-                  {Object.entries(groupedImprovements).map(([key, group], index) => <Collapsible key={index} defaultOpen={index === 0} className="bg-card rounded-xl overflow-hidden shadow-sm border border-border transition-all hover:shadow-md">
+              {Object.keys(groupedImprovements).length > 0 ? (
+                <div className="space-y-6">
+                  {Object.entries(groupedImprovements).map(([key, group], index) => (
+                    <Collapsible key={index} defaultOpen={index === 0} className="bg-card rounded-xl overflow-hidden shadow-sm border border-border transition-all hover:shadow-md">
                       <CollapsibleTrigger className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors">
                         <div>
                           <h3 className="text-2xl">{group.company}</h3>
@@ -348,7 +381,8 @@ const ComparisonPage: React.FC = () => {
                       
                       <CollapsibleContent className="px-5 pb-5">
                         <div className="space-y-7 pt-2">
-                          {group.modifications.map((mod, idx) => <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
+                          {group.modifications.map((mod, idx) => (
+                            <div key={idx} className="transition hover:translate-y-[-2px] duration-300">
                               <div className="border-l-4 border-primary/40 pl-4 mb-6">
                                 <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Original</p>
                                 <p className="text-base text-foreground/90 leading-relaxed pl-2">{mod.original}</p>
@@ -358,19 +392,26 @@ const ComparisonPage: React.FC = () => {
                                 <p className="text-sm text-primary uppercase tracking-wider mb-2">Enhanced</p>
                                 <p className="text-base text-primary leading-relaxed pl-2">{mod.improved}</p>
                                 
-                                {mod.type && <div className="mt-4 flex justify-end">
+                                {mod.type && (
+                                  <div className="mt-4 flex justify-end">
                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${mod.type === 'Major' ? 'bg-draft-coral bg-opacity-15 text-draft-coral' : 'bg-draft-mint bg-opacity-15 text-draft-green'}`}>
                                       {mod.type} Enhancement
                                     </span>
-                                  </div>}
+                                  </div>
+                                )}
                               </div>
-                            </div>)}
+                            </div>
+                          ))}
                         </div>
                       </CollapsibleContent>
-                    </Collapsible>)}
-                </div> : <div className="bg-card p-8 text-center rounded-lg border border-border">
+                    </Collapsible>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-card p-8 text-center rounded-lg border border-border">
                   <p className="text-base text-muted-foreground">No enhancements found for this job.</p>
-                </div>}
+                </div>
+              )}
             </div>
           </div>
           
@@ -400,12 +441,16 @@ const ComparisonPage: React.FC = () => {
                     <div className="text-center">
                       <h1 className="text-xl font-bold text-draft-green font-serif mb-2">Enhanced Resume Preview</h1>
                       <p className="text-draft-green/70 font-serif">
-                        {(!jobData?.resume_id || !user?.id) 
+                        {(!jobData?.enhanced_resume_id || !user?.id) 
                           ? "Preview unavailable: Missing resume information." 
                           : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
                       </p>
-                  {!pdfUrl && jobData?.resume_id && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the PDF might not be available or could not be loaded.</p>}
-                  {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />}
+                      {!pdfUrl && jobData?.enhanced_resume_id && user?.id && !isLoading && (
+                        <p className="text-sm text-destructive mt-2">
+                          PDF file may not be available or could not be loaded. Resume ID: {jobData.enhanced_resume_id}
+                        </p>
+                      )}
+                      {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />}
                     </div>
                   </div>
                 )}
@@ -414,6 +459,8 @@ const ComparisonPage: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default ComparisonPage;
