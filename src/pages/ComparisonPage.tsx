@@ -138,15 +138,18 @@ const ComparisonPage: React.FC = () => {
     fetchJobData();
   }, [jobIdParam, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
 
-  // Check if PDF exists and get URL for the ENHANCED resume
+  // Check if PDF exists and get URL for the resume
   useEffect(() => {
     const checkAndFetchPdf = async () => {
-      if (jobData?.enhanced_resume_id && user?.id) {
-        console.log(`[ComparisonPage] PDF Effect: Starting PDF check for enhancedResumeId: ${jobData.enhanced_resume_id}, user: ${user.id}`);
+      // Use the original resume_id from job data instead of enhanced_resume_id
+      const resumeIdForPdf = jobData?.resume_id;
+      
+      if (resumeIdForPdf && user?.id) {
+        console.log(`[ComparisonPage] PDF Effect: Starting PDF check for resumeId: ${resumeIdForPdf}, user: ${user.id}`);
         try {
-          const url = await getPdfUrl(jobData.enhanced_resume_id, user.id);
+          const url = await getPdfUrl(resumeIdForPdf, user.id);
           setPdfUrl(url);
-          console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${jobData.enhanced_resume_id}: ${url}`);
+          console.log(`[ComparisonPage] PDF Effect: Successfully set PDF URL for ${resumeIdForPdf}: ${url}`);
         } catch (err) {
           console.error('[ComparisonPage] PDF Effect: Error getting PDF URL:', err);
           setPdfUrl(null);
@@ -158,7 +161,7 @@ const ComparisonPage: React.FC = () => {
         }
       } else {
         setPdfUrl(null); 
-        if (!jobData?.enhanced_resume_id) console.warn("[ComparisonPage] PDF Effect: enhanced_resume_id is missing for PDF check.");
+        if (!resumeIdForPdf) console.warn("[ComparisonPage] PDF Effect: resume_id is missing for PDF check.");
         if (!user?.id) console.warn("[ComparisonPage] PDF Effect: user.id is missing for PDF check.");
       }
     };
@@ -168,12 +171,15 @@ const ComparisonPage: React.FC = () => {
     }
   }, [jobData, user?.id, isLoading]);
 
-  // Handle download for the ENHANCED resume
+  // Handle download for the resume
   const handleDownload = async (format: 'pdf' | 'docx' = 'pdf') => {
-    if (!jobData?.enhanced_resume_id || !user?.id) {
+    // Use the original resume_id from job data instead of enhanced_resume_id
+    const resumeIdForDownload = jobData?.resume_id;
+    
+    if (!resumeIdForDownload || !user?.id) {
       toast({
         title: "Download failed",
-        description: "Enhanced Resume ID or user information is missing.",
+        description: "Resume ID or user information is missing.",
         variant: "destructive"
       });
       return;
@@ -181,7 +187,7 @@ const ComparisonPage: React.FC = () => {
     
     setIsDownloading(true);
     setDownloadFormat(format); 
-    console.log(`[ComparisonPage] Download: Initiated for ${format}, enhanced ID: ${jobData.enhanced_resume_id}`);
+    console.log(`[ComparisonPage] Download: Initiated for ${format}, resume ID: ${resumeIdForDownload}`);
     
     try {
       if (format === 'docx') {
@@ -191,9 +197,9 @@ const ComparisonPage: React.FC = () => {
           return; 
       }
 
-      const url = await getPdfUrl(jobData.enhanced_resume_id, user.id); 
+      const url = await getPdfUrl(resumeIdForDownload, user.id); 
       if (!url) {
-        throw new Error('Could not generate download URL for the enhanced resume.');
+        throw new Error('Could not generate download URL for the resume.');
       }
       console.log(`[ComparisonPage] Download: PDF URL for download: ${url}`);
       
@@ -204,7 +210,7 @@ const ComparisonPage: React.FC = () => {
         description: `Your optimized resume (${format.toUpperCase()}) has been opened in a new tab.`
       });
     } catch (error) {
-      console.error("[ComparisonPage] Download: Error for enhanced resume:", error);
+      console.error("[ComparisonPage] Download: Error for resume:", error);
       toast({
         title: "Download failed",
         description: error instanceof Error ? error.message : "There was an error downloading your resume. Please try again.",
@@ -394,11 +400,11 @@ const ComparisonPage: React.FC = () => {
                     <div className="text-center">
                       <h1 className="text-xl font-bold text-draft-green font-serif mb-2">Enhanced Resume Preview</h1>
                       <p className="text-draft-green/70 font-serif">
-                        {(!jobData?.enhanced_resume_id || !user?.id) 
+                        {(!jobData?.resume_id || !user?.id) 
                           ? "Preview unavailable: Missing resume information." 
                           : (isLoading ? "Processing results..." : "Loading preview or PDF not found...")} 
                       </p>
-                  {!pdfUrl && jobData?.enhanced_resume_id && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the enhanced PDF might not be available or could not be loaded.</p>}
+                  {!pdfUrl && jobData?.resume_id && user?.id && !isLoading && <p className="text-sm text-destructive mt-2">If this persists, the PDF might not be available or could not be loaded.</p>}
                   {isLoading && <Loader className="h-6 w-6 animate-spin text-primary mt-4" />}
                     </div>
                   </div>
