@@ -60,7 +60,7 @@ const Comparison2Page: React.FC = () => {
         const transformedData: OptimizationData = {
           id: data.id,
           status: data.status,
-          modifications: Array.isArray(data.modifications) ? data.modifications as Modification[] : [],
+          modifications: Array.isArray(data.modifications) ? (data.modifications as unknown as Modification[]) : [],
           enhanced_resume_id: data.enhanced_resume_id || '',
           error_message: data.error_message || undefined
         };
