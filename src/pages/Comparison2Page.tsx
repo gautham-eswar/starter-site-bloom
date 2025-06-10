@@ -56,7 +56,16 @@ const Comparison2Page: React.FC = () => {
           return;
         }
 
-        setOptimizationData(data);
+        // Transform the data to match our interface
+        const transformedData: OptimizationData = {
+          id: data.id,
+          status: data.status,
+          modifications: Array.isArray(data.modifications) ? data.modifications as Modification[] : [],
+          enhanced_resume_id: data.enhanced_resume_id || '',
+          error_message: data.error_message || undefined
+        };
+
+        setOptimizationData(transformedData);
       } catch (err) {
         console.error('Unexpected error:', err);
         setError('An unexpected error occurred');
@@ -209,7 +218,10 @@ const Comparison2Page: React.FC = () => {
               </CardHeader>
               <CardContent>
                 {optimizationData.enhanced_resume_id ? (
-                  <SimpleResumeViewer resumeId={optimizationData.enhanced_resume_id} />
+                  <SimpleResumeViewer 
+                    resumeId={optimizationData.enhanced_resume_id} 
+                    fileName="enhanced_resume.pdf"
+                  />
                 ) : (
                   <p className="text-draft-text">Enhanced resume not available yet.</p>
                 )}
