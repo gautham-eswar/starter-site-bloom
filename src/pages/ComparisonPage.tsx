@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Loader, ChevronDown } from 'lucide-react';
+import { Download, Loader, ChevronDown, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import { useResumeContext } from '@/contexts/ResumeContext';
 import { OptimizationResult, Modification } from '@/types/api';
@@ -74,6 +74,8 @@ const ComparisonPage: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [jobData, setJobData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pollingAttempts, setPollingAttempts] = useState(0);
+  const [isPolling, setIsPolling] = useState(false);
 
   console.log('[ComparisonPage] Current State:', {
     user_id: user?.id,
@@ -81,6 +83,8 @@ const ComparisonPage: React.FC = () => {
     isLoading,
     jobData: jobData ? { id: jobData.id, status: jobData.status } : null,
     error,
+    pollingAttempts,
+    isPolling,
     contextResumeId,
     contextJobId,
     optimizationResult: optimizationResult ? { status: optimizationResult.status } : null
@@ -113,7 +117,6 @@ const ComparisonPage: React.FC = () => {
       if (!user?.id) {
         console.warn("[ComparisonPage] CRITICAL: User not authenticated");
         console.log("[ComparisonPage] User object:", user);
-        setError("User not authenticated");
         setIsLoading(false);
         return;
       }
@@ -122,7 +125,19 @@ const ComparisonPage: React.FC = () => {
         console.log(`[ComparisonPage] === QUERYING SUPABASE ===`);
         console.log(`[ComparisonPage] Query params: job_id=${jobIdParam}, user_id=${user.id}`);
         
-        // Query for the specific job
+        // First, let's see what's in the optimization_jobs table
+        const { data: recentJobs, error: listError } = await supabase
+          .from('optimization_jobs')
+          .select('id, status, created_at, user_id, enhanced_resume_id')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        console.log('[ComparisonPage] Recent jobs in table:', recentJobs);
+        if (listError) {
+          console.error('[ComparisonPage] Error listing recent jobs:', listError);
+        }
+
+        // Now query for the specific job
         const { data, error } = await supabase
           .from('optimization_jobs')
           .select('*')
@@ -153,9 +168,24 @@ const ComparisonPage: React.FC = () => {
 
         if (!data) {
           console.warn('[ComparisonPage] No job found with ID:', jobIdParam);
-          setError(`No optimization job found with ID: ${jobIdParam}`);
-          setIsLoading(false);
-          return;
+          console.log('[ComparisonPage] Available job IDs from recent query:', 
+            recentJobs?.map(job => job.id) || 'none');
+          
+          // Check if we should poll (job might not be created yet)
+          if (pollingAttempts < 30) {
+            setPollingAttempts(prev => prev + 1);
+            setIsPolling(true);
+            console.log(`[ComparisonPage] Job not found, polling attempt ${pollingAttempts + 1}/30`);
+            
+            setTimeout(() => {
+              fetchJobData();
+            }, 5000); // Poll every 5 seconds
+            return;
+          } else {
+            setError(`No optimization job found with ID: ${jobIdParam}`);
+            setIsLoading(false);
+            return;
+          }
         }
 
         console.log('[ComparisonPage] === JOB FOUND ===');
@@ -171,6 +201,26 @@ const ComparisonPage: React.FC = () => {
           keywords_extracted_count: Array.isArray(data.keywords_extracted) ? data.keywords_extracted.length : 'not array'
         });
 
+        // Check if job is still processing
+        if (data.status === 'pending' || data.status === 'processing') {
+          console.log(`[ComparisonPage] Job still processing: ${data.status}`);
+          
+          if (pollingAttempts < 30) {
+            setPollingAttempts(prev => prev + 1);
+            setIsPolling(true);
+            console.log(`[ComparisonPage] Continuing to poll, attempt ${pollingAttempts + 1}/30`);
+            
+            setTimeout(() => {
+              fetchJobData();
+            }, 5000);
+            return;
+          } else {
+            setError("The optimization is taking longer than expected. Please try again later.");
+            setIsLoading(false);
+            return;
+          }
+        }
+
         // Check if job failed
         if (data.status === 'error') {
           console.error('[ComparisonPage] Job failed:', data.error_message);
@@ -179,17 +229,10 @@ const ComparisonPage: React.FC = () => {
           return;
         }
 
-        // Check if job is still processing
-        if (data.status === 'pending' || data.status === 'processing') {
-          console.log(`[ComparisonPage] Job still processing: ${data.status}`);
-          setError("The optimization is still in progress. Please try again in a moment.");
-          setIsLoading(false);
-          return;
-        }
-
         // Job completed successfully
         console.log('[ComparisonPage] === PROCESSING COMPLETED JOB ===');
         setJobData(data);
+        setIsPolling(false);
 
         // Update context
         if (data.enhanced_resume_id) {
@@ -248,6 +291,8 @@ const ComparisonPage: React.FC = () => {
       }
     };
 
+    // Reset polling attempts when dependencies change
+    setPollingAttempts(0);
     setIsLoading(true);
     fetchJobData();
   }, [jobIdParam, user?.id, setContextEnhancedResumeId, setContextJobId, setOptimizationResult]);
@@ -367,6 +412,8 @@ const ComparisonPage: React.FC = () => {
   const handleRetry = () => {
     console.log('[ComparisonPage] === RETRY INITIATED ===');
     setError(null);
+    setPollingAttempts(0);
+    setIsPolling(false);
     setIsLoading(true);
     // The useEffect will automatically trigger and refetch
   };
@@ -374,13 +421,14 @@ const ComparisonPage: React.FC = () => {
   console.log('[ComparisonPage] === RENDER DECISION ===');
   console.log('[ComparisonPage] Render state:', {
     isLoading,
+    isPolling,
     error,
     hasOptimizationResult: !!optimizationResult,
     pdfUrl
   });
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isPolling) {
     console.log('[ComparisonPage] Rendering loading state');
     return (
       <div className="min-h-screen bg-draft-bg">
@@ -388,15 +436,26 @@ const ComparisonPage: React.FC = () => {
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
           <div className="flex flex-col items-center max-w-md text-center">
             <div className="flex items-center mb-4">
-              <Loader className="h-8 w-8 animate-spin text-primary mr-3" />
+              {isPolling ? (
+                <RefreshCw className="h-8 w-8 animate-spin text-primary mr-3" />
+              ) : (
+                <Loader className="h-8 w-8 animate-spin text-primary mr-3" />
+              )}
               <div>
                 <p className="text-base text-foreground font-medium">
-                  Loading optimization results...
+                  {isPolling ? 'Waiting for optimization to complete...' : 'Loading optimization results...'}
                 </p>
+                {isPolling && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Checking progress... (Attempt {pollingAttempts}/30)
+                  </p>
+                )}
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Please wait while we load your results.
+              {isPolling 
+                ? 'The backend is still processing your resume. This typically takes 1-3 minutes.' 
+                : 'Please wait while we load your results.'}
             </p>
           </div>
         </div>
@@ -420,7 +479,7 @@ const ComparisonPage: React.FC = () => {
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={handleRetry}>
-                <Loader className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Retry
               </Button>
               <Button variant="default" onClick={() => navigate('/')}>
