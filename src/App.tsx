@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ComparisonPage from "./pages/ComparisonPage";
+import Comparison2Page from "./pages/Comparison2Page";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
@@ -61,6 +62,11 @@ const AppRoutes = () => {
       <Route path="/comparison" element={
         <ProtectedRoute>
           <ComparisonPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/comparison2" element={
+        <ProtectedRoute>
+          <Comparison2Page />
         </ProtectedRoute>
       } />
       <Route path="/test2" element={<Test2 />} />

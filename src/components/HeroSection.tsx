@@ -1,13 +1,16 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Circle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
+import OptimizationLoadingModal from '@/components/OptimizationLoadingModal';
 import { usePipelineContext, PipelineState } from '@/contexts/ResumeContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { uploadResume, optimizeResume } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
 
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
@@ -18,6 +21,8 @@ const NOT_UPLOADED = 0,
 const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationJobId, setOptimizationJobId] = useState<string | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,8 +146,7 @@ const HeroSection: React.FC = () => {
       const jobId = optimizeResponse?.data?.job_id;
       if (jobId) {
         console.log("Navigating to comparison page with job_id:", jobId);
-        window.location.href=`/pricing`;
-        // window.location.href=`/comparison?job_id=${jobId}`;
+        navigate(`/comparison?job_id=${jobId}`);
       } else {
         console.error("No job_id in optimization response:", optimizeResponse);
         toast({
@@ -163,6 +167,125 @@ const HeroSection: React.FC = () => {
     }
   };
 
+  const handleOptimizeResume = async () => {
+    // Validation
+    if (!resumeFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please upload a resume file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description empty",
+        description: "Please provide a job description to tailor your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Starting optimization process...");
+    setIsOptimizing(true);
+
+    try {
+      // Step 1: Upload resume
+      const uploadResponse = await uploadResume(resumeFile, user.id);
+      
+      if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
+        console.error("Upload failed:", uploadResponse?.error);
+        toast({
+          title: "Upload failed",
+          description: uploadResponse?.error || "Failed to upload resume",
+          variant: "destructive",
+        });
+        setIsOptimizing(false);
+        return;
+      }
+
+      const resumeId = uploadResponse.data.resume_id;
+      console.log("Upload successful, resume ID:", resumeId);
+
+      // Step 2: Optimize resume
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+      
+      if (optimizeResponse?.error) {
+        console.error("Optimization failed:", optimizeResponse.error);
+        toast({
+          title: "Optimization failed",
+          description: optimizeResponse.error,
+          variant: "destructive",
+        });
+        setIsOptimizing(false);
+        return;
+      }
+
+      const jobId = optimizeResponse?.data?.job_id;
+      if (jobId) {
+        setOptimizationJobId(jobId);
+        // Start checking status
+        checkOptimizationStatus(jobId);
+      } else {
+        console.error("No job_id in optimization response:", optimizeResponse);
+        toast({
+          title: "Processing incomplete",
+          description: "Resume was processed but could not get job ID.",
+          variant: "destructive",
+        });
+        setIsOptimizing(false);
+      }
+      
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsOptimizing(false);
+    }
+  };
+
+  const checkOptimizationStatus = async (jobId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('optimization_jobs')
+        .select('status')
+        .eq('id', jobId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking status:', error);
+        setIsOptimizing(false);
+        return;
+      }
+
+      if (data?.status === 'completed') {
+        console.log('Optimization completed, navigating to comparison2');
+        setIsOptimizing(false);
+        navigate(`/comparison2?job_id=${jobId}`);
+      } else {
+        // Continue checking every 2 seconds
+        setTimeout(() => checkOptimizationStatus(jobId), 2000);
+      }
+    } catch (error) {
+      console.error('Error checking optimization status:', error);
+      setIsOptimizing(false);
+    }
+  };
+
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       {/* Full-page loading overlay */}
       {isProcessing && (
@@ -174,6 +297,12 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Optimization loading modal */}
+      <OptimizationLoadingModal 
+        isOpen={isOptimizing} 
+        onOpenChange={setIsOptimizing}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left side - Hero text */}
@@ -216,7 +345,7 @@ const HeroSection: React.FC = () => {
                   variant="ghost" 
                   className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" 
                   onClick={handleUploadClick}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isOptimizing}
                 >
                   {resumeFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
@@ -265,26 +394,48 @@ const HeroSection: React.FC = () => {
                       Write <ArrowRight size={16} />
                     </Button>
                     
-                    <Button 
-                      onClick={handleMakeItBetter} 
-                      disabled={isProcessing}
-                      variant="outline" 
-                      className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
-                    >
-                      {isProcessing ? "Processing..." : "Make it better"}
-                    </Button>
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        onClick={handleMakeItBetter} 
+                        disabled={isProcessing || isOptimizing}
+                        variant="outline" 
+                        className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      >
+                        {isProcessing ? "Processing..." : "Make it better"}
+                      </Button>
+                      
+                      <Button 
+                        onClick={handleOptimizeResume} 
+                        disabled={isProcessing || isOptimizing}
+                        variant="outline" 
+                        size="icon"
+                        className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
+                      >
+                        <Circle size={16} />
+                      </Button>
+                    </div>
                   </div>
                 )}
                 
                 {isWriteExpanded && (
-                  <div className="mt-4 pt-4 flex justify-center">
+                  <div className="mt-4 pt-4 flex justify-center gap-2">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={isProcessing}
+                      disabled={isProcessing || isOptimizing}
                       variant="outline" 
-                      className="mt-4 self-center border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
                       {isProcessing ? "Processing..." : "Make it better"}
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleOptimizeResume} 
+                      disabled={isProcessing || isOptimizing}
+                      variant="outline" 
+                      size="icon"
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
+                    >
+                      <Circle size={16} />
                     </Button>
                   </div>
                 )}
