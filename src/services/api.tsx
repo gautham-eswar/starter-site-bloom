@@ -84,14 +84,18 @@ export async function uploadResume(file: File, userId: string) {
 // Optimize resume with job description
 export async function optimizeResume(resumeId: string, jobDescription: string, userId: string) {
   console.log(`Optimizing resume ID: ${resumeId} for user ID: ${userId} with job description.`);
+  console.log(`JOB DESC: `, jobDescription);
   const formData = new FormData();
   formData.append("resume_id", resumeId);
   formData.append("user_id", userId);
   formData.append("job_description", jobDescription);
-  return await apiRequest("/api/optimize", {
+  console.log(`FORM DATA: `, formData);
+  const res=  await apiRequest("/api/optimize", {
     method: "POST",
     body: formData,
   });
+  console.log("OPTIMIZE RESUME: ", res);
+  return res;
 }
 
 // Download optimized resume
