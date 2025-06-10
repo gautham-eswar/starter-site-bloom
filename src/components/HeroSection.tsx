@@ -112,8 +112,9 @@ const HeroSection: React.FC = () => {
 
       // Step 2: Optimize resume
       console.log("Step 2: Optimizing resume...");
+      let optimizeResponse;
       try {
-        const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+        optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
         console.log("OPTIMIZE RES", optimizeResponse);
       } catch (error) {
         console.log("NOT OPTIMIZED BC OF ", error);
