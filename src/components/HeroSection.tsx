@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload } from 'lucide-react';
@@ -118,6 +117,8 @@ const HeroSection: React.FC = () => {
         console.log("OPTIMIZE RES", optimizeResponse);
       } catch (error) {
         console.log("NOT OPTIMIZED BC OF ", error);
+        setIsProcessing(false);
+        return;
       }
       
       if (optimizeResponse?.error) {
@@ -133,17 +134,21 @@ const HeroSection: React.FC = () => {
 
       console.log("Optimization successful:", optimizeResponse);
       
-      // Redirect to comparison page
-      if (optimizeResponse?.data?.job_id) {
-        navigate(`/comparison?job_id=${optimizeResponse.data.job_id}`);
+      // Reset processing state before navigation
+      setIsProcessing(false);
+      
+      // Navigate to comparison page with job_id
+      const jobId = optimizeResponse?.data?.job_id;
+      if (jobId) {
+        console.log("Navigating to comparison page with job_id:", jobId);
+        navigate(`/comparison?job_id=${jobId}`);
       } else {
-        console.error("No job_id in optimization response");
+        console.error("No job_id in optimization response:", optimizeResponse);
         toast({
           title: "Processing incomplete",
           description: "Resume was processed but could not navigate to results.",
           variant: "destructive",
         });
-        setIsProcessing(false);
       }
       
     } catch (error) {
