@@ -141,7 +141,8 @@ const HeroSection: React.FC = () => {
       const jobId = optimizeResponse?.data?.job_id;
       if (jobId) {
         console.log("Navigating to comparison page with job_id:", jobId);
-        navigate(`/comparison?job_id=${jobId}`);
+        // navigate(`/comparison?job_id=${jobId}`);
+        window.href(`/comparison?job_id=${jobId}`);
       } else {
         console.error("No job_id in optimization response:", optimizeResponse);
         toast({
