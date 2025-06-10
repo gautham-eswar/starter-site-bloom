@@ -434,7 +434,10 @@ const ComparisonPage: React.FC = () => {
       <div className="min-h-screen bg-draft-bg">
         <Header />
         <div className="h-[calc(100vh-80px)] flex items-center justify-center">
-          <div className="flex flex-col items-center max-w-md text-center">
+          <p className="text-base text-foreground font-medium">
+            Loaded comparison page
+          </p>
+          {/* <div className="flex flex-col items-center max-w-md text-center">
             <div className="flex items-center mb-4">
               {isPolling ? (
                 <RefreshCw className="h-8 w-8 animate-spin text-primary mr-3" />
@@ -456,7 +459,7 @@ const ComparisonPage: React.FC = () => {
               {isPolling 
                 ? 'The backend is still processing your resume. This typically takes 1-3 minutes.' 
                 : 'Please wait while we load your results.'}
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
