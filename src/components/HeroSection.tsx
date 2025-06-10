@@ -134,13 +134,13 @@ const HeroSection: React.FC = () => {
 
       console.log("Optimization successful:", optimizeResponse);
       
+      // Reset processing state before navigation
+      setIsProcessing(false);
+      
       // Navigate to comparison page with job_id
       const jobId = optimizeResponse?.data?.job_id;
       if (jobId) {
         console.log("Navigating to comparison page with job_id:", jobId);
-        // Reset processing state before navigation
-        setIsProcessing(false);
-        // Use React Router's navigate function instead of window.href
         navigate(`/comparison?job_id=${jobId}`);
       } else {
         console.error("No job_id in optimization response:", optimizeResponse);
@@ -149,7 +149,6 @@ const HeroSection: React.FC = () => {
           description: "Resume was processed but could not navigate to results.",
           variant: "destructive",
         });
-        setIsProcessing(false);
       }
       
     } catch (error) {
