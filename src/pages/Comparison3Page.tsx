@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -71,7 +70,7 @@ const Comparison3Page: React.FC = () => {
     }
   };
 
-  // Handle resume ID lookup
+  // Handle resume ID lookup - now supports both old and enhanced resume IDs
   const handleLoadResume = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -96,9 +95,37 @@ const Comparison3Page: React.FC = () => {
     setIsLoadingResume(true);
     
     try {
+      let targetResumeId = resumeId.trim();
+      
+      // First, check if this is an old resume ID by looking it up in optimization_jobs
+      console.log(`Checking if ${resumeId} is an old resume ID...`);
+      
+      const { data: optimizationJob, error: jobError } = await supabase
+        .from('optimization_jobs')
+        .select('enhanced_resume_id')
+        .eq('resume_id', resumeId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (jobError) {
+        console.error('Error checking optimization jobs:', jobError);
+      }
+      
+      if (optimizationJob?.enhanced_resume_id) {
+        console.log(`Found enhanced resume ID: ${optimizationJob.enhanced_resume_id}`);
+        targetResumeId = optimizationJob.enhanced_resume_id;
+        toast({
+          title: "Enhanced Resume Found",
+          description: `Using enhanced resume ID: ${targetResumeId}`,
+          variant: "default"
+        });
+      } else {
+        console.log(`No enhanced resume found, treating ${resumeId} as direct resume ID`);
+      }
+      
       const bucketName = RESUME_BUCKET;
-      const fileName = `enhanced_resume_${resumeId}.pdf`;
-      const storagePath = `Resumes/${user.id}/${resumeId}/${fileName}`;
+      const fileName = `enhanced_resume_${targetResumeId}.pdf`;
+      const storagePath = `Resumes/${user.id}/${targetResumeId}/${fileName}`;
       
       console.log(`Checking for resume at path: ${storagePath}`);
       
@@ -106,7 +133,7 @@ const Comparison3Page: React.FC = () => {
       const { data: files, error: listError } = await supabase
         .storage
         .from(bucketName)
-        .list(`Resumes/${user.id}/${resumeId}`, {
+        .list(`Resumes/${user.id}/${targetResumeId}`, {
           limit: 100,
           search: fileName
         });
@@ -117,7 +144,7 @@ const Comparison3Page: React.FC = () => {
       }
       
       if (!files || files.length === 0) {
-        throw new Error(`File "${fileName}" not found in path "Resumes/${user.id}/${resumeId}".`);
+        throw new Error(`File "${fileName}" not found in path "Resumes/${user.id}/${targetResumeId}".`);
       }
 
       const targetFile = files.find(file => file.name === fileName);
@@ -143,7 +170,9 @@ const Comparison3Page: React.FC = () => {
         
         toast({
           title: "Resume Found!",
-          description: "Resume loaded successfully from storage",
+          description: targetResumeId === resumeId ? 
+            "Resume loaded successfully from storage" : 
+            `Enhanced resume loaded successfully (ID: ${targetResumeId})`,
           variant: "default"
         });
       } else {
