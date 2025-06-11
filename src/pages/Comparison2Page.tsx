@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -162,15 +161,30 @@ const Comparison2Page: React.FC = () => {
     setPdfUrl(null);
 
     try {
-      // Find optimization job by enhanced_resume_id
-      const { data, error } = await supabase
+      // First try to find optimization job by resume_id
+      let { data, error } = await supabase
         .from('optimization_jobs')
         .select('*')
-        .eq('enhanced_resume_id', resumeId)
+        .eq('resume_id', resumeId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      // If not found by resume_id, try enhanced_resume_id
+      if (!data && !error) {
+        const enhancedResult = await supabase
+          .from('optimization_jobs')
+          .select('*')
+          .eq('enhanced_resume_id', resumeId)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        data = enhancedResult.data;
+        error = enhancedResult.error;
+      }
 
       if (error) {
         console.error('Error fetching optimization data:', error);
@@ -180,6 +194,28 @@ const Comparison2Page: React.FC = () => {
 
       if (!data) {
         setError(`No optimization job found for resume ID: ${resumeId}`);
+        return;
+      }
+
+      // Check status and provide specific messaging
+      if (data.status !== 'completed') {
+        const statusMessage = data.status === 'processing' 
+          ? `Optimization job found but is still processing. Current status: ${data.status}`
+          : data.status === 'error'
+          ? `Optimization job found but failed with error: ${data.error_message || 'Unknown error'}`
+          : `Optimization job found with status: ${data.status}`;
+        
+        setError(statusMessage);
+        
+        // Still set the data so user can see the status
+        const transformedData: OptimizationData = {
+          id: data.id,
+          status: data.status,
+          modifications: [],
+          enhanced_resume_id: data.enhanced_resume_id || '',
+          error_message: data.error_message || undefined
+        };
+        setOptimizationData(transformedData);
         return;
       }
 
@@ -201,6 +237,16 @@ const Comparison2Page: React.FC = () => {
       enhanced_resume_id: data.enhanced_resume_id || '',
       error_message: data.error_message || undefined
     };
+
+    // Safe conversion for modifications
+    if (data.modifications) {
+      try {
+        transformedData.modifications = parseModifications(data.modifications);
+      } catch (err) {
+        console.warn('[Comparison2Page] Error parsing modifications:', err);
+        transformedData.modifications = [];
+      }
+    }
 
     setOptimizationData(transformedData);
     setJobData(data);
@@ -372,7 +418,7 @@ const Comparison2Page: React.FC = () => {
             <CardContent>
               <div className="flex gap-4">
                 <Input
-                  placeholder="Enter resume ID (e.g., user123/resume456)"
+                  placeholder="Enter resume ID (e.g., resume_1749550785_d3dec52c)"
                   value={resumeIdInput}
                   onChange={(e) => setResumeIdInput(e.target.value)}
                   className="flex-1"
@@ -441,8 +487,8 @@ const Comparison2Page: React.FC = () => {
           </div>
         )}
 
-        {/* Main Content */}
-        {optimizationResult && !isLoading && !error && (
+        {/* Main Content - Only show if status is completed */}
+        {optimizationResult && !isLoading && !error && optimizationData?.status === 'completed' && (
           <main className="max-w-[1440px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Left side - Score Summary and Improvements */}
