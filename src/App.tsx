@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ComparisonPage from "./pages/ComparisonPage";
 import Comparison2Page from "./pages/Comparison2Page";
+import Comparison3Page from "./pages/Comparison3Page";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
@@ -69,6 +70,7 @@ const AppRoutes = () => {
           <Comparison2Page />
         </ProtectedRoute>
       } />
+      <Route path="/comparison3" element={<Comparison3Page />} />
       <Route path="/test2" element={<Test2 />} />
       <Route path="/test3" element={<Test3 />} />
       <Route path="/auth" element={<Auth />} />
