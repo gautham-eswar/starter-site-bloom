@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -244,16 +243,51 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   };
 
   // Handle PDF load error
-  const onDocumentLoadError = (error: Error) => {
-    addLog(`PDF.js load error: ${error.message} (URL: ${pdfUrl})`);
-    setError(`Failed to load PDF content: ${error.message}. Please check if the URL is valid and the file is a proper PDF.`);
+  const onDocumentLoadError = (error: any) => {
+    // Log the full error object to understand its structure
+    console.error('PDF.js load error object:', error);
+    addLog(`PDF.js load error object: ${JSON.stringify(error, null, 2)}`);
+    
+    let errorMessage = 'Failed to load PDF content';
+    
+    if (error && typeof error === 'object') {
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.name) {
+        errorMessage = `${error.name}: ${error.toString()}`;
+      } else {
+        errorMessage = `PDF load failed: ${JSON.stringify(error)}`;
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
+    addLog(`PDF.js load error: ${errorMessage} (URL: ${pdfUrl})`);
+    setError(`${errorMessage}. Please check if the URL is valid and the file is a proper PDF.`);
     setLoading(false);
   };
 
   // Handle page render error
-  const onPageRenderError = (error: Error) => {
-    addLog(`PDF.js page render error: ${error.message}`);
-    setError(`Failed to render PDF page: ${error.message}`);
+  const onPageRenderError = (error: any) => {
+    console.error('PDF.js page render error object:', error);
+    addLog(`PDF.js page render error object: ${JSON.stringify(error, null, 2)}`);
+    
+    let errorMessage = 'Failed to render PDF page';
+    
+    if (error && typeof error === 'object') {
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.name) {
+        errorMessage = `${error.name}: ${error.toString()}`;
+      } else {
+        errorMessage = `Page render failed: ${JSON.stringify(error)}`;
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
+    addLog(`PDF.js page render error: ${errorMessage}`);
+    setError(`Failed to render PDF page: ${errorMessage}`);
   };
   
   // Navigation functions
@@ -356,7 +390,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
         ) : error ? (
           <div className="p-6 bg-white rounded-lg shadow-md max-w-md text-center">
             <p className="text-xl font-bold text-red-600 mb-2">Error Loading PDF</p>
-            <p className="text-gray-700 mb-4 whitespace-pre-wrap">{error}</p>
+            <p className="text-gray-700 mb-4 whitespace-pre-wrap break-words">{error}</p>
             <Button onClick={fetchPdfUrl} disabled={!resumeId || !fileName}>Try Again</Button>
           </div>
         ) : !pdfUrl ? (
