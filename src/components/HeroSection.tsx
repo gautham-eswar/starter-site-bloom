@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Upload, Circle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
 import OptimizationLoadingModal from '@/components/OptimizationLoadingModal';
@@ -22,6 +21,7 @@ const HeroSection: React.FC = () => {
   const [isWriteExpanded, setIsWriteExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isPollingForCompletion, setIsPollingForCompletion] = useState(false);
   const [optimizationJobId, setOptimizationJobId] = useState<string | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
@@ -257,6 +257,125 @@ const HeroSection: React.FC = () => {
     }
   };
 
+  const handleSquareButtonOptimize = async () => {
+    // Validation
+    if (!resumeFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please upload a resume file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description empty",
+        description: "Please provide a job description to tailor your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Starting square button optimization process...");
+    setIsPollingForCompletion(true);
+
+    try {
+      // Step 1: Upload resume
+      const uploadResponse = await uploadResume(resumeFile, user.id);
+      
+      if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
+        console.error("Upload failed:", uploadResponse?.error);
+        toast({
+          title: "Upload failed",
+          description: uploadResponse?.error || "Failed to upload resume",
+          variant: "destructive",
+        });
+        setIsPollingForCompletion(false);
+        return;
+      }
+
+      const resumeId = uploadResponse.data.resume_id;
+      console.log("Upload successful, resume ID:", resumeId);
+
+      // Step 2: Optimize resume
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+      
+      if (optimizeResponse?.error) {
+        console.error("Optimization failed:", optimizeResponse.error);
+        toast({
+          title: "Optimization failed",
+          description: optimizeResponse.error,
+          variant: "destructive",
+        });
+        setIsPollingForCompletion(false);
+        return;
+      }
+
+      const jobId = optimizeResponse?.data?.job_id;
+      if (jobId) {
+        // Start polling for completion and navigate to comparison3
+        pollForCompletionAndNavigate(resumeId);
+      } else {
+        console.error("No job_id in optimization response:", optimizeResponse);
+        toast({
+          title: "Processing incomplete",
+          description: "Resume was processed but could not get job ID.",
+          variant: "destructive",
+        });
+        setIsPollingForCompletion(false);
+      }
+      
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsPollingForCompletion(false);
+    }
+  };
+
+  const pollForCompletionAndNavigate = async (resumeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('optimization_jobs')
+        .select('status, enhanced_resume_id')
+        .eq('resume_id', resumeId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking status:', error);
+        setIsPollingForCompletion(false);
+        return;
+      }
+
+      if (data?.status === 'completed' && data?.enhanced_resume_id) {
+        console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', data.enhanced_resume_id);
+        setIsPollingForCompletion(false);
+        // Navigate to comparison3 with the enhanced resume ID as a URL parameter
+        navigate(`/comparison3?resume_id=${data.enhanced_resume_id}`);
+      } else {
+        // Continue polling every 2 seconds
+        setTimeout(() => pollForCompletionAndNavigate(resumeId), 2000);
+      }
+    } catch (error) {
+      console.error('Error polling for completion:', error);
+      setIsPollingForCompletion(false);
+    }
+  };
+
   const checkOptimizationStatus = async (jobId: string) => {
     try {
       const { data, error } = await supabase
@@ -294,6 +413,17 @@ const HeroSection: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
             <h3 className="text-lg font-medium text-draft-green">Processing your resume...</h3>
             <p className="text-draft-text mt-2">This may take a few moments.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Polling for completion loading overlay */}
+      {isPollingForCompletion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
+            <h3 className="text-lg font-medium text-draft-green">Processing your resume...</h3>
+            <p className="text-draft-text mt-2">Please wait while we optimize your resume and prepare the PDF viewer.</p>
           </div>
         </div>
       )}
@@ -345,7 +475,7 @@ const HeroSection: React.FC = () => {
                   variant="ghost" 
                   className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" 
                   onClick={handleUploadClick}
-                  disabled={isProcessing || isOptimizing}
+                  disabled={isProcessing || isOptimizing || isPollingForCompletion}
                 >
                   {resumeFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
@@ -397,7 +527,7 @@ const HeroSection: React.FC = () => {
                     <div className="flex gap-2 mt-4">
                       <Button 
                         onClick={handleMakeItBetter} 
-                        disabled={isProcessing || isOptimizing}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
                         variant="outline" 
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                       >
@@ -406,12 +536,22 @@ const HeroSection: React.FC = () => {
                       
                       <Button 
                         onClick={handleOptimizeResume} 
-                        disabled={isProcessing || isOptimizing}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
                         variant="outline" 
                         size="icon"
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
                       >
                         <Circle size={16} />
+                      </Button>
+
+                      <Button 
+                        onClick={handleSquareButtonOptimize} 
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                        variant="outline" 
+                        size="icon"
+                        className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      >
+                        <Square size={16} />
                       </Button>
                     </div>
                   </div>
@@ -421,7 +561,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center gap-2">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={isProcessing || isOptimizing}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
                       variant="outline" 
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -430,12 +570,22 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleOptimizeResume} 
-                      disabled={isProcessing || isOptimizing}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
                       variant="outline" 
                       size="icon"
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
                     >
                       <Circle size={16} />
+                    </Button>
+
+                    <Button 
+                      onClick={handleSquareButtonOptimize} 
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                      variant="outline" 
+                      size="icon"
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                    >
+                      <Square size={16} />
                     </Button>
                   </div>
                 )}
