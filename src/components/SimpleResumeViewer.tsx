@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -9,8 +10,11 @@ import { Loader } from 'lucide-react';
 import { RESUME_BUCKET } from '@/services/supabaseSetup';
 import { useAuth } from '@/components/auth/AuthProvider';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// Configure PDF.js worker with correct path
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 interface SimpleResumeViewerProps {
   resumeId: string; // This should be just the resume ID, e.g., "resume_1749550838_31a24cf1"
@@ -46,9 +50,10 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
 
   // Memoize PDF.js options to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+    cMapUrl: '/cmaps/',
     cMapPacked: true,
-    standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+    standardFontDataUrl: '/standard_fonts/',
+    withCredentials: false,
   }), []);
 
   // Function to fetch PDF URL
@@ -77,13 +82,17 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       if (publicData && publicData.publicUrl) {
         addLog(`Got public URL: ${publicData.publicUrl}`);
         // Test if URL is accessible before setting it
-        const testResponse = await fetch(publicData.publicUrl, { method: 'HEAD' });
-        if (testResponse.ok) {
-          addLog(`Public URL is accessible (${testResponse.status}). Setting PDF URL.`);
-          setPdfUrl(publicData.publicUrl);
-          return;
-        } else {
-          addLog(`Public URL not accessible (${testResponse.status}). Trying signed URL.`);
+        try {
+          const testResponse = await fetch(publicData.publicUrl, { method: 'HEAD' });
+          if (testResponse.ok) {
+            addLog(`Public URL is accessible (${testResponse.status}). Setting PDF URL.`);
+            setPdfUrl(publicData.publicUrl);
+            return;
+          } else {
+            addLog(`Public URL not accessible (${testResponse.status}). Trying signed URL.`);
+          }
+        } catch (fetchError) {
+          addLog(`Public URL test failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}. Trying signed URL.`);
         }
       } else {
         addLog('No public URL returned or structure is unexpected. Trying signed URL.');
@@ -229,9 +238,22 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setPageNumber(1);
-    setLoading(false); // Ensure loading is false on success
-    setError(null); // Clear any previous errors
+    setLoading(false);
+    setError(null);
     addLog(`PDF loaded successfully with ${numPages} pages`);
+  };
+
+  // Handle PDF load error
+  const onDocumentLoadError = (error: Error) => {
+    addLog(`PDF.js load error: ${error.message} (URL: ${pdfUrl})`);
+    setError(`Failed to load PDF content: ${error.message}. Please check if the URL is valid and the file is a proper PDF.`);
+    setLoading(false);
+  };
+
+  // Handle page render error
+  const onPageRenderError = (error: Error) => {
+    addLog(`PDF.js page render error: ${error.message}`);
+    setError(`Failed to render PDF page: ${error.message}`);
   };
   
   // Navigation functions
@@ -347,11 +369,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
             <Document
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={(pdfJsError) => {
-                addLog(`PDF.js load error: ${pdfJsError.message} (URL: ${pdfUrl})`);
-                setError(`Failed to load PDF content: ${pdfJsError.message}. Please check if the URL is valid and the file is a proper PDF.`);
-                setLoading(false); // Ensure loading is false on error
-              }}
+              onLoadError={onDocumentLoadError}
               loading={
                 <div className="flex flex-col items-center justify-center p-6">
                   <Loader className="h-8 w-8 animate-spin text-gray-700 mb-2" />
@@ -359,7 +377,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
                 </div>
               }
               options={pdfOptions}
-              key={pdfUrl} // Add key to force re-render when URL changes
+              key={pdfUrl}
             >
               <Page 
                 pageNumber={pageNumber} 
@@ -367,10 +385,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
                 className="pdf-page"
-                onRenderError={(error) => {
-                    addLog(`PDF.js page render error: ${error.message}`);
-                    setError(`Failed to render PDF page: ${error.message}`);
-                }}
+                onRenderError={onPageRenderError}
               />
             </Document>
           </div>
