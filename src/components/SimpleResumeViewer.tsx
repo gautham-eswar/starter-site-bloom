@@ -6,17 +6,20 @@ import { ArrowLeft, ArrowRight, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader } from 'lucide-react';
-import { RESUME_BUCKET } from '@/services/supabaseSetup'; // Import RESUME_BUCKET
+import { RESUME_BUCKET } from '@/services/supabaseSetup';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface SimpleResumeViewerProps {
-  resumeId: string; // This should be the folder path, e.g., "user123/actual-resume-id"
-  fileName: string; // This is the actual file name, e.g., "enhanced_resume.pdf"
+  resumeId: string; // This should be just the resume ID, e.g., "resume_1749550838_31a24cf1"
+  fileName: string; // This is the actual file name, e.g., "enhanced_resume_resume_1749550838_31a24cf1.pdf"
 }
 
 const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileName }) => {
+  const { user } = useAuth();
+  
   // State for PDF viewing
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -29,7 +32,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   
   // Debug state
   const [logs, setLogs] = useState<string[]>([]);
-  const [viewLogs, setViewLogs] = useState<boolean>(true); // Default to true for easier debugging initially
+  const [viewLogs, setViewLogs] = useState<boolean>(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // Helper function to add logs
@@ -52,16 +55,16 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   const fetchPdfUrl = async () => {
     setLoading(true);
     setError(null);
-    setPdfUrl(null); // Clear previous URL
-    addLog(`Starting fetch for resumeId (path prefix): ${resumeId}, fileName: ${fileName}`);
+    setPdfUrl(null);
+    addLog(`Starting fetch for resumeId: ${resumeId}, fileName: ${fileName}`);
     
     try {
-      if (!resumeId || !fileName) {
-        throw new Error('Resume ID (path prefix) and file name are required');
+      if (!resumeId || !fileName || !user?.id) {
+        throw new Error('Resume ID, file name, and user authentication are required');
       }
       
-      const bucketName = RESUME_BUCKET; // Use imported RESUME_BUCKET
-      const storagePath = `${resumeId}/${fileName}`; // Corrected storage path
+      const bucketName = RESUME_BUCKET;
+      const storagePath = `Resumes/${user.id}/${resumeId}/${fileName}`;
       addLog(`Accessing bucket: ${bucketName}, path: ${storagePath}`);
 
       // First attempt: Try public URL
@@ -95,7 +98,6 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
         
       if (signedError) {
         addLog(`Signed URL error: ${signedError.message}. Trying download.`);
-        // Don't throw yet, try download as a last resort
       } else if (signedData && signedData.signedUrl) {
         addLog(`Got signed URL: ${signedData.signedUrl}`);
         setPdfUrl(signedData.signedUrl);
@@ -113,7 +115,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
         
       if (downloadError) {
         addLog(`Download error: ${downloadError.message}`);
-        throw downloadError; // If all methods fail, this is the final error
+        throw downloadError;
       }
       
       if (downloadData) {
@@ -141,18 +143,23 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   // Check if the file exists
   const checkFileExists = async () => {
     try {
-      addLog(`Checking if file exists: bucket=${RESUME_BUCKET}, pathPrefix=${resumeId}, fileName=${fileName}`);
+      if (!user?.id) {
+        addLog('No user ID available for file check');
+        setError('User authentication required');
+        return;
+      }
+
+      addLog(`Checking if file exists: bucket=${RESUME_BUCKET}, folder=Resumes/${user.id}/${resumeId}, fileName=${fileName}`);
       
       const bucketName = RESUME_BUCKET;
-      // `resumeId` prop is now the folderPath itself
-      const folderPathToList = resumeId; 
+      const folderPathToList = `Resumes/${user.id}/${resumeId}`;
       
       const { data, error: listError } = await supabase
         .storage
         .from(bucketName)
         .list(folderPathToList, {
-          limit: 100, // List more files in the directory for debugging
-          search: fileName // Search for the specific file
+          limit: 100,
+          search: fileName
         });
         
       if (listError) {
@@ -162,7 +169,7 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       }
       
       if (!data || data.length === 0) {
-        addLog(`File "${fileName}" NOT found in path: "${folderPathToList}" within bucket "${bucketName}". (Searched using .list())`);
+        addLog(`File "${fileName}" NOT found in path: "${folderPathToList}" within bucket "${bucketName}".`);
         setError(`File "${fileName}" not found at path "${folderPathToList}".`);
         return;
       }
@@ -170,12 +177,12 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
       const targetFile = data.find(file => file.name === fileName);
       
       if (targetFile) {
-        addLog(`File "${fileName}" found in "${folderPathToList}"! Size: ${targetFile.metadata?.size || 'unknown'} bytes. Last modified: ${targetFile.metadata?.last_modified || 'unknown'}`);
+        addLog(`File "${fileName}" found in "${folderPathToList}"! Size: ${targetFile.metadata?.size || 'unknown'} bytes.`);
       } else {
-        addLog(`File "${fileName}" NOT found in the listed files from "${folderPathToList}". Check if search pattern in .list() is too restrictive or filename is exact.`);
+        addLog(`File "${fileName}" NOT found in the listed files from "${folderPathToList}".`);
         addLog('Files found in directory:');
         data.forEach(file => addLog(`- ${file.name}`));
-        setError(`File "${fileName}" not found in directory "${folderPathToList}", though other files might exist.`);
+        setError(`File "${fileName}" not found in directory "${folderPathToList}".`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -209,16 +216,15 @@ const SimpleResumeViewer: React.FC<SimpleResumeViewerProps> = ({ resumeId, fileN
   
   // Fetch PDF on component mount and when resumeId or fileName change
   useEffect(() => {
-    if (resumeId && fileName) { // Ensure both are present before fetching
+    if (resumeId && fileName && user?.id) {
       fetchPdfUrl();
     } else {
-      addLog("resumeId or fileName is missing, not fetching PDF.");
-      setError("Resume ID (path prefix) or File Name not provided.");
+      addLog("resumeId, fileName, or user ID is missing, not fetching PDF.");
+      setError("Resume ID, File Name, or user authentication not provided.");
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId, fileName]); // Removed pdfOptions from dependency array as it's stable
-  
+  }, [resumeId, fileName, user?.id]);
+
   // Handle PDF load success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);

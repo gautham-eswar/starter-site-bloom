@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -317,7 +316,7 @@ const Comparison3Page: React.FC = () => {
                     </div>
                   ) : showResumeViewer && user?.id ? (
                     <SimpleResumeViewer 
-                      resumeId={`Resumes/${user.id}/${resumeId}`}
+                      resumeId={resumeId}
                       fileName={`enhanced_resume_${resumeId}.pdf`}
                     />
                   ) : pdfUrl ? (
