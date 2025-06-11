@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
@@ -374,13 +375,28 @@ const HeroSection: React.FC = () => {
 
     try {
       console.log(`Checking optimization status for resume ID: ${resumeId}`);
+      console.log(`Current user ID: ${user?.id}`);
+      console.log(`User authenticated: ${!!user}`);
       
+      // First, let's try to see if there are ANY rows for this resume_id (without user filter)
+      const { data: allRows, error: allRowsError } = await supabase
+        .from('optimization_jobs')
+        .select('*')
+        .eq('resume_id', resumeId);
+
+      console.log('All rows for this resume_id (no user filter):', allRows);
+      console.log('Error fetching all rows:', allRowsError);
+
+      // Now try with user filter
       const { data, error } = await supabase
         .from('optimization_jobs')
-        .select('status, enhanced_resume_id, id')
+        .select('status, enhanced_resume_id, id, user_id')
         .eq('resume_id', resumeId)
         .eq('user_id', user?.id)
         .maybeSingle();
+
+      console.log('Query result with user filter:', data);
+      console.log('Query error:', error);
 
       if (error) {
         console.error('Error checking status:', error);
@@ -393,7 +409,7 @@ const HeroSection: React.FC = () => {
 
       if (!data) {
         console.log('No optimization job found yet, continuing to poll...');
-        setCurrentStatus('No job row found in Supabase yet, continuing to poll...');
+        setCurrentStatus(`No job row found for user ${user?.id}, continuing to poll...`);
         setRowFound(false);
         setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
         return;
