@@ -1,6 +1,6 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Square, Circle, Triangle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import ProgressModal from '@/components/ProgressModal';
 import OptimizationLoadingModal from '@/components/OptimizationLoadingModal';
@@ -33,6 +33,14 @@ const HeroSection: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // New state for triangle button functionality
+  const [isTriangleOptimizing, setIsTriangleOptimizing] = useState(false);
+  const [triangleResumeId, setTriangleResumeId] = useState<string>('');
+  const [statusPollingInterval, setStatusPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [currentJobStatus, setCurrentJobStatus] = useState<string>('');
+  const [jobCreatedAt, setJobCreatedAt] = useState<string>('');
+  const [enhancedResumeId, setEnhancedResumeId] = useState<string>('');
 
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
@@ -355,6 +363,166 @@ const HeroSection: React.FC = () => {
     }
   };
 
+  const handleTriangleOptimize = async () => {
+    // Validation
+    if (!resumeFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please upload a resume file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description empty",
+        description: "Please provide a job description to tailor your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Starting triangle optimization process...");
+    setIsTriangleOptimizing(true);
+    setCurrentJobStatus('Starting optimization...');
+    setTriangleResumeId('');
+    setEnhancedResumeId('');
+
+    try {
+      // Step 1: Upload resume
+      console.log("Triangle: Uploading resume...");
+      const uploadResponse = await uploadResume(resumeFile, user.id);
+      
+      if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
+        console.error("Triangle upload failed:", uploadResponse?.error);
+        toast({
+          title: "Upload failed",
+          description: uploadResponse?.error || "Failed to upload resume",
+          variant: "destructive",
+        });
+        setIsTriangleOptimizing(false);
+        return;
+      }
+
+      const resumeId = uploadResponse.data.resume_id;
+      console.log("Triangle upload successful, resume ID:", resumeId);
+      setTriangleResumeId(resumeId);
+      setCurrentJobStatus('Resume uploaded, starting optimization...');
+
+      // Step 2: Optimize resume
+      console.log("Triangle: Optimizing resume...");
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+      
+      if (optimizeResponse?.error) {
+        console.error("Triangle optimization failed:", optimizeResponse.error);
+        toast({
+          title: "Optimization failed",
+          description: optimizeResponse.error,
+          variant: "destructive",
+        });
+        setIsTriangleOptimizing(false);
+        return;
+      }
+
+      console.log("Triangle optimization request sent, starting status polling...");
+      setCurrentJobStatus('Optimization started, checking status...');
+      
+      // Start polling for status updates
+      startStatusPolling(resumeId);
+      
+    } catch (error) {
+      console.error("Triangle processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsTriangleOptimizing(false);
+    }
+  };
+
+  const startStatusPolling = (resumeId: string) => {
+    // Clear any existing interval
+    if (statusPollingInterval) {
+      clearInterval(statusPollingInterval);
+    }
+
+    const pollStatus = async () => {
+      try {
+        console.log(`Polling status for resume ID: ${resumeId}`);
+        
+        // Query for the optimization job using the same logic as comparison3
+        const { data: job, error } = await supabase
+          .from('optimization_jobs')
+          .select('*')
+          .eq('resume_id', resumeId)
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error polling status:', error);
+          setCurrentJobStatus(`Error: ${error.message}`);
+          return;
+        }
+
+        if (job) {
+          console.log('Found job:', job);
+          setCurrentJobStatus(job.status);
+          setJobCreatedAt(job.created_at);
+          
+          if (job.enhanced_resume_id) {
+            setEnhancedResumeId(job.enhanced_resume_id);
+          }
+
+          // If completed, stop polling and show success
+          if (job.status === 'completed') {
+            if (statusPollingInterval) {
+              clearInterval(statusPollingInterval);
+              setStatusPollingInterval(null);
+            }
+            setIsTriangleOptimizing(false);
+            toast({
+              title: "Optimization Complete!",
+              description: `Enhanced resume ready: ${job.enhanced_resume_id}`,
+              variant: "default",
+            });
+          }
+        } else {
+          setCurrentJobStatus('Job not found yet...');
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        setCurrentJobStatus(`Polling error: ${error}`);
+      }
+    };
+
+    // Poll immediately, then every 5 seconds
+    pollStatus();
+    const interval = setInterval(pollStatus, 5000);
+    setStatusPollingInterval(interval);
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+      }
+    };
+  }, [statusPollingInterval]);
+
   const pollForCompletionAndNavigate = async () => {
     const startTime = pollingStartTime || Date.now();
     const timeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -673,6 +841,16 @@ const HeroSection: React.FC = () => {
                       >
                         <Square size={16} />
                       </Button>
+
+                      <Button 
+                        onClick={handleTriangleOptimize} 
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing}
+                        variant="outline" 
+                        size="icon"
+                        className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      >
+                        <Triangle size={16} />
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -707,6 +885,16 @@ const HeroSection: React.FC = () => {
                     >
                       <Square size={16} />
                     </Button>
+
+                    <Button 
+                      onClick={handleTriangleOptimize} 
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing}
+                      variant="outline" 
+                      size="icon"
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                    >
+                      <Triangle size={16} />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -714,6 +902,38 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Triangle Status Display */}
+      {isTriangleOptimizing && (
+        <div className="mt-4 p-4 bg-draft-bg/50 border border-draft-green/20 rounded-md">
+          <h4 className="text-sm font-medium text-draft-green mb-2">Optimization Status</h4>
+          <div className="space-y-2 text-xs">
+            <div>
+              <span className="font-medium">Resume ID:</span> 
+              <span className="ml-2 font-mono text-draft-green">{triangleResumeId || 'generating...'}</span>
+            </div>
+            <div>
+              <span className="font-medium">Status:</span> 
+              <span className="ml-2 font-mono text-draft-green">{currentJobStatus || 'initializing...'}</span>
+            </div>
+            {jobCreatedAt && (
+              <div>
+                <span className="font-medium">Started:</span> 
+                <span className="ml-2">{new Date(jobCreatedAt).toLocaleTimeString()}</span>
+              </div>
+            )}
+            {enhancedResumeId && (
+              <div>
+                <span className="font-medium">Enhanced Resume ID:</span> 
+                <span className="ml-2 font-mono text-draft-green">{enhancedResumeId}</span>
+              </div>
+            )}
+            <div className="text-gray-500">
+              Updates every 5 seconds
+            </div>
+          </div>
+        </div>
+      )}
     </section>;
 };
 
