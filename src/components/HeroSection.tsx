@@ -460,6 +460,12 @@ const HeroSection: React.FC = () => {
     const pollStatus = async () => {
       try {
         console.log(`Polling status for resume ID: ${resumeId}`);
+        console.log(`Current user ID: ${user?.id}`);
+        
+        // Add debugging for auth state
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        console.log('Auth user:', authUser?.id);
+        console.log('Auth error:', authError);
         
         // Query for the optimization job using the same logic as comparison3
         const { data: job, error } = await supabase
@@ -474,6 +480,16 @@ const HeroSection: React.FC = () => {
         if (error) {
           console.error('Error polling status:', error);
           setCurrentJobStatus(`Error: ${error.message}`);
+          
+          // Try to see what jobs exist for debugging
+          const { data: allJobs, error: allJobsError } = await supabase
+            .from('optimization_jobs')
+            .select('*')
+            .eq('user_id', user?.id)
+            .order('created_at', { ascending: false });
+          
+          console.log('All jobs for this user:', allJobs);
+          console.log('Error fetching all jobs:', allJobsError);
           return;
         }
 
@@ -500,7 +516,18 @@ const HeroSection: React.FC = () => {
             });
           }
         } else {
+          console.log('No job found for resume ID:', resumeId);
           setCurrentJobStatus('Job not found yet...');
+          
+          // Additional debugging - check all jobs in the table
+          const { data: allJobs, error: allJobsError } = await supabase
+            .from('optimization_jobs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+          
+          console.log('Recent jobs in table (any user):', allJobs);
+          console.log('Error:', allJobsError);
         }
       } catch (error) {
         console.error('Polling error:', error);
