@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
@@ -30,6 +29,7 @@ const HeroSection: React.FC = () => {
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
   const [rowFound, setRowFound] = useState<boolean>(false);
   const [hasWaitedInitially, setHasWaitedInitially] = useState<boolean>(false);
+  const [currentResumeId, setCurrentResumeId] = useState<string>(''); // Track the current resume ID
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -297,9 +297,11 @@ const HeroSection: React.FC = () => {
     setPollingStartTime(Date.now());
     setRowFound(false);
     setHasWaitedInitially(false);
+    setCurrentResumeId(''); // Reset resume ID
 
     try {
       // Step 1: Upload resume
+      console.log("Step 1: Uploading resume...");
       const uploadResponse = await uploadResume(resumeFile, user.id);
       
       if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
@@ -315,9 +317,11 @@ const HeroSection: React.FC = () => {
 
       const resumeId = uploadResponse.data.resume_id;
       console.log("Upload successful, resume ID:", resumeId);
+      setCurrentResumeId(resumeId); // Store the resume ID
       setCurrentStatus('Resume uploaded, starting optimization...');
 
       // Step 2: Optimize resume
+      console.log("Step 2: Optimizing resume...");
       const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
       
       if (optimizeResponse?.error) {
@@ -481,6 +485,9 @@ const HeroSection: React.FC = () => {
             <p className="text-draft-text mt-2">Please wait while we optimize your resume and prepare the PDF viewer.</p>
             
             <div className="mt-4 p-3 bg-gray-50 rounded">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Resume ID:</strong> <span className="font-mono text-draft-green">{currentResumeId || 'generating...'}</span>
+              </p>
               <p className="text-sm text-gray-600 mb-2">
                 <strong>Current Status:</strong> <span className="font-mono text-draft-green">{currentStatus || 'initializing...'}</span>
               </p>
