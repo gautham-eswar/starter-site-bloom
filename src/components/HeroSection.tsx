@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
@@ -27,6 +28,8 @@ const HeroSection: React.FC = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [currentStatus, setCurrentStatus] = useState<string>('');
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
+  const [rowFound, setRowFound] = useState<boolean>(false);
+  const [hasWaitedInitially, setHasWaitedInitially] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -290,8 +293,10 @@ const HeroSection: React.FC = () => {
 
     console.log("Starting square button optimization process...");
     setIsPollingForCompletion(true);
-    setCurrentStatus('');
+    setCurrentStatus('Starting optimization...');
     setPollingStartTime(Date.now());
+    setRowFound(false);
+    setHasWaitedInitially(false);
 
     try {
       // Step 1: Upload resume
@@ -310,6 +315,7 @@ const HeroSection: React.FC = () => {
 
       const resumeId = uploadResponse.data.resume_id;
       console.log("Upload successful, resume ID:", resumeId);
+      setCurrentStatus('Resume uploaded, starting optimization...');
 
       // Step 2: Optimize resume
       const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
@@ -325,19 +331,14 @@ const HeroSection: React.FC = () => {
         return;
       }
 
-      const jobId = optimizeResponse?.data?.job_id;
-      if (jobId) {
-        // Start polling for completion and navigate to comparison3
+      console.log("Optimization request sent, starting to poll for completion...");
+      setCurrentStatus('Optimization started, waiting 20 seconds before checking status...');
+      
+      // Wait 20 seconds before starting to check
+      setTimeout(() => {
+        setHasWaitedInitially(true);
         pollForCompletionAndNavigate(resumeId);
-      } else {
-        console.error("No job_id in optimization response:", optimizeResponse);
-        toast({
-          title: "Processing incomplete",
-          description: "Resume was processed but could not get job ID.",
-          variant: "destructive",
-        });
-        setIsPollingForCompletion(false);
-      }
+      }, 20000);
       
     } catch (error) {
       console.error("Processing error:", error);
@@ -372,14 +373,15 @@ const HeroSection: React.FC = () => {
       
       const { data, error } = await supabase
         .from('optimization_jobs')
-        .select('status, enhanced_resume_id')
+        .select('status, enhanced_resume_id, id')
         .eq('resume_id', resumeId)
         .eq('user_id', user?.id)
-        .maybeSingle(); // Use maybeSingle instead of single to handle no rows gracefully
+        .maybeSingle();
 
       if (error) {
         console.error('Error checking status:', error);
-        setCurrentStatus('error');
+        setCurrentStatus(`Error checking status: ${error.message}`);
+        setRowFound(false);
         // Continue polling unless it's a permanent error
         setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
         return;
@@ -387,13 +389,17 @@ const HeroSection: React.FC = () => {
 
       if (!data) {
         console.log('No optimization job found yet, continuing to poll...');
-        setCurrentStatus('pending');
+        setCurrentStatus('No job row found in Supabase yet, continuing to poll...');
+        setRowFound(false);
         setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
         return;
       }
 
+      // Row found!
+      setRowFound(true);
+      console.log('Optimization job found:', data);
       console.log('Current optimization status:', data.status);
-      setCurrentStatus(data.status);
+      setCurrentStatus(`Row found! Status: "${data.status}"`);
 
       if (data.status === 'completed' && data.enhanced_resume_id) {
         console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', data.enhanced_resume_id);
@@ -406,7 +412,7 @@ const HeroSection: React.FC = () => {
       }
     } catch (error) {
       console.error('Error polling for completion:', error);
-      setCurrentStatus('error');
+      setCurrentStatus(`Error: ${error}`);
       setIsPollingForCompletion(false);
       toast({
         title: "Error",
@@ -466,7 +472,7 @@ const HeroSection: React.FC = () => {
         </div>
       )}
 
-      {/* Polling for completion loading overlay with status */}
+      {/* Polling for completion loading overlay with detailed status */}
       {isPollingForCompletion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg text-center max-w-md">
@@ -475,9 +481,25 @@ const HeroSection: React.FC = () => {
             <p className="text-draft-text mt-2">Please wait while we optimize your resume and prepare the PDF viewer.</p>
             
             <div className="mt-4 p-3 bg-gray-50 rounded">
-              <p className="text-sm text-gray-600 mb-1">Status: <span className="font-mono text-draft-green">{currentStatus || 'initializing...'}</span></p>
-              <p className="text-sm text-gray-600">Elapsed: <span className="font-mono">{getElapsedTime()}</span></p>
-              <p className="text-xs text-gray-500 mt-2">Checking every 5 seconds (max 5 minutes)</p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Current Status:</strong> <span className="font-mono text-draft-green">{currentStatus || 'initializing...'}</span>
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Supabase Row Found:</strong> <span className={`font-mono ${rowFound ? 'text-green-600' : 'text-red-600'}`}>
+                  {rowFound ? 'Yes' : 'No'}
+                </span>
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Initial Wait Complete:</strong> <span className={`font-mono ${hasWaitedInitially ? 'text-green-600' : 'text-orange-600'}`}>
+                  {hasWaitedInitially ? 'Yes' : 'Waiting...'}
+                </span>
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Elapsed:</strong> <span className="font-mono">{getElapsedTime()}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                {hasWaitedInitially ? 'Checking every 5 seconds (max 5 minutes)' : 'Will check after 20 second initial wait'}
+              </p>
             </div>
           </div>
         </div>
