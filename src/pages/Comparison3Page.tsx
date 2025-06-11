@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -114,9 +115,13 @@ const Comparison3Page: React.FC = () => {
       if (optimizationJob?.enhanced_resume_id) {
         console.log(`Found enhanced resume ID: ${optimizationJob.enhanced_resume_id}`);
         targetResumeId = optimizationJob.enhanced_resume_id;
+        
+        // Update the resumeId state with the enhanced resume ID
+        setResumeId(targetResumeId);
+        
         toast({
           title: "Enhanced Resume Found",
-          description: `Using enhanced resume ID: ${targetResumeId}`,
+          description: `Updated to enhanced resume ID: ${targetResumeId}`,
           variant: "default"
         });
       } else {
@@ -170,7 +175,7 @@ const Comparison3Page: React.FC = () => {
         
         toast({
           title: "Resume Found!",
-          description: targetResumeId === resumeId ? 
+          description: targetResumeId === resumeId.trim() ? 
             "Resume loaded successfully from storage" : 
             `Enhanced resume loaded successfully (ID: ${targetResumeId})`,
           variant: "default"
