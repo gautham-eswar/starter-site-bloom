@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
@@ -356,7 +355,7 @@ const HeroSection: React.FC = () => {
     }
   };
 
-  const pollForCompletionAndNavigate = async (resumeId: string) => {
+  const pollForCompletionAndNavigate = async () => {
     const startTime = pollingStartTime || Date.now();
     const timeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
     
@@ -374,52 +373,85 @@ const HeroSection: React.FC = () => {
     }
 
     try {
-      console.log(`Checking optimization status for resume ID: ${resumeId}`);
+      console.log(`=== DEBUGGING: Let's see what's actually in the table ===`);
+      console.log(`Current user ID: ${user?.id}`);
       
-      // Changed: Remove .maybeSingle() and get the most recent job for this resume
-      const { data, error } = await supabase
+      // First, let's see ALL jobs for this user (no filters except user_id)
+      const { data: allUserJobs, error: allUserError } = await supabase
         .from('optimization_jobs')
-        .select('status, enhanced_resume_id, id, created_at')
-        .eq('resume_id', resumeId)
+        .select('*')
         .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      console.log('ALL jobs for this user:', allUserJobs);
+      console.log('Error fetching all user jobs:', allUserError);
+
+      // Now let's see ALL jobs in the table (no user filter) to check if anything exists
+      const { data: allJobs, error: allJobsError } = await supabase
+        .from('optimization_jobs')
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(10);
 
-      if (error) {
-        console.error('Error checking status:', error);
-        setCurrentStatus(`Error checking status: ${error.message}`);
-        setRowFound(false);
-        // Continue polling unless it's a permanent error
-        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
-        return;
-      }
+      console.log('ALL recent jobs in table (any user):', allJobs);
+      console.log('Error fetching all jobs:', allJobsError);
 
-      if (!data || data.length === 0) {
-        console.log('No optimization job found yet, continuing to poll...');
-        setCurrentStatus('No job row found in Supabase yet, continuing to poll...');
-        setRowFound(false);
-        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
-        return;
-      }
+      // Now let's try different approaches to find a completed job for this user
+      console.log(`=== TRYING DIFFERENT SEARCH APPROACHES ===`);
+      
+      // Approach 1: Look for ANY status for this user
+      const { data: anyStatus, error: anyStatusError } = await supabase
+        .from('optimization_jobs')
+        .select('*')
+        .eq('user_id', user?.id);
 
-      // Row found! Get the first (most recent) result
-      const jobData = data[0];
-      setRowFound(true);
-      console.log('Optimization job found:', jobData);
-      console.log('Current optimization status:', jobData.status);
-      setCurrentStatus(`Row found! Status: "${jobData.status}"`);
+      console.log('Approach 1 - Any status for user:', anyStatus);
+      console.log('Approach 1 error:', anyStatusError);
 
-      if (jobData.status === 'completed' && jobData.enhanced_resume_id) {
-        console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', jobData.enhanced_resume_id);
-        setIsPollingForCompletion(false);
-        // Navigate to comparison3 with the enhanced resume ID as a URL parameter
-        navigate(`/comparison3?resume_id=${jobData.enhanced_resume_id}`);
+      // Approach 2: Look for completed status (any user) to see if completed jobs exist at all
+      const { data: anyCompleted, error: anyCompletedError } = await supabase
+        .from('optimization_jobs')
+        .select('*')
+        .eq('status', 'completed')
+        .limit(5);
+
+      console.log('Approach 2 - Any completed jobs (any user):', anyCompleted);
+      console.log('Approach 2 error:', anyCompletedError);
+
+      // Approach 3: Look for this user's jobs from the last hour
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: recentJobs, error: recentError } = await supabase
+        .from('optimization_jobs')
+        .select('*')
+        .eq('user_id', user?.id)
+        .gte('created_at', oneHourAgo);
+
+      console.log('Approach 3 - Recent jobs for user (last hour):', recentJobs);
+      console.log('Approach 3 error:', recentError);
+
+      // Update status with what we found
+      if (allUserJobs && allUserJobs.length > 0) {
+        const latestJob = allUserJobs[0];
+        setCurrentStatus(`Found ${allUserJobs.length} job(s). Latest status: "${latestJob.status}"`);
+        setRowFound(true);
+        
+        // If we found a completed job, navigate to it
+        if (latestJob.status === 'completed' && latestJob.enhanced_resume_id) {
+          console.log('SUCCESS: Found completed job, navigating to comparison3');
+          setIsPollingForCompletion(false);
+          navigate(`/comparison3?resume_id=${latestJob.enhanced_resume_id}`);
+          return;
+        }
       } else {
-        // Continue polling every 5 seconds
-        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
+        setCurrentStatus(`No jobs found for user. Total jobs in table: ${allJobs?.length || 0}`);
+        setRowFound(false);
       }
+
+      // Continue polling every 5 seconds
+      setTimeout(() => pollForCompletionAndNavigate(), 5000);
+      
     } catch (error) {
-      console.error('Error polling for completion:', error);
+      console.error('Error in debugging poll:', error);
       setCurrentStatus(`Error: ${error}`);
       setIsPollingForCompletion(false);
       toast({
