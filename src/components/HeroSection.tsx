@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Upload, Square, Circle } from 'lucide-react';
@@ -375,12 +376,14 @@ const HeroSection: React.FC = () => {
     try {
       console.log(`Checking optimization status for resume ID: ${resumeId}`);
       
+      // Changed: Remove .maybeSingle() and get the most recent job for this resume
       const { data, error } = await supabase
         .from('optimization_jobs')
-        .select('status, enhanced_resume_id, id')
+        .select('status, enhanced_resume_id, id, created_at')
         .eq('resume_id', resumeId)
         .eq('user_id', user?.id)
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) {
         console.error('Error checking status:', error);
@@ -391,7 +394,7 @@ const HeroSection: React.FC = () => {
         return;
       }
 
-      if (!data) {
+      if (!data || data.length === 0) {
         console.log('No optimization job found yet, continuing to poll...');
         setCurrentStatus('No job row found in Supabase yet, continuing to poll...');
         setRowFound(false);
@@ -399,17 +402,18 @@ const HeroSection: React.FC = () => {
         return;
       }
 
-      // Row found!
+      // Row found! Get the first (most recent) result
+      const jobData = data[0];
       setRowFound(true);
-      console.log('Optimization job found:', data);
-      console.log('Current optimization status:', data.status);
-      setCurrentStatus(`Row found! Status: "${data.status}"`);
+      console.log('Optimization job found:', jobData);
+      console.log('Current optimization status:', jobData.status);
+      setCurrentStatus(`Row found! Status: "${jobData.status}"`);
 
-      if (data.status === 'completed' && data.enhanced_resume_id) {
-        console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', data.enhanced_resume_id);
+      if (jobData.status === 'completed' && jobData.enhanced_resume_id) {
+        console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', jobData.enhanced_resume_id);
         setIsPollingForCompletion(false);
         // Navigate to comparison3 with the enhanced resume ID as a URL parameter
-        navigate(`/comparison3?resume_id=${data.enhanced_resume_id}`);
+        navigate(`/comparison3?resume_id=${jobData.enhanced_resume_id}`);
       } else {
         // Continue polling every 5 seconds
         setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
