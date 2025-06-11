@@ -11,6 +11,13 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { uploadResume, optimizeResume } from '@/services/api';
 import { supabase } from '@/integrations/supabase/client';
 
+// Diamond icon component
+const DiamondIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+  </svg>
+);
+
 const NOT_UPLOADED = 0,
   UPLOADING = 1,
   UPLOADED = 2,
@@ -41,6 +48,10 @@ const HeroSection: React.FC = () => {
   const [currentJobStatus, setCurrentJobStatus] = useState<string>('');
   const [jobCreatedAt, setJobCreatedAt] = useState<string>('');
   const [enhancedResumeId, setEnhancedResumeId] = useState<string>('');
+
+  // New state for diamond button functionality
+  const [isDiamondOptimizing, setIsDiamondOptimizing] = useState(false);
+  const [diamondStatus, setDiamondStatus] = useState<string>('');
 
   const toggleWriteExpanded = () => {
     setIsWriteExpanded(prev => !prev);
@@ -74,6 +85,110 @@ const HeroSection: React.FC = () => {
 
   const handleJobDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
+  };
+
+  // Diamond button handler - stays on loading page until API completes, then navigates
+  const handleDiamondOptimize = async () => {
+    // Validation
+    if (!resumeFile) {
+      toast({
+        title: "No resume selected",
+        description: "Please upload a resume file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Job description empty",
+        description: "Please provide a job description to tailor your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Starting diamond optimization process...");
+    setIsDiamondOptimizing(true);
+    setDiamondStatus('Uploading resume...');
+
+    try {
+      // Step 1: Upload resume
+      console.log("Diamond: Uploading resume...");
+      const uploadResponse = await uploadResume(resumeFile, user.id);
+      
+      if (uploadResponse?.error || !uploadResponse?.data?.resume_id) {
+        console.error("Diamond upload failed:", uploadResponse?.error);
+        toast({
+          title: "Upload failed",
+          description: uploadResponse?.error || "Failed to upload resume",
+          variant: "destructive",
+        });
+        setIsDiamondOptimizing(false);
+        return;
+      }
+
+      const resumeId = uploadResponse.data.resume_id;
+      console.log("Diamond upload successful, resume ID:", resumeId);
+      setDiamondStatus('Resume uploaded, optimizing...');
+
+      // Step 2: Optimize resume and wait for completion
+      console.log("Diamond: Optimizing resume...");
+      const optimizeResponse = await optimizeResume(resumeId, jobDescription, user.id);
+      
+      if (optimizeResponse?.error) {
+        console.error("Diamond optimization failed:", optimizeResponse.error);
+        toast({
+          title: "Optimization failed",
+          description: optimizeResponse.error,
+          variant: "destructive",
+        });
+        setIsDiamondOptimizing(false);
+        return;
+      }
+
+      // Success! The API has completed processing
+      console.log("Diamond optimization completed successfully:", optimizeResponse);
+      setDiamondStatus('Optimization complete! Navigating...');
+      
+      // Navigate to comparison3 with the enhanced resume ID
+      const enhancedResumeId = optimizeResponse?.data?.enhanced_resume_id;
+      if (enhancedResumeId) {
+        console.log("Navigating to comparison3 with enhanced resume ID:", enhancedResumeId);
+        
+        // Small delay to show the completion message
+        setTimeout(() => {
+          setIsDiamondOptimizing(false);
+          navigate(`/comparison3?resume_id=${enhancedResumeId}`);
+        }, 1000);
+      } else {
+        console.error("No enhanced_resume_id in optimization response:", optimizeResponse);
+        toast({
+          title: "Processing incomplete",
+          description: "Optimization completed but could not get enhanced resume ID.",
+          variant: "destructive",
+        });
+        setIsDiamondOptimizing(false);
+      }
+      
+    } catch (error) {
+      console.error("Diamond processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsDiamondOptimizing(false);
+    }
   };
 
   const handleMakeItBetter = async () => {
@@ -707,6 +822,23 @@ const HeroSection: React.FC = () => {
         </div>
       )}
 
+      {/* Diamond loading modal */}
+      {isDiamondOptimizing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg text-center max-w-md">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
+            <h3 className="text-lg font-medium text-draft-green">Optimizing your resume...</h3>
+            <p className="text-draft-text mt-2">Please wait while we process your resume.</p>
+            
+            <div className="mt-4 p-3 bg-gray-50 rounded">
+              <p className="text-sm text-draft-green font-mono">
+                {diamondStatus || 'Starting...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Polling for completion loading overlay with detailed status */}
       {isPollingForCompletion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -790,7 +922,7 @@ const HeroSection: React.FC = () => {
                   variant="ghost" 
                   className="pl-0 mt-4 text-draft-green dark:text-draft-yellow hover:bg-transparent hover:text-draft-green/80 dark:hover:text-draft-yellow/80 flex items-center gap-1" 
                   onClick={handleUploadClick}
-                  disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                  disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                 >
                   {resumeFile ? "Change File" : "Upload"} <ArrowRight size={16} />
                 </Button>
@@ -842,7 +974,7 @@ const HeroSection: React.FC = () => {
                     <div className="flex gap-2 mt-4">
                       <Button 
                         onClick={handleMakeItBetter} 
-                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                         variant="outline" 
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                       >
@@ -851,7 +983,7 @@ const HeroSection: React.FC = () => {
                       
                       <Button 
                         onClick={handleOptimizeResume} 
-                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                         variant="outline" 
                         size="icon"
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
@@ -861,7 +993,7 @@ const HeroSection: React.FC = () => {
 
                       <Button 
                         onClick={handleSquareButtonOptimize} 
-                        disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                         variant="outline" 
                         size="icon"
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
@@ -871,12 +1003,23 @@ const HeroSection: React.FC = () => {
 
                       <Button 
                         onClick={handleTriangleOptimize} 
-                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing}
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing || isDiamondOptimizing}
                         variant="outline" 
                         size="icon"
                         className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                       >
                         <Triangle size={16} />
+                      </Button>
+
+                      <Button 
+                        onClick={handleDiamondOptimize} 
+                        disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing || isDiamondOptimizing}
+                        variant="outline" 
+                        size="icon"
+                        className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                        title="Process and navigate to comparison"
+                      >
+                        <DiamondIcon size={16} />
                       </Button>
                     </div>
                   </div>
@@ -886,7 +1029,7 @@ const HeroSection: React.FC = () => {
                   <div className="mt-4 pt-4 flex justify-center gap-2">
                     <Button 
                       onClick={handleMakeItBetter} 
-                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                       variant="outline" 
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
@@ -895,7 +1038,7 @@ const HeroSection: React.FC = () => {
                     
                     <Button 
                       onClick={handleOptimizeResume} 
-                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                       variant="outline" 
                       size="icon"
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50 rounded-full"
@@ -905,7 +1048,7 @@ const HeroSection: React.FC = () => {
 
                     <Button 
                       onClick={handleSquareButtonOptimize} 
-                      disabled={isProcessing || isOptimizing || isPollingForCompletion}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isDiamondOptimizing}
                       variant="outline" 
                       size="icon"
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
@@ -915,12 +1058,23 @@ const HeroSection: React.FC = () => {
 
                     <Button 
                       onClick={handleTriangleOptimize} 
-                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing}
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing || isDiamondOptimizing}
                       variant="outline" 
                       size="icon"
                       className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
                     >
                       <Triangle size={16} />
+                    </Button>
+
+                    <Button 
+                      onClick={handleDiamondOptimize} 
+                      disabled={isProcessing || isOptimizing || isPollingForCompletion || isTriangleOptimizing || isDiamondOptimizing}
+                      variant="outline" 
+                      size="icon"
+                      className="border-draft-green text-draft-green hover:text-draft-green hover:bg-draft-bg/80 dark:border-draft-yellow dark:text-draft-yellow dark:hover:text-draft-yellow dark:hover:bg-draft-footer/50"
+                      title="Process and navigate to comparison"
+                    >
+                      <DiamondIcon size={16} />
                     </Button>
                   </div>
                 )}
