@@ -165,14 +165,11 @@ const HeroSection: React.FC = () => {
       if (enhancedResumeId) {
         console.log("Navigating to comparison3 with enhanced resume ID:", enhancedResumeId);
         
-        // Navigate immediately while keeping loading state until page loads
-        navigate(`/comparison3?resume_id=${enhancedResumeId}`);
-        
-        // Clear loading state after navigation
+        // Small delay to show the completion message
         setTimeout(() => {
           setIsDiamondOptimizing(false);
-          setDiamondStatus('');
-        }, 500);
+          navigate(`/comparison3?resume_id=${enhancedResumeId}`);
+        }, 1000);
       } else {
         console.error("No enhanced_resume_id in optimization response:", optimizeResponse);
         toast({
@@ -825,13 +822,13 @@ const HeroSection: React.FC = () => {
         </div>
       )}
 
-      {/* Diamond loading modal - GLOBAL overlay that persists across navigation */}
+      {/* Diamond loading modal */}
       {isDiamondOptimizing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg text-center max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
             <h3 className="text-lg font-medium text-draft-green">Optimizing your resume...</h3>
-            <p className="text-draft-text mt-2">Please wait while we process your resume and prepare the comparison.</p>
+            <p className="text-draft-text mt-2">Please wait while we process your resume.</p>
             
             <div className="mt-4 p-3 bg-gray-50 rounded">
               <p className="text-sm text-draft-green font-mono">
@@ -1122,5 +1119,3 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
-
-</initial_code>

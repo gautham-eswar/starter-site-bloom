@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,7 +26,7 @@ const Comparison3Page: React.FC = () => {
   const [resumeId, setResumeId] = useState('');
   const [isLoadingResume, setIsLoadingResume] = useState(false);
 
-  // Check for resume_id URL parameter on component mount and auto-load
+  // Check for resume_id URL parameter on component mount
   useEffect(() => {
     const resumeIdFromUrl = searchParams.get('resume_id');
     if (resumeIdFromUrl && user?.id) {
@@ -138,18 +140,18 @@ const Comparison3Page: React.FC = () => {
         
         toast({
           title: "Enhanced Resume Found",
-          description: `Loading enhanced resume: ${finalResumeId}`,
+          description: `Updated to enhanced resume ID: ${finalResumeId}`,
           variant: "default"
         });
       } else {
-        console.log(`No enhanced resume found, treating ${targetResumeId} as direct enhanced resume ID`);
+        console.log(`No enhanced resume found, treating ${targetResumeId} as direct resume ID`);
       }
       
       const bucketName = RESUME_BUCKET;
       const fileName = `enhanced_resume_${finalResumeId}.pdf`;
       const storagePath = `Resumes/${user.id}/${finalResumeId}/${fileName}`;
       
-      console.log(`Looking for enhanced resume at path: ${storagePath}`);
+      console.log(`Checking for resume at path: ${storagePath}`);
       
       // First check if file exists
       const { data: files, error: listError } = await supabase
@@ -166,16 +168,16 @@ const Comparison3Page: React.FC = () => {
       }
       
       if (!files || files.length === 0) {
-        throw new Error(`Enhanced resume file "${fileName}" not found in storage.`);
+        throw new Error(`File "${fileName}" not found in path "Resumes/${user.id}/${finalResumeId}".`);
       }
 
       const targetFile = files.find(file => file.name === fileName);
       
       if (!targetFile) {
-        throw new Error(`Enhanced resume file "${fileName}" not found in directory.`);
+        throw new Error(`File "${fileName}" not found in directory.`);
       }
 
-      console.log(`Enhanced resume file found! Size: ${targetFile.metadata?.size || 'unknown'} bytes`);
+      console.log(`File found! Size: ${targetFile.metadata?.size || 'unknown'} bytes`);
       
       // Get public URL
       const { data: publicData } = supabase
@@ -184,28 +186,28 @@ const Comparison3Page: React.FC = () => {
         .getPublicUrl(storagePath);
       
       if (publicData && publicData.publicUrl) {
-        console.log(`Generated public URL for enhanced resume: ${publicData.publicUrl}`);
+        console.log(`Generated public URL: ${publicData.publicUrl}`);
         
         // Automatically populate the PDF link field and load it
         setPdfLink(publicData.publicUrl);
         setPdfUrl(publicData.publicUrl);
         
         toast({
-          title: "Enhanced Resume Loaded!",
+          title: "Resume Found!",
           description: finalResumeId === targetResumeId ? 
-            "Enhanced resume loaded successfully" : 
-            `Enhanced resume loaded (ID: ${finalResumeId})`,
+            "Resume loaded successfully from storage" : 
+            `Enhanced resume loaded successfully (ID: ${finalResumeId})`,
           variant: "default"
         });
       } else {
-        throw new Error('Failed to generate public URL for the enhanced resume');
+        throw new Error('Failed to generate public URL for the resume');
       }
       
     } catch (err) {
-      console.error('Enhanced resume lookup error:', err);
+      console.error('Resume lookup error:', err);
       toast({
-        title: "Error Loading Enhanced Resume",
-        description: err instanceof Error ? err.message : "Failed to load enhanced resume",
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to load resume",
         variant: "destructive"
       });
     } finally {
