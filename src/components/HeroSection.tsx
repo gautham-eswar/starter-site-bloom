@@ -341,7 +341,7 @@ const HeroSection: React.FC = () => {
       // Wait 20 seconds before starting to check
       setTimeout(() => {
         setHasWaitedInitially(true);
-        pollForCompletionAndNavigate(resumeId);
+        pollForCompletionAndNavigate();
       }, 20000);
       
     } catch (error) {
