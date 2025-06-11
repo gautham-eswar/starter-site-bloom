@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -5,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { LinkIcon, Loader, FileText } from 'lucide-react';
 import Header from '@/components/Header';
 import { DirectPDFViewer } from '@/components/DirectPDFViewer';
-import SimpleResumeViewer from '@/components/SimpleResumeViewer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { RESUME_BUCKET } from '@/services/supabaseSetup';
 
 const Comparison3Page: React.FC = () => {
   const { user } = useAuth();
@@ -20,7 +22,6 @@ const Comparison3Page: React.FC = () => {
   // State for resume ID lookup
   const [resumeId, setResumeId] = useState('');
   const [isLoadingResume, setIsLoadingResume] = useState(false);
-  const [showResumeViewer, setShowResumeViewer] = useState(false);
 
   // Handle PDF link submission
   const handleLoadPdf = (e: React.FormEvent) => {
@@ -53,7 +54,6 @@ const Comparison3Page: React.FC = () => {
       }
 
       setPdfUrl(pdfLink);
-      setShowResumeViewer(false); // Hide resume viewer when showing PDF link
       
       toast({
         title: "Success",
@@ -72,7 +72,7 @@ const Comparison3Page: React.FC = () => {
   };
 
   // Handle resume ID lookup
-  const handleLoadResume = (e: React.FormEvent) => {
+  const handleLoadResume = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!resumeId.trim()) {
@@ -96,19 +96,65 @@ const Comparison3Page: React.FC = () => {
     setIsLoadingResume(true);
     
     try {
-      // Show the resume viewer with the specified format
-      setShowResumeViewer(true);
-      setPdfUrl(null); // Hide PDF link viewer when showing resume
+      const bucketName = RESUME_BUCKET;
+      const fileName = `enhanced_resume_${resumeId}.pdf`;
+      const storagePath = `Resumes/${user.id}/${resumeId}/${fileName}`;
       
-      toast({
-        title: "Loading Resume",
-        description: "Attempting to load resume from storage",
-        variant: "default"
-      });
+      console.log(`Checking for resume at path: ${storagePath}`);
+      
+      // First check if file exists
+      const { data: files, error: listError } = await supabase
+        .storage
+        .from(bucketName)
+        .list(`Resumes/${user.id}/${resumeId}`, {
+          limit: 100,
+          search: fileName
+        });
+        
+      if (listError) {
+        console.error('List error:', listError);
+        throw new Error(`Failed to check file existence: ${listError.message}`);
+      }
+      
+      if (!files || files.length === 0) {
+        throw new Error(`File "${fileName}" not found in path "Resumes/${user.id}/${resumeId}".`);
+      }
+
+      const targetFile = files.find(file => file.name === fileName);
+      
+      if (!targetFile) {
+        throw new Error(`File "${fileName}" not found in directory.`);
+      }
+
+      console.log(`File found! Size: ${targetFile.metadata?.size || 'unknown'} bytes`);
+      
+      // Get public URL
+      const { data: publicData } = supabase
+        .storage
+        .from(bucketName)
+        .getPublicUrl(storagePath);
+      
+      if (publicData && publicData.publicUrl) {
+        console.log(`Generated public URL: ${publicData.publicUrl}`);
+        
+        // Automatically populate the PDF link field and load it
+        setPdfLink(publicData.publicUrl);
+        setPdfUrl(publicData.publicUrl);
+        
+        toast({
+          title: "Resume Found!",
+          description: "Resume loaded successfully from storage",
+          variant: "default"
+        });
+      } else {
+        throw new Error('Failed to generate public URL for the resume');
+      }
+      
     } catch (err) {
+      console.error('Resume lookup error:', err);
       toast({
         title: "Error",
-        description: "Failed to load resume",
+        description: err instanceof Error ? err.message : "Failed to load resume",
         variant: "destructive"
       });
     } finally {
@@ -121,7 +167,6 @@ const Comparison3Page: React.FC = () => {
     setPdfLink('');
     setPdfUrl(null);
     setResumeId('');
-    setShowResumeViewer(false);
   };
 
   return (
@@ -203,9 +248,9 @@ const Comparison3Page: React.FC = () => {
                     ) : (
                       <FileText className="h-4 w-4 mr-2" />
                     )}
-                    Load Resume
+                    Find & Load Resume
                   </Button>
-                  {(pdfUrl || showResumeViewer) && (
+                  {pdfUrl && (
                     <Button 
                       type="button" 
                       variant="outline"
@@ -216,7 +261,7 @@ const Comparison3Page: React.FC = () => {
                   )}
                 </div>
                 <p className="text-sm text-draft-text/70">
-                  Enter a resume ID to look up the PDF in Supabase storage (format: Resumes/user_id/resume_id)
+                  Enter a resume ID to automatically find and load the PDF
                 </p>
                 {!user?.id && (
                   <p className="text-sm text-red-600">
@@ -248,7 +293,7 @@ const Comparison3Page: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-draft-green mb-2">Option 2: Resume ID Lookup</h3>
                     <p className="text-sm text-draft-text">
-                      Enter a resume ID to automatically look up the PDF in storage using the format: Resumes/user_id/resume_id/enhanced_resume_resume_id.pdf
+                      Enter a resume ID to automatically find and load the PDF. This will populate the PDF link above.
                     </p>
                   </div>
                   
@@ -262,35 +307,19 @@ const Comparison3Page: React.FC = () => {
               </Card>
 
               {/* Current PDF Info */}
-              {(pdfUrl || showResumeViewer) && (
+              {pdfUrl && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-draft-green">Current Document</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {pdfUrl && (
-                        <div>
-                          <span className="text-sm font-medium text-draft-text">Source:</span>
-                          <div className="text-xs bg-gray-100 p-2 rounded mt-1">
-                            Direct PDF Link
-                          </div>
-                          <div className="text-xs bg-gray-100 p-2 rounded mt-1 break-all">
-                            {pdfUrl}
-                          </div>
+                      <div>
+                        <span className="text-sm font-medium text-draft-text">PDF URL:</span>
+                        <div className="text-xs bg-gray-100 p-2 rounded mt-1 break-all">
+                          {pdfUrl}
                         </div>
-                      )}
-                      {showResumeViewer && (
-                        <div>
-                          <span className="text-sm font-medium text-draft-text">Source:</span>
-                          <div className="text-xs bg-gray-100 p-2 rounded mt-1">
-                            Resume ID Lookup
-                          </div>
-                          <div className="text-xs bg-gray-100 p-2 rounded mt-1 break-all">
-                            Resumes/{user?.id}/{resumeId}/enhanced_resume_{resumeId}.pdf
-                          </div>
-                        </div>
-                      )}
+                      </div>
                       <div className="flex items-center gap-2 text-sm text-green-600">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         Document loaded successfully
@@ -312,13 +341,10 @@ const Comparison3Page: React.FC = () => {
                   {isLoading || isLoadingResume ? (
                     <div className="h-full flex flex-col items-center justify-center">
                       <Loader className="h-12 w-12 text-draft-green animate-spin mb-4" />
-                      <p className="text-draft-text">Loading PDF...</p>
+                      <p className="text-draft-text">
+                        {isLoadingResume ? "Finding resume..." : "Loading PDF..."}
+                      </p>
                     </div>
-                  ) : showResumeViewer && user?.id ? (
-                    <SimpleResumeViewer 
-                      resumeId={resumeId}
-                      fileName={`enhanced_resume_${resumeId}.pdf`}
-                    />
                   ) : pdfUrl ? (
                     <DirectPDFViewer url={pdfUrl} />
                   ) : (
