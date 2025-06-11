@@ -25,6 +25,8 @@ const HeroSection: React.FC = () => {
   const [optimizationJobId, setOptimizationJobId] = useState<string | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
+  const [currentStatus, setCurrentStatus] = useState<string>('');
+  const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -288,6 +290,8 @@ const HeroSection: React.FC = () => {
 
     console.log("Starting square button optimization process...");
     setIsPollingForCompletion(true);
+    setCurrentStatus('');
+    setPollingStartTime(Date.now());
 
     try {
       // Step 1: Upload resume
@@ -347,32 +351,68 @@ const HeroSection: React.FC = () => {
   };
 
   const pollForCompletionAndNavigate = async (resumeId: string) => {
+    const startTime = pollingStartTime || Date.now();
+    const timeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
+    
+    // Check if we've exceeded the time limit
+    if (Date.now() - startTime > timeLimit) {
+      console.log('Polling timeout reached (5 minutes)');
+      setIsPollingForCompletion(false);
+      setCurrentStatus('timeout');
+      toast({
+        title: "Processing Timeout",
+        description: "The optimization is taking longer than expected. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      console.log(`Checking optimization status for resume ID: ${resumeId}`);
+      
       const { data, error } = await supabase
         .from('optimization_jobs')
         .select('status, enhanced_resume_id')
         .eq('resume_id', resumeId)
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle no rows gracefully
 
       if (error) {
         console.error('Error checking status:', error);
-        setIsPollingForCompletion(false);
+        setCurrentStatus('error');
+        // Continue polling unless it's a permanent error
+        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
         return;
       }
 
-      if (data?.status === 'completed' && data?.enhanced_resume_id) {
+      if (!data) {
+        console.log('No optimization job found yet, continuing to poll...');
+        setCurrentStatus('pending');
+        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
+        return;
+      }
+
+      console.log('Current optimization status:', data.status);
+      setCurrentStatus(data.status);
+
+      if (data.status === 'completed' && data.enhanced_resume_id) {
         console.log('Optimization completed, navigating to comparison3 with enhanced resume ID:', data.enhanced_resume_id);
         setIsPollingForCompletion(false);
         // Navigate to comparison3 with the enhanced resume ID as a URL parameter
         navigate(`/comparison3?resume_id=${data.enhanced_resume_id}`);
       } else {
-        // Continue polling every 2 seconds
-        setTimeout(() => pollForCompletionAndNavigate(resumeId), 2000);
+        // Continue polling every 5 seconds
+        setTimeout(() => pollForCompletionAndNavigate(resumeId), 5000);
       }
     } catch (error) {
       console.error('Error polling for completion:', error);
+      setCurrentStatus('error');
       setIsPollingForCompletion(false);
+      toast({
+        title: "Error",
+        description: "Failed to check optimization status. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -405,6 +445,15 @@ const HeroSection: React.FC = () => {
     }
   };
 
+  // Calculate elapsed time for display
+  const getElapsedTime = () => {
+    if (!pollingStartTime) return '0s';
+    const elapsed = Math.floor((Date.now() - pollingStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+  };
+
   return <section className="py-16 md:py-24 px-8 md:px-12 lg:px-20">
       {/* Full-page loading overlay */}
       {isProcessing && (
@@ -417,13 +466,19 @@ const HeroSection: React.FC = () => {
         </div>
       )}
 
-      {/* Polling for completion loading overlay */}
+      {/* Polling for completion loading overlay with status */}
       {isPollingForCompletion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg text-center">
+          <div className="bg-white p-8 rounded-lg text-center max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-draft-green mx-auto mb-4"></div>
             <h3 className="text-lg font-medium text-draft-green">Processing your resume...</h3>
             <p className="text-draft-text mt-2">Please wait while we optimize your resume and prepare the PDF viewer.</p>
+            
+            <div className="mt-4 p-3 bg-gray-50 rounded">
+              <p className="text-sm text-gray-600 mb-1">Status: <span className="font-mono text-draft-green">{currentStatus || 'initializing...'}</span></p>
+              <p className="text-sm text-gray-600">Elapsed: <span className="font-mono">{getElapsedTime()}</span></p>
+              <p className="text-xs text-gray-500 mt-2">Checking every 5 seconds (max 5 minutes)</p>
+            </div>
           </div>
         </div>
       )}
