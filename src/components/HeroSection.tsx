@@ -1122,5 +1122,3 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
-
-</edits_to_apply>
